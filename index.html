@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subatomic Particle Database & Simulation Physics Engine</title>
+  <meta name="description" content="표준 모형 및 BSM 기본입자들의 물리 프로필 사전과 붕괴/충돌 물리 보존 법칙 시뮬레이터 웹 애플리케이션">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <header>
+    <div class="logo-container">
+      <svg style="width: 32px; height: 32px; fill: #6366f1;" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+      </svg>
+      <h1>SUBATOMIC PHYSICS ENGINE</h1>
+    </div>
+    <p class="header-subtitle">Standard Model & Beyond the Standard Model Elementary Particles Portal</p>
+    <div class="badge">DATABASE V1.0.0 // PHYSICS ENGINE RUNNING</div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container">
+    
+    <!-- Left Column: Interactive Particle Directory -->
+    <section class="dictionary-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Elementary Particle Periodic Table (소립자 격자판)</h2>
+      </div>
+
+      <!-- Filters & Toggles -->
+      <div class="filter-tabs">
+        <button class="tab-btn active" data-tab="standard-model">Standard Model (표준 모형)</button>
+        <button class="tab-btn" data-tab="bsm">BSM (가상 입자)</button>
+        <button class="tab-btn" data-tab="all">All Particles (전체 보기)</button>
+      </div>
+
+      <div class="toggle-bar">
+        <label class="toggle-switch" id="antiparticle-label">
+          <span>Show Antiparticles (반입자 보기)</span>
+          <input type="checkbox" id="antiparticle-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Dynamic Particles Grid -->
+      <div id="matrix-grid">
+        <!-- Rendered dynamically by app.js -->
+        <div style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+          Initializing subatomic database matrix...
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Details & Collision Lab -->
+    <section class="side-panel">
+      
+      <!-- Panel 1: Particle Detailed Quantum Profile -->
+      <div class="glass-panel" id="particle-details-panel">
+        <div class="details-empty">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p>소립자 격자판에서 입자를 클릭하면 해당 입자의 양자 전하, 스핀, 바리온수, 붕괴 경로 등 정밀 물리 프로필이 여기에 표시됩니다.</p>
+        </div>
+      </div>
+
+      <!-- Panel 2: Subatomic Reaction & Collision Simulator -->
+      <div class="glass-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Subatomic Collision & Decay Lab (반응 시뮬레이터)</h2>
+        </div>
+        
+        <div class="simulator-panel">
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+            입자를 격자판에서 클릭하면 활성화된 슬롯에 추가됩니다. 입자를 클릭하여 붕괴(Decay) 또는 산란(Collision) 반응을 설정해 보세요.
+          </p>
+
+          <!-- Interactive Slots -->
+          <div class="sim-workspace">
+            <div class="slot-container">
+              <!-- Reactant Slot -->
+              <div class="slot active-slot" id="slot-reactants" data-placeholder="Reactants (반응물)"></div>
+              
+              <!-- Directional Arrow -->
+              <div class="slot-arrow">&rarr;</div>
+              
+              <!-- Product Slot -->
+              <div class="slot" id="slot-products" data-placeholder="Products (생성물)"></div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="sim-actions">
+              <button class="action-btn btn-clear" id="btn-clear-sim" title="Clear Slots">Clear</button>
+              <button class="action-btn" id="btn-run-sim">
+                <svg style="width: 18px; height: 18px; fill: none; stroke: currentColor;" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Activate Collider (충돌기 가동)
+              </button>
+            </div>
+          </div>
+
+          <!-- Physics Track Canvas Visualizer -->
+          <div class="visualizer-wrapper">
+            <canvas id="canvas-visualizer"></canvas>
+            <div class="canvas-overlay">[ BUBBLE CHAMBER DETECTOR // ACTIVE ]</div>
+          </div>
+
+          <!-- Report Audit Output -->
+          <div id="audit-report-container">
+            <!-- Rendered dynamically by app.js on simulation -->
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer Info -->
+  <footer>
+    <p>Subatomic Physics Engine Database Portal | Created for High-Fidelity Physics Simulation</p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.6;">
+      Data references derived from the Particle Data Group (PDG) 2026 Standards. 
+      GitHub Repository: <a href="https://github.com/eljja/ElementaryParticle" target="_blank">eljja/ElementaryParticle</a>
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
