@@ -131,3 +131,21 @@ def test_gell_mann_nishijima():
     assert pion.verify_gell_mann_nishijima() is True
     assert pion.strong_isospin_3 == 1.0
     assert pion.hypercharge == 0.0  # B=0, S=0 -> Y=0
+
+def test_uncertainty_lifetime():
+    """Test that stored lifetimes and decay widths satisfy Heisenberg's Uncertainty Principle (Gamma * tau = hbar)"""
+    db = ParticleDatabase()
+    
+    # Check heavy bosons (W, Z) and top quark
+    z = db.get_particle("Z0")
+    assert z.verify_uncertainty_lifetime() is True
+    
+    w = db.get_particle("W+")
+    assert w.verify_uncertainty_lifetime() is True
+    
+    top = db.get_particle("t")
+    assert top.verify_uncertainty_lifetime() is True
+    
+    # Check that stable particles yield None for uncertainty lifetime
+    photon = db.get_particle("gamma")
+    assert photon.uncertainty_lifetime_s is None

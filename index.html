@@ -86,6 +86,9 @@
         <button class="right-tab-btn" id="btn-tab-angular" onclick="switchRightTab('angular')">
           📐 Angular Lab
         </button>
+        <button class="right-tab-btn" id="btn-tab-collider-lab" onclick="switchRightTab('collider-lab')">
+          🎯 Collider Lab
+        </button>
       </div>
 
       <!-- Tab Content A: Collision & Decay Simulator -->
@@ -365,6 +368,68 @@
 
               <!-- Physical Formula Panel -->
               <div id="polarization-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.4; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content F: Collider Breit-Wigner Resonance Lab -->
+      <div class="tab-content" id="tab-collider-lab">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Collider Resonance & Breit-Wigner Lab (가속기 공명 생성)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              충돌 중심 에너지($\sqrt{s}$)를 조작하여 Z 보손 또는 힉스 보손의 정지 질량에 접근시킵니다. 공명점($\sqrt{s} \approx M$)에 도달할 때의 양자 단면적 피크와 검출기 공명 이벤트를 실시간으로 입증합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Select Resonance Target -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Select Resonance Target (공명 대상 입자)</span>
+                <div class="color-buttons-container" style="margin-top: 0.25rem;">
+                  <button class="color-pick-btn active-lepton" id="btn-col-z" onclick="selectColliderTarget('Z0')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Z⁰ Boson (91.2 GeV)</button>
+                  <button class="color-pick-btn" id="btn-col-h" onclick="selectColliderTarget('H0')" style="border-color: rgba(255, 255, 255, 0.05);">H⁰ Higgs (125.3 GeV)</button>
+                </div>
+              </div>
+
+              <!-- Collider Energy Control Slider -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>COLLIDER ENERGY (충돌 중심 에너지, √s)</span>
+                  <span id="label-collider-energy" style="color: var(--color-lepton); font-family: var(--font-mono);">80.0 GeV</span>
+                </div>
+                <input type="range" id="slider-collider-energy" min="70" max="110" step="0.1" value="80.0" oninput="updateColliderLab()" style="width: 100%; margin-top: 0.5rem; accent-color: #00f0ff;">
+              </div>
+
+              <!-- Resonance Status Header Alert -->
+              <div id="collider-resonance-status-alert" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--color-text-muted);">
+                OFF RESONANCE (비공명 상태)
+              </div>
+
+              <!-- 2D Line Chart Canvas for Breit-Wigner Cross Section -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Breit-Wigner Cross Section Profile (반응 단면적 σ 곡선)</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-cross-section"></canvas>
+                </div>
+              </div>
+
+              <!-- Collider Event Chamber (2D Visualizer) -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Collider Detector Chamber (검출기 이벤트 시각화)</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-collider-event"></canvas>
+                  <div class="canvas-overlay">[ DETECTOR EVENT CHAMBER // ACTIVE ]</div>
+                </div>
+              </div>
+
+              <!-- Uncertainty & Breit-Wigner Math Panel -->
+              <div id="collider-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
               </div>
             </div>
 

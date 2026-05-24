@@ -1238,11 +1238,17 @@ footer a:hover {
   margin: 0.5rem 0;
   text-align: center;
   border: 1px solid rgba(56, 189, 248, 0.1);
-}#canvas-su3-multiplet {
+}#canvas-su3-multiplet, #canvas-cross-section, #canvas-collider-event {
   width: 100%;
   height: 100%;
   background: rgba(5, 7, 20, 0.95);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.05);
+}
+
+@keyframes neon-pulse-red {
+  0% { box-shadow: 0 0 10px rgba(255, 51, 102, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); }
+  100% { box-shadow: 0 0 10px rgba(255, 51, 102, 0.2); }
 }

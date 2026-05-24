@@ -1033,20 +1033,22 @@ function switchRightTab(tab) {
   const neutrinoBtn = document.getElementById('btn-tab-neutrino');
   const cascadeBtn = document.getElementById('btn-tab-cascade');
   const angularBtn = document.getElementById('btn-tab-angular');
+  const colliderLabBtn = document.getElementById('btn-tab-collider-lab');
   
   const collisionContent = document.getElementById('tab-collision');
   const builderContent = document.getElementById('tab-builder');
   const neutrinoContent = document.getElementById('tab-neutrino');
   const cascadeContent = document.getElementById('tab-cascade');
   const angularContent = document.getElementById('tab-angular');
+  const colliderLabContent = document.getElementById('tab-collider-lab');
   
   // Reset tab button statuses
-  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn].forEach(b => {
+  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn].forEach(b => {
     if (b) b.classList.remove('active');
   });
   
   // Reset tab contents
-  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent].forEach(c => {
+  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent].forEach(c => {
     if (c) c.classList.remove('active');
   });
   
@@ -1054,6 +1056,12 @@ function switchRightTab(tab) {
   if (tab !== 'angular' && ang3DAnimationId) {
     cancelAnimationFrame(ang3DAnimationId);
     ang3DAnimationId = null;
+  }
+  
+  // Stop ongoing collider resonance loops
+  if (tab !== 'collider-lab' && colliderLoopId) {
+    cancelAnimationFrame(colliderLoopId);
+    colliderLoopId = null;
   }
   
   if (tab === 'collision') {
@@ -1077,16 +1085,20 @@ function switchRightTab(tab) {
   } else if (tab === 'neutrino') {
     neutrinoBtn.classList.add('active');
     neutrinoContent.classList.add('active');
-    updateNeutrinoOscillation(); // Immediately render PMNS calculations and trigger wave!
+    updateNeutrinoOscillation(); 
   } else if (tab === 'cascade') {
     cascadeBtn.classList.add('active');
     cascadeContent.classList.add('active');
     initDecayCascadeSelector();
-    runDecayCascade(); // Render initial decay cascade
+    runDecayCascade(); 
   } else if (tab === 'angular') {
     angularBtn.classList.add('active');
     angularContent.classList.add('active');
-    selectAngularBoson(selectedAngularBoson); // Render polarization axes and graphics!
+    selectAngularBoson(selectedAngularBoson); 
+  } else if (tab === 'collider-lab') {
+    colliderLabBtn.classList.add('active');
+    colliderLabContent.classList.add('active');
+    selectColliderTarget(selectedColliderTargetSymbol);
   }
 }
 
@@ -2602,4 +2614,455 @@ function updateHadronBuilderMultiplet(customI3 = null, customY = null, customSym
       </div>
     `;
   }
+}
+  }
+}
+
+// ----------------------------------------------------
+// COLLIDER BREIT-WIGNER RESONANCE LAB
+// ----------------------------------------------------
+
+let selectedColliderTargetSymbol = 'Z0';
+let colliderLoopId = null;
+let colliderCanvas2D, colliderCtx2D;
+let colliderCanvasEvent, colliderCtxEvent;
+
+function selectColliderTarget(symbol) {
+  selectedColliderTargetSymbol = symbol;
+  
+  const ZBtn = document.getElementById('btn-col-z');
+  const HBtn = document.getElementById('btn-col-h');
+  
+  if (ZBtn && HBtn) {
+    [ZBtn, HBtn].forEach(b => {
+      b.classList.remove('active-lepton');
+      b.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+      b.style.background = 'transparent';
+      b.style.color = 'var(--color-text-muted)';
+    });
+    
+    const targetBtn = symbol === 'Z0' ? ZBtn : HBtn;
+    const accentColor = symbol === 'H0' ? 'var(--color-scalar)' : 'var(--color-boson)';
+    targetBtn.classList.add('active-lepton');
+    targetBtn.style.borderColor = accentColor;
+    targetBtn.style.background = symbol === 'H0' ? 'rgba(0, 255, 170, 0.15)' : 'rgba(168, 85, 247, 0.15)';
+    targetBtn.style.color = '#fff';
+  }
+  
+  // Set slider attributes dynamically based on mass and width
+  const energySlider = document.getElementById('slider-collider-energy');
+  if (energySlider) {
+    if (symbol === 'Z0') {
+      energySlider.min = "75.0";
+      energySlider.max = "105.0";
+      energySlider.step = "0.1";
+      energySlider.value = "80.0";
+    } else {
+      // Higgs width is extremely narrow, need high precision slider around 125 GeV
+      energySlider.min = "124.00";
+      energySlider.max = "126.50";
+      energySlider.step = "0.01";
+      energySlider.value = "124.20";
+    }
+  }
+  
+  updateColliderLab();
+}
+
+function updateColliderLab() {
+  colliderCanvas2D = document.getElementById('canvas-cross-section');
+  colliderCanvasEvent = document.getElementById('canvas-collider-event');
+  if (!colliderCanvas2D || !colliderCanvasEvent) return;
+  
+  colliderCtx2D = colliderCanvas2D.getContext('2d');
+  colliderCtxEvent = colliderCanvasEvent.getContext('2d');
+  
+  const w2D = colliderCanvas2D.clientWidth;
+  const h2D = colliderCanvas2D.clientHeight;
+  colliderCanvas2D.width = w2D * window.devicePixelRatio;
+  colliderCanvas2D.height = h2D * window.devicePixelRatio;
+  colliderCtx2D.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  const wEvent = colliderCanvasEvent.clientWidth;
+  const hEvent = colliderCanvasEvent.clientHeight;
+  colliderCanvasEvent.width = wEvent * window.devicePixelRatio;
+  colliderCanvasEvent.height = hEvent * window.devicePixelRatio;
+  colliderCtxEvent.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  const slider = document.getElementById('slider-collider-energy');
+  if (!slider) return;
+  const sqrtS = parseFloat(slider.value);
+  
+  // Update labels
+  const labelVal = document.getElementById('label-collider-energy');
+  if (labelVal) labelVal.textContent = `${sqrtS.toFixed(2)} GeV`;
+  
+  // 1. Draw Breit-Wigner curve
+  draw2DBreitWignerChart(w2D, h2D, sqrtS);
+  
+  // 2. Start/Restart detector simulation
+  startColliderDetectorSimulation(wEvent, hEvent, sqrtS);
+  
+  // 3. Render physical descriptions
+  renderColliderPhysicsMath();
+}
+
+function draw2DBreitWignerChart(w, h, currentS) {
+  colliderCtx2D.clearRect(0, 0, w, h);
+  
+  const padX = 45;
+  const padY = 30;
+  const graphW = w - padX * 2;
+  const graphH = h - padY * 2;
+  
+  // Axes
+  colliderCtx2D.strokeStyle = 'rgba(255,255,255,0.1)';
+  colliderCtx2D.lineWidth = 1;
+  colliderCtx2D.beginPath();
+  colliderCtx2D.moveTo(padX, padY);
+  colliderCtx2D.lineTo(padX, h - padY);
+  colliderCtx2D.lineTo(w - padX, h - padY);
+  colliderCtx2D.stroke();
+  
+  // Set parameters based on selection
+  let M = 91.1876;
+  let Gamma = 2.4952;
+  let minE = 75.0, maxE = 105.0;
+  
+  if (selectedColliderTargetSymbol === 'H0') {
+    M = 125.25;
+    Gamma = 0.0041; // Extremely narrow peak
+    minE = 124.0;
+    maxE = 126.5;
+  }
+  
+  // Breit-Wigner formula
+  function getBreitWignerCrossSection(E) {
+    const sVal = E * E;
+    const mVal = M * M;
+    const gamVal = Gamma * Gamma;
+    
+    if (selectedColliderTargetSymbol === 'H0') {
+      // Scale Higgs peak to be visually outstanding
+      const widthDamping = 0.05; // artificially wide width for plot visibility, otherwise Higgs needle is completely invisible on 2D resolution!
+      const denom = (E - M) * (E - M) + widthDamping * widthDamping;
+      return (widthDamping * widthDamping) / (denom || 1);
+    }
+    
+    // Z0 relativistic Breit-Wigner
+    const num = sVal * gamVal;
+    const denom = (sVal - mVal) * (sVal - mVal) + mVal * gamVal;
+    return num / (denom || 1);
+  }
+  
+  // Draw curve
+  const points = [];
+  const steps = 150;
+  for (let i = 0; i <= steps; i++) {
+    const E = minE + (i / steps) * (maxE - minE);
+    const val = getBreitWignerCrossSection(E);
+    points.push({ E, val });
+  }
+  
+  // Find max val for normalization
+  const maxVal = Math.max(...points.map(pt => pt.val)) || 1.0;
+  
+  colliderCtx2D.beginPath();
+  points.forEach((pt, idx) => {
+    const x = padX + ((pt.E - minE) / (maxE - minE)) * graphW;
+    const y = (h - padY) - (pt.val / maxVal) * graphH;
+    if (idx === 0) colliderCtx2D.moveTo(x, y);
+    else colliderCtx2D.lineTo(x, y);
+  });
+  
+  const accentColor = selectedColliderTargetSymbol === 'H0' ? '#00ffaa' : '#a855f7';
+  
+  colliderCtx2D.strokeStyle = accentColor;
+  colliderCtx2D.lineWidth = 2.5;
+  colliderCtx2D.shadowBlur = 10;
+  colliderCtx2D.shadowColor = accentColor;
+  colliderCtx2D.stroke();
+  colliderCtx2D.shadowBlur = 0;
+  
+  // Draw current energy vertical marker bar
+  const curX = padX + ((currentS - minE) / (maxE - minE)) * graphW;
+  colliderCtx2D.strokeStyle = '#00f0ff';
+  colliderCtx2D.lineWidth = 1.5;
+  colliderCtx2D.setLineDash([3, 3]);
+  colliderCtx2D.beginPath();
+  colliderCtx2D.moveTo(curX, padY - 5);
+  colliderCtx2D.lineTo(curX, h - padY);
+  colliderCtx2D.stroke();
+  colliderCtx2D.setLineDash([]);
+  
+  // Draw marker pointer
+  colliderCtx2D.fillStyle = '#00f0ff';
+  colliderCtx2D.beginPath();
+  colliderCtx2D.moveTo(curX, padY - 8);
+  colliderCtx2D.lineTo(curX - 4, padY - 14);
+  colliderCtx2D.lineTo(curX + 4, padY - 14);
+  colliderCtx2D.fill();
+  
+  // Add labels and title
+  colliderCtx2D.fillStyle = '#fff';
+  colliderCtx2D.font = 'bold 8px Space Grotesk';
+  colliderCtx2D.textAlign = 'center';
+  colliderCtx2D.fillText(`${minE} GeV`, padX, h - padY + 12);
+  colliderCtx2D.fillText(`${M.toFixed(1)} GeV (Peak)`, padX + ((M - minE) / (maxE - minE)) * graphW, h - padY + 12);
+  colliderCtx2D.fillText(`${maxE} GeV`, w - padX, h - padY + 12);
+  
+  colliderCtx2D.textAlign = 'right';
+  colliderCtx2D.fillText('σ (Cross-section)', padX - 8, padY + 5);
+  
+  colliderCtx2D.textAlign = 'left';
+  colliderCtx2D.font = 'bold 9px Space Grotesk';
+  colliderCtx2D.fillText(`Breit-Wigner Curve: ${selectedColliderTargetSymbol} Resonance Profile`, padX + 5, padY - 12);
+}
+
+function startColliderDetectorSimulation(w, h, currentS) {
+  if (colliderLoopId) {
+    cancelAnimationFrame(colliderLoopId);
+    colliderLoopId = null;
+  }
+  
+  // Target mass and width
+  let M = 91.1876;
+  let errorMargin = 2.0; // GeV margin for Z0 resonance trigger
+  
+  if (selectedColliderTargetSymbol === 'H0') {
+    M = 125.25;
+    errorMargin = 0.08; // extremely narrow margin for Higgs resonance trigger
+  }
+  
+  const resonanceDistance = Math.abs(currentS - M);
+  const isResonanceActive = resonanceDistance <= errorMargin;
+  
+  const alertEl = document.getElementById('collider-resonance-status-alert');
+  if (alertEl) {
+    if (isResonanceActive) {
+      alertEl.textContent = `✨ RESONANCE ACTIVE (공명 생성 활성화: ΔE = ${resonanceDistance.toFixed(2)} GeV) ✨`;
+      alertEl.style.background = 'rgba(0, 255, 170, 0.12)';
+      alertEl.style.borderColor = '#00ffaa';
+      alertEl.style.color = '#00ffaa';
+      alertEl.style.textShadow = '0 0 10px rgba(0, 255, 170, 0.4)';
+    } else {
+      alertEl.textContent = `OFF RESONANCE (비공명 상태: ΔE = ${resonanceDistance.toFixed(2)} GeV)`;
+      alertEl.style.background = 'rgba(255, 255, 255, 0.02)';
+      alertEl.style.borderColor = 'var(--border-color)';
+      alertEl.style.color = 'var(--color-text-muted)';
+      alertEl.style.textShadow = 'none';
+    }
+  }
+  
+  const centerX = w / 2;
+  const centerY = h / 2;
+  
+  // Particle streams (colliding beams)
+  const leftBeam = [];
+  const rightBeam = [];
+  
+  // Resonance explosion particles
+  const jets = [];
+  
+  function triggerResonanceExplosion() {
+    const jetsCount = selectedColliderTargetSymbol === 'H0' ? 4 : (18 + Math.floor(Math.random() * 12));
+    const jetColor = selectedColliderTargetSymbol === 'H0' ? '#00ffaa' : '#a855f7';
+    
+    if (selectedColliderTargetSymbol === 'H0') {
+      // Higgs golden channel: 4-muon decay (straight neon tracks)
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI / 2) + (Math.random() - 0.5) * 0.2;
+        const speed = 3.5;
+        jets.push({
+          x: centerX,
+          y: centerY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color: '#00ffaa',
+          size: 2.0,
+          decay: 0.012,
+          alpha: 1.0,
+          isHiggsMuon: true
+        });
+      }
+    } else {
+      // Z0 Standard hadronic/leptonic jet curves
+      for (let i = 0; i < jetsCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 2.5;
+        const curve = (Math.random() - 0.5) * 0.06; // magnetic curve
+        jets.push({
+          x: centerX,
+          y: centerY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color: i % 2 === 0 ? '#a855f7' : '#00f0ff',
+          size: 1.5 + Math.random() * 1.5,
+          decay: 0.015 + Math.random() * 0.015,
+          alpha: 1.0,
+          curve
+        });
+      }
+    }
+  }
+  
+  let frame = 0;
+  
+  function draw() {
+    colliderCtxEvent.fillStyle = 'rgba(5, 7, 20, 0.2)';
+    colliderCtxEvent.fillRect(0, 0, w, h);
+    
+    // Draw detector crosshairs
+    colliderCtxEvent.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+    colliderCtxEvent.lineWidth = 1;
+    colliderCtxEvent.beginPath();
+    colliderCtxEvent.arc(centerX, centerY, h / 3.5, 0, Math.PI*2);
+    colliderCtxEvent.arc(centerX, centerY, h / 2.0, 0, Math.PI*2);
+    colliderCtxEvent.stroke();
+    
+    colliderCtxEvent.beginPath();
+    colliderCtxEvent.moveTo(0, centerY); colliderCtxEvent.lineTo(w, centerY);
+    colliderCtxEvent.moveTo(centerX, 0); colliderCtxEvent.lineTo(centerX, h);
+    colliderCtxEvent.stroke();
+    
+    // Spawn incoming beam packets
+    if (frame % 4 === 0) {
+      leftBeam.push({ x: 30, y: centerY, vx: 5, color: '#00f0ff' });
+      rightBeam.push({ x: w - 30, y: centerY, vx: -5, color: '#ec4899' });
+    }
+    
+    // Update and draw left beam
+    colliderCtxEvent.fillStyle = '#00f0ff';
+    for (let i = leftBeam.length - 1; i >= 0; i--) {
+      const b = leftBeam[i];
+      b.x += b.vx;
+      colliderCtxEvent.beginPath();
+      colliderCtxEvent.arc(b.x, b.y, 2, 0, Math.PI*2);
+      colliderCtxEvent.fill();
+      
+      if (b.x >= centerX) {
+        // Impact!
+        if (isResonanceActive && Math.random() > 0.4) {
+          triggerResonanceExplosion();
+        }
+        leftBeam.splice(i, 1);
+      }
+    }
+    
+    // Update and draw right beam
+    colliderCtxEvent.fillStyle = '#ec4899';
+    for (let i = rightBeam.length - 1; i >= 0; i--) {
+      const b = rightBeam[i];
+      b.x += b.vx;
+      colliderCtxEvent.beginPath();
+      colliderCtxEvent.arc(b.x, b.y, 2, 0, Math.PI*2);
+      colliderCtxEvent.fill();
+      
+      if (b.x <= centerX) {
+        rightBeam.splice(i, 1);
+      }
+    }
+    
+    // Update and draw resonance jets
+    for (let i = jets.length - 1; i >= 0; i--) {
+      const j = jets[i];
+      
+      if (j.curve) {
+        // Curve track under magnetic field
+        const originalSpeed = Math.sqrt(j.vx*j.vx + j.vy*j.vy);
+        const currentAngle = Math.atan2(j.vy, j.vx) + j.curve;
+        j.vx = Math.cos(currentAngle) * originalSpeed;
+        j.vy = Math.sin(currentAngle) * originalSpeed;
+      }
+      
+      j.x += j.vx;
+      j.y += j.vy;
+      j.alpha -= j.decay;
+      
+      if (j.alpha <= 0 || j.x < 0 || j.x > w || j.y < 0 || j.y > h) {
+        jets.splice(i, 1);
+        continue;
+      }
+      
+      colliderCtxEvent.fillStyle = j.color;
+      colliderCtxEvent.globalAlpha = j.alpha;
+      colliderCtxEvent.beginPath();
+      
+      if (j.isHiggsMuon) {
+        // Draw golden straight four muon lines
+        colliderCtxEvent.strokeStyle = '#00ffaa';
+        colliderCtxEvent.lineWidth = 2.5;
+        colliderCtxEvent.shadowBlur = 12;
+        colliderCtxEvent.shadowColor = '#00ffaa';
+        colliderCtxEvent.beginPath();
+        colliderCtxEvent.moveTo(centerX, centerY);
+        colliderCtxEvent.lineTo(j.x, j.y);
+        colliderCtxEvent.stroke();
+        colliderCtxEvent.shadowBlur = 0; // reset
+      } else {
+        colliderCtxEvent.arc(j.x, j.y, j.size, 0, Math.PI*2);
+        colliderCtxEvent.fill();
+      }
+      colliderCtxEvent.globalAlpha = 1.0;
+    }
+    
+    // Highlight central collision point
+    if (isResonanceActive) {
+      const glow = 5 + Math.sin(frame * 0.2) * 2.5;
+      colliderCtxEvent.strokeStyle = selectedColliderTargetSymbol === 'H0' ? 'rgba(0, 255, 170, 0.4)' : 'rgba(168, 85, 247, 0.4)';
+      colliderCtxEvent.lineWidth = 1.5;
+      colliderCtxEvent.beginPath();
+      colliderCtxEvent.arc(centerX, centerY, glow, 0, Math.PI*2);
+      colliderCtxEvent.stroke();
+    }
+    
+    frame++;
+    colliderLoopId = requestAnimationFrame(draw);
+  }
+  
+  draw();
+}
+
+function renderColliderPhysicsMath() {
+  const container = document.getElementById('collider-physics-details');
+  if (!container) return;
+  
+  let html = '';
+  
+  if (selectedColliderTargetSymbol === 'H0') {
+    html = `
+      <div class="physics-formula-title">
+        <span>🎯 힉스 보손 ($H^0$) 가속기 공명 생성 및 황금 채널 (Golden Channel)</span>
+        <span style="color: var(--color-scalar); font-weight: bold;">M = 125.25 GeV</span>
+      </div>
+      <p style="margin-bottom: 0.5rem;">
+        힉스 보손($H^0$)은 붕괴 폭 $\\Gamma_H \\approx 4.1 \\text{ MeV}$ ($0.0041 \\text{ GeV}$)로 극도로 좁은 에너지 피크를 갖는 정교한 양자 상태입니다.
+      </p>
+      <div class="physics-formula-math">
+        \\Gamma_H \\cdot \\tau_H \\approx \\hbar \\quad \\Rightarrow \\quad \\tau_H \\approx 1.6 \\times 10^{-22} \\text{ s}
+      </div>
+      <p style="font-size: 0.75rem;">
+        <b>황금 채널 (Golden Channel) 시뮬레이션</b>: 힉스의 공명 에너지인 $125.25 \\text{ GeV}$ 근처에 빔 에너지를 정확히 조율하면, 힉스 보손 생성과 함께 $H^0 \\to Z^0 Z^0 \\to \\mu^+\\mu^-\\mu^+\\mu^-$ (4-Muon) 형태의 선명한 골든 트랙 폭발이 검출기 상에 에메랄드 네온 광채로 실시간 드로잉됩니다!
+      </p>
+    `;
+  } else {
+    // Z0
+    html = `
+      <div class="physics-formula-title">
+        <span>⚡ Z 보손 ($Z^0$) 상대론적 Breit-Wigner 공명 공식</span>
+        <span style="color: var(--color-boson); font-weight: bold;">M = 91.19 GeV</span>
+      </div>
+      <p style="margin-bottom: 0.5rem;">
+        가속 충돌 중심 에너지 $\\sqrt{s}$에 대한 Z 보손 생성 단면적 $\\sigma$은 <b>상대론적 브라이트-위그너(Relativistic Breit-Wigner)</b> 공식을 엄격히 따릅니다.
+      </p>
+      <div class="physics-formula-math">
+        \\sigma(s) = \\sigma_{\\text{peak}} \\frac{s \\Gamma_Z^2}{(s - M_Z^2)^2 + M_Z^2 \\Gamma_Z^2}
+      </div>
+      <p style="font-size: 0.75rem;">
+        여기서 $M_Z \\approx 91.19 \\text{ GeV}$, $\\Gamma_Z \\approx 2.495 \\text{ GeV}$ 이며, 붕괴 폭 $\\Gamma_Z$에 의해 공명 피크의 반가폭(FWHM)이 넓은 종 모양(Bell shape) 곡선을 나타내어, 에너지가 피크 근방 $\\pm 2 \\text{ GeV}$ 범위에 있을 때 가속기 충돌 중심에서 격렬한 하드론 다중 제트(Hadronic Jets) 공명 생성 이벤트가 터져나옵니다.
+      </p>
+    `;
+  }
+  
+  container.innerHTML = html;
 }

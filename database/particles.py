@@ -102,6 +102,28 @@ class Particle:
         """Returns True if the particle is a boson (integer spin)."""
         return (self.spin % 1.0) == 0.0
 
+    @property
+    def uncertainty_lifetime_s(self) -> Optional[float]:
+        """
+        Computes the theoretical lifetime in seconds using Heisenberg's Uncertainty Principle:
+        tau = hbar / Gamma
+        where hbar = 6.582119569e-25 GeV.s
+        """
+        if self.stable or self.decay_width_gev <= 0.0:
+            return None
+        hbar = 6.582119569e-25
+        return hbar / self.decay_width_gev
+
+    def verify_uncertainty_lifetime(self) -> bool:
+        """
+        Verifies if the stored lifetime matches the one computed from the decay width
+        within a 10% threshold (due to rounding differences in stored values).
+        """
+        theory_lifetime = self.uncertainty_lifetime_s
+        if theory_lifetime is None or self.lifetime_s is None:
+            return True
+        return abs(theory_lifetime - self.lifetime_s) / self.lifetime_s < 0.10
+
     def verify_antiparticle_conjugation(self, other: 'Particle') -> bool:
         """
         Verifies if another particle is the mathematically correct antiparticle of this one.
