@@ -69,53 +69,129 @@
         </div>
       </div>
 
-      <!-- Panel 2: Subatomic Reaction & Collision Simulator -->
-      <div class="glass-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Subatomic Collision & Decay Lab (반응 시뮬레이터)</h2>
+      <!-- Tabs for Right Side -->
+      <div class="right-tabs-header">
+        <button class="right-tab-btn active" id="btn-tab-collision" onclick="switchRightTab('collision')">
+          💥 Collision & Decay Lab
+        </button>
+        <button class="right-tab-btn" id="btn-tab-builder" onclick="switchRightTab('builder')">
+          ⚛️ Hadron Builder (강입자 조립)
+        </button>
+      </div>
+
+      <!-- Tab Content A: Collision & Decay Simulator -->
+      <div class="tab-content active" id="tab-collision">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Subatomic Collision & Decay Lab (반응 시뮬레이터)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              입자를 격자판에서 클릭하면 활성화된 슬롯에 추가됩니다. 입자를 클릭하여 붕괴(Decay) 또는 산란(Collision) 반응을 설정해 보세요.
+            </p>
+
+            <!-- Interactive Slots -->
+            <div class="sim-workspace">
+              <div class="slot-container">
+                <!-- Reactant Slot -->
+                <div class="slot active-slot" id="slot-reactants" data-placeholder="Reactants (반응물)"></div>
+                
+                <!-- Directional Arrow -->
+                <div class="slot-arrow">&rarr;</div>
+                
+                <!-- Product Slot -->
+                <div class="slot" id="slot-products" data-placeholder="Products (생성물)"></div>
+              </div>
+              
+              <!-- Actions -->
+              <div class="sim-actions">
+                <button class="action-btn btn-clear" id="btn-clear-sim" title="Clear Slots">Clear</button>
+                <button class="action-btn" id="btn-run-sim">
+                  <svg style="width: 18px; height: 18px; fill: none; stroke: currentColor;" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Activate Collider (충돌기 가동)
+                </button>
+              </div>
+            </div>
+
+            <!-- Physics Track Canvas Visualizer -->
+            <div class="visualizer-wrapper">
+              <canvas id="canvas-visualizer"></canvas>
+              <div class="canvas-overlay">[ BUBBLE CHAMBER DETECTOR // ACTIVE ]</div>
+            </div>
+
+            <!-- Report Audit Output -->
+            <div id="audit-report-container">
+              <!-- Rendered dynamically by app.js on simulation -->
+            </div>
+
+          </div>
         </div>
-        
-        <div class="simulator-panel">
-          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-            입자를 격자판에서 클릭하면 활성화된 슬롯에 추가됩니다. 입자를 클릭하여 붕괴(Decay) 또는 산란(Collision) 반응을 설정해 보세요.
-          </p>
+      </div>
 
-          <!-- Interactive Slots -->
-          <div class="sim-workspace">
-            <div class="slot-container">
-              <!-- Reactant Slot -->
-              <div class="slot active-slot" id="slot-reactants" data-placeholder="Reactants (반응물)"></div>
-              
-              <!-- Directional Arrow -->
-              <div class="slot-arrow">&rarr;</div>
-              
-              <!-- Product Slot -->
-              <div class="slot" id="slot-products" data-placeholder="Products (생성물)"></div>
+      <!-- Tab Content B: Hadron Builder -->
+      <div class="tab-content" id="tab-builder">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Hadron Builder & Synthesis Lab (강입자 조립)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              기본 쿼크들을 조립하고 색전하(Red, Green, Blue)를 할당하여 자연계의 안정한 강입자 또는 새로운 이종 강입자(Exotic Hadron)를 직접 조립·합성해 보세요.
+            </p>
+
+            <div class="builder-workspace">
+              <!-- Slots representing Quarks -->
+              <div class="quark-slots-container">
+                <div class="quark-builder-slot" id="quark-slot-0" onclick="selectBuilderSlot(0)">
+                  <span class="slot-quark-symbol">?</span>
+                  <span class="slot-quark-label">Slot 1</span>
+                  <div class="color-dot-indicator" id="color-dot-0"></div>
+                </div>
+                <div class="quark-builder-slot" id="quark-slot-1" onclick="selectBuilderSlot(1)">
+                  <span class="slot-quark-symbol">?</span>
+                  <span class="slot-quark-label">Slot 2</span>
+                  <div class="color-dot-indicator" id="color-dot-1"></div>
+                </div>
+                <div class="quark-builder-slot" id="quark-slot-2" onclick="selectBuilderSlot(2)">
+                  <span class="slot-quark-symbol">?</span>
+                  <span class="slot-quark-label">Slot 3</span>
+                  <div class="color-dot-indicator" id="color-dot-2"></div>
+                </div>
+              </div>
+
+              <!-- Color Charge Assigner Buttons -->
+              <div class="color-assigner-panel">
+                <span class="color-assigner-title">Assign Color Charge to Selected Slot</span>
+                <div class="color-buttons-container">
+                  <button class="color-pick-btn pick-red" id="btn-pick-red" onclick="assignColorToSlot('red')">Red (R)</button>
+                  <button class="color-pick-btn pick-green" id="btn-pick-green" onclick="assignColorToSlot('green')">Green (G)</button>
+                  <button class="color-pick-btn pick-blue" id="btn-pick-blue" onclick="assignColorToSlot('blue')">Blue (B)</button>
+                </div>
+                <div class="color-buttons-container" style="margin-top: 0.25rem;">
+                  <button class="color-pick-btn pick-red" id="btn-pick-anti_red" onclick="assignColorToSlot('anti_red')" style="border-color: #ffaa00; color: #ffaa00;">Anti-R</button>
+                  <button class="color-pick-btn pick-green" id="btn-pick-anti_green" onclick="assignColorToSlot('anti_green')" style="border-color: #d400ff; color: #d400ff;">Anti-G</button>
+                  <button class="color-pick-btn pick-blue" id="btn-pick-anti_blue" onclick="assignColorToSlot('anti_blue')" style="border-color: #3e4e94; color: #a5b4fc;">Anti-B</button>
+                </div>
+              </div>
+
+              <!-- Builder Action Buttons -->
+              <div class="sim-actions" style="margin-top: 0.5rem;">
+                <button class="action-btn btn-clear" onclick="clearHadronBuilder()" style="max-width: 80px;">Reset</button>
+                <button class="action-btn" onclick="synthesizeHadron()" id="btn-synthesize-hadron" style="background: linear-gradient(135deg, #00ffaa 0%, #00f0ff 100%); color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(0, 255, 170, 0.25);">
+                  ⚡ SYNTHESIZE HADRON (강입자 합성)
+                </button>
+              </div>
             </div>
-            
-            <!-- Actions -->
-            <div class="sim-actions">
-              <button class="action-btn btn-clear" id="btn-clear-sim" title="Clear Slots">Clear</button>
-              <button class="action-btn" id="btn-run-sim">
-                <svg style="width: 18px; height: 18px; fill: none; stroke: currentColor;" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Activate Collider (충돌기 가동)
-              </button>
+
+            <!-- Report Synthesis Output -->
+            <div id="hadron-synthesis-report">
+              <!-- Rendered dynamically by app.js -->
             </div>
           </div>
-
-          <!-- Physics Track Canvas Visualizer -->
-          <div class="visualizer-wrapper">
-            <canvas id="canvas-visualizer"></canvas>
-            <div class="canvas-overlay">[ BUBBLE CHAMBER DETECTOR // ACTIVE ]</div>
-          </div>
-
-          <!-- Report Audit Output -->
-          <div id="audit-report-container">
-            <!-- Rendered dynamically by app.js on simulation -->
-          </div>
-
         </div>
       </div>
 
