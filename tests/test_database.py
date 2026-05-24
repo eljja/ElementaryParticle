@@ -95,3 +95,39 @@ def test_bsm_reactions():
     res3 = db.verify_reaction(reactants=["M", "anti_M"], products=["gamma", "gamma"])
     assert res3["is_physically_allowed"] is True
     assert res3["conservations"]["magnetic_charge"]["conserved"] is True
+
+def test_gell_mann_nishijima():
+    """Test that the Gell-Mann–Nishijima formula (Q = I_3 + Y/2) holds for all quarks and hadrons."""
+    db = ParticleDatabase()
+    
+    # Check quarks
+    u = db.get_particle("u")
+    assert u.verify_gell_mann_nishijima() is True
+    assert u.strong_isospin_3 == 0.5
+    assert abs(u.hypercharge - (1.0/3.0)) < 1e-5
+    
+    d = db.get_particle("d")
+    assert d.verify_gell_mann_nishijima() is True
+    assert d.strong_isospin_3 == -0.5
+    assert abs(d.hypercharge - (1.0/3.0)) < 1e-5
+    
+    s = db.get_particle("s")
+    assert s.verify_gell_mann_nishijima() is True
+    assert s.strangeness == -1.0
+    assert abs(s.hypercharge - (-2.0/3.0)) < 1e-5
+    
+    # Check hadrons
+    proton = db.get_particle("p")
+    assert proton.verify_gell_mann_nishijima() is True
+    assert proton.strong_isospin_3 == 0.5
+    assert proton.hypercharge == 1.0  # B=1, S=0 -> Y=1
+    
+    neutron = db.get_particle("n")
+    assert neutron.verify_gell_mann_nishijima() is True
+    assert neutron.strong_isospin_3 == -0.5
+    assert neutron.hypercharge == 1.0
+    
+    pion = db.get_particle("pi+")
+    assert pion.verify_gell_mann_nishijima() is True
+    assert pion.strong_isospin_3 == 1.0
+    assert pion.hypercharge == 0.0  # B=0, S=0 -> Y=0

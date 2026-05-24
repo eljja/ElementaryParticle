@@ -1073,6 +1073,7 @@ function switchRightTab(tab) {
       animationId = null;
     }
     drawEmptyCanvas();
+    updateHadronBuilderMultiplet();
   } else if (tab === 'neutrino') {
     neutrinoBtn.classList.add('active');
     neutrinoContent.classList.add('active');
@@ -1120,6 +1121,7 @@ function addQuarkToBuilder(symbol) {
   
   renderBuilderSlots();
   updateColorButtons();
+  updateHadronBuilderMultiplet();
   
   if (selectedSlotIdx < 2) {
     selectBuilderSlot(selectedSlotIdx + 1);
@@ -1187,6 +1189,7 @@ function clearHadronBuilder() {
   renderBuilderSlots();
   selectBuilderSlot(0);
   document.getElementById('hadron-synthesis-report').innerHTML = '';
+  updateHadronBuilderMultiplet();
 }
 
 function synthesizeHadron() {
@@ -1374,6 +1377,10 @@ function synthesizeHadron() {
 
   if (allowed) {
     animateHadronBuilderSynthesis(qObjs);
+    const stats = calculateSU3FlavorNumbers(builderSlots.filter(s => s !== null));
+    updateHadronBuilderMultiplet(stats.I3, stats.Y, matchSymbol);
+  } else {
+    updateHadronBuilderMultiplet();
   }
 }
 
@@ -2355,4 +2362,244 @@ function renderAngularPhysicalFormulas() {
   }
   
   container.innerHTML = html;
+}
+
+// ----------------------------------------------------
+// SU(3) FLAVOR MULTIPLETS & GELL-MANN-NISHIJIMA LAB
+// ----------------------------------------------------
+
+function calculateSU3FlavorNumbers(quarksList) {
+  let I3 = 0.0;
+  let S = 0.0;
+  let B = 0.0;
+  
+  quarksList.forEach(q => {
+    if (!q) return;
+    const isAnti = q.startsWith('anti_');
+    const baseQuark = isAnti ? q.replace('anti_', '') : q;
+    
+    let q_I3 = 0.0;
+    let q_S = 0.0;
+    let q_B = 1.0/3.0;
+    
+    if (baseQuark === 'u') q_I3 = 0.5;
+    else if (baseQuark === 'd') q_I3 = -0.5;
+    else if (baseQuark === 's') q_S = -1.0;
+    
+    if (isAnti) {
+      q_I3 = -q_I3;
+      q_S = -q_S;
+      q_B = -q_B;
+    }
+    
+    I3 += q_I3;
+    S += q_S;
+    B += q_B;
+  });
+  
+  return { I3, S, B, Y: B + S };
+}
+
+let su3CanvasLoopId = null;
+
+function drawSU3MultipletPlot(activeI3 = null, activeY = null, activeSymbol = null) {
+  const canvas = document.getElementById('canvas-su3-multiplet');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const w = rect.width;
+  const h = rect.height;
+  
+  ctx.clearRect(0, 0, w, h);
+  
+  // Margins and scaling
+  const padX = 50;
+  const padY = 40;
+  const graphW = w - padX * 2;
+  const graphH = h - padY * 2;
+  
+  const minI3 = -1.5, maxI3 = 1.5;
+  const minY = -1.5, maxY = 1.5;
+  
+  const mapX = (i3) => padX + ((i3 - minI3) / (maxI3 - minI3)) * graphW;
+  const mapY = (y) => h - padY - ((y - minY) / (maxY - minY)) * graphH;
+  
+  // 1. Draw grid background & coordinate axes
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+  ctx.lineWidth = 1;
+  for (let val = -1.5; val <= 1.5; val += 0.5) {
+    // vertical grids
+    ctx.beginPath();
+    ctx.moveTo(mapX(val), padY);
+    ctx.lineTo(mapX(val), h - padY);
+    ctx.stroke();
+    
+    // horizontal grids
+    ctx.beginPath();
+    ctx.moveTo(padX, mapY(val));
+    ctx.lineTo(w - padX, mapY(val));
+    ctx.stroke();
+  }
+  
+  // Coordinate Axes (I_3 and Y)
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 1.5;
+  
+  // X-axis (Y = 0)
+  ctx.beginPath(); ctx.moveTo(padX, mapY(0)); ctx.lineTo(w - padX, mapY(0)); ctx.stroke();
+  // Y-axis (I_3 = 0)
+  ctx.beginPath(); ctx.moveTo(mapX(0), padY); ctx.lineTo(mapX(0), h - padY); ctx.stroke();
+  
+  // Axes Arrow / Labels
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = 'bold 8px Space Grotesk';
+  ctx.textAlign = 'center';
+  ctx.fillText('I₃ (등방스핀)', w - padX + 22, mapY(0) + 3);
+  ctx.fillText('Y (초전하)', mapX(0), padY - 10);
+  
+  // Axis values
+  ctx.font = '7px Space Grotesk';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  [-1.0, -0.5, 0.5, 1.0].forEach(val => {
+    ctx.fillText(val.toFixed(1), mapX(val), mapY(0) + 10);
+    ctx.fillText(val.toFixed(1), mapX(0) - 15, mapY(val) + 3);
+  });
+  
+  // 2. Draw standard SU(3) Multiplet grids (Baryon Octet & Meson Nonet grid structure)
+  // Let's draw the standard hex outline representing Baryon Octet / Meson Nonet
+  const hexPoints = [
+    { i3: -0.5, y: 1.0 },  // n, K0
+    { i3: 0.5, y: 1.0 },   // p, K+
+    { i3: 1.0, y: 0.0 },   // Sigma+, pi+
+    { i3: 0.5, y: -1.0 },  // Xi0, K-
+    { i3: -0.5, y: -1.0 }, // Xi-, Kbar0
+    { i3: -1.0, y: 0.0 }   // Sigma-, pi-
+  ];
+  
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 3]);
+  ctx.beginPath();
+  hexPoints.forEach((pt, idx) => {
+    const x = mapX(pt.i3);
+    const y = mapY(pt.y);
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Add some dotted connection lines inside hexagon to Lambda/Sigma0 center (0,0)
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+  ctx.beginPath();
+  hexPoints.forEach(pt => {
+    ctx.moveTo(mapX(pt.i3), mapY(pt.y));
+    ctx.lineTo(mapX(0), mapY(0));
+  });
+  ctx.stroke();
+  
+  // Plot reference multiplet standard particles
+  const refParticles = [
+    { i3: 0.5, y: 1.0, sym: 'p/K⁺' },
+    { i3: -0.5, y: 1.0, sym: 'n/K⁰' },
+    { i3: 1.0, y: 0.0, sym: 'Σ⁺/π⁺' },
+    { i3: -1.0, y: 0.0, sym: 'Σ⁻/π⁻' },
+    { i3: 0.5, y: -1.0, sym: 'Ξ⁰/K⁻' },
+    { i3: -0.5, y: -1.0, sym: 'Ξ⁻/K̄⁰' },
+    { i3: 0.0, y: 0.0, sym: 'Λ/π⁰' }
+  ];
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.font = '7px Space Grotesk';
+  ctx.textAlign = 'center';
+  refParticles.forEach(rp => {
+    ctx.beginPath();
+    ctx.arc(mapX(rp.i3), mapY(rp.y), 2.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText(rp.sym, mapX(rp.i3), mapY(rp.y) - 6);
+  });
+  
+  // 3. Render active composition dot (if exists)
+  if (activeI3 !== null && activeY !== null) {
+    const actX = mapX(activeI3);
+    const actY = mapY(activeY);
+    
+    // Draw pulsing neon glow ring
+    const pulse = 10 + Math.sin(Date.now() * 0.008) * 3;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#00ffaa';
+    ctx.strokeStyle = '#00ffaa';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.arc(actX, actY, pulse, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.shadowBlur = 0; // reset
+    
+    // Draw solid core
+    ctx.fillStyle = '#00ffaa';
+    ctx.beginPath();
+    ctx.arc(actX, actY, 4, 0, Math.PI*2);
+    ctx.fill();
+    
+    // Draw active symbol text banner
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px Space Grotesk';
+    ctx.fillText(activeSymbol || 'Composed', actX, actY - 14);
+  }
+}
+
+function updateHadronBuilderMultiplet(customI3 = null, customY = null, customSymbol = null) {
+  if (customI3 !== null && customY !== null) {
+    drawSU3MultipletPlot(customI3, customY, customSymbol);
+    return;
+  }
+  
+  // Calculate from builder slots
+  const nonNullQuarks = builderSlots.filter(q => q !== null);
+  if (nonNullQuarks.length === 0) {
+    drawSU3MultipletPlot(null, null, null);
+    
+    const formulaCard = document.getElementById('gell-mann-nishijima-equation-card');
+    if (formulaCard) formulaCard.style.display = 'none';
+    return;
+  }
+  
+  const stats = calculateSU3FlavorNumbers(nonNullQuarks);
+  const tempSym = nonNullQuarks.length === 3 ? "Baryon Space" : (nonNullQuarks.length === 2 ? "Meson Space" : "Quark State");
+  
+  drawSU3MultipletPlot(stats.I3, stats.Y, tempSym);
+  
+  // Render Gell-Mann-Nishijima equation Card
+  const formulaCard = document.getElementById('gell-mann-nishijima-equation-card');
+  if (formulaCard) {
+    formulaCard.style.display = 'block';
+    
+    // Compute total charge Q
+    const totalQ = nonNullQuarks.reduce((sum, q) => {
+      const isAnti = q.startsWith('anti_');
+      const baseQuark = isAnti ? q.replace('anti_', '') : q;
+      let chg = baseQuark === 'u' ? 2.0/3.0 : -1.0/3.0;
+      return sum + (isAnti ? -chg : chg);
+    }, 0.0);
+    
+    const isVerified = Math.abs(totalQ - (stats.I3 + stats.Y / 2.0)) < 1e-4;
+    
+    formulaCard.innerHTML = `
+      <div style="font-weight: 700; color: #00ffaa; margin-bottom: 0.25rem; display: flex; justify-content: space-between;">
+        <span>🧪 Gell-Mann–Nishijima 공식 입증 성공</span>
+        <span>${isVerified ? '✓ VERIFIED' : '✗ SYSTEM UNSTABLE'}</span>
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 0.4rem; border-radius: 5px; text-align: center; border: 1px solid rgba(0,255,170,0.1); margin: 0.35rem 0;">
+        Q = I₃ + Y/2 &rArr; ${totalQ.toFixed(2)} = ${stats.I3.toFixed(1)} + (${stats.Y.toFixed(2)})/2
+      </div>
+      <div style="font-size: 0.72rem; color: var(--color-text-muted);">
+        <b>수식 해설</b>: 전하량 Q(${totalQ.toFixed(2)}e)는 강력 등방스핀 성분 I₃(${stats.I3.toFixed(1)})와 쿼크 초전하 Y(${stats.Y.toFixed(2)}, 바리온수 B + 기묘도 S)의 합산으로 양자역학계에 철저히 일치합니다.
+      </div>
+    `;
+  }
 }

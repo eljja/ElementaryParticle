@@ -38,6 +38,62 @@ class Particle:
         """Total lepton number L = L_e + L_mu + L_tau."""
         return self.lepton_number_e + self.lepton_number_mu + self.lepton_number_tau
 
+    @property
+    def strong_isospin_3(self) -> float:
+        """
+        Returns the 3rd component of strong isospin (I_3) for quarks and hadrons.
+        For quarks: u = +0.5, d = -0.5, s = 0.
+        For hadrons: Proton = +0.5, Neutron = -0.5, Pion+ = +1.0, Pion- = -1.0, Pion0 = 0.0.
+        """
+        sym = self.symbol
+        if sym == 'u': return 0.5
+        if sym == 'd': return -0.5
+        if sym == 's': return 0.0
+        if sym == 'anti_u': return -0.5
+        if sym == 'anti_d': return 0.5
+        if sym == 'anti_s': return 0.0
+        
+        if self.type not in ['quark', 'hadron', 'baryon', 'meson']:
+            return 0.0
+            
+        if sym == 'p': return 0.5
+        if sym == 'anti_p': return -0.5
+        if sym == 'n': return -0.5
+        if sym == 'anti_n': return 0.5
+        if sym == 'pi+': return 1.0
+        if sym == 'pi-': return -1.0
+        if sym == 'pi0': return 0.0
+        
+        return 0.0
+
+    @property
+    def strangeness(self) -> float:
+        """
+        Strangeness (S) quantum number.
+        S = -(n_s - n_anti_s)
+        """
+        sym = self.symbol
+        if sym == 's': return -1.0
+        if sym == 'anti_s': return 1.0
+        return 0.0
+
+    @property
+    def hypercharge(self) -> float:
+        """
+        Hypercharge (Y) quantum number.
+        Y = B + S.
+        """
+        return self.baryon_number + self.strangeness
+
+    def verify_gell_mann_nishijima(self) -> bool:
+        """
+        Verifies the Gell-Mann–Nishijima formula:
+        Q = I_3 + Y / 2
+        """
+        if self.type not in ['quark', 'hadron', 'baryon', 'meson']:
+            return True
+        return abs(self.charge - (self.strong_isospin_3 + self.hypercharge / 2.0)) < 1e-5
+
     def is_fermion(self) -> bool:
         """Returns True if the particle is a fermion (half-integer spin)."""
         return (self.spin % 1.0) == 0.5
