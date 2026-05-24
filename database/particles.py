@@ -176,6 +176,10 @@ class ParticleDatabase:
         mass_in = sum(p.mass_mev for p in reactant_objs)
         mass_out = sum(p.mass_mev for p in product_objs)
         
+        # Calculate fermion counts
+        total_fermions_in = sum(1 for p in reactant_objs if p.is_fermion())
+        total_fermions_out = sum(1 for p in product_objs if p.is_fermion())
+        
         # Check conservations
         charge_conserved = abs(total_q_in - total_q_out) < 1e-5
         baryon_conserved = abs(total_b_in - total_b_out) < 1e-5
@@ -183,6 +187,7 @@ class ParticleDatabase:
         lmu_conserved = abs(total_lmu_in - total_lmu_out) < 1e-5
         ltau_conserved = abs(total_ltau_in - total_ltau_out) < 1e-5
         magnetic_conserved = abs(total_mag_in - total_mag_out) < 1e-5
+        fermion_parity_conserved = (total_fermions_in % 2) == (total_fermions_out % 2)
         
         # Energy threshold check (Decay can only happen if reactant mass > product mass)
         energy_conserved = True
@@ -201,6 +206,7 @@ class ParticleDatabase:
             lmu_conserved and 
             ltau_conserved and 
             magnetic_conserved and 
+            fermion_parity_conserved and
             energy_conserved
         )
         
@@ -213,6 +219,7 @@ class ParticleDatabase:
                 "lepton_mu": {"conserved": lmu_conserved, "in": total_lmu_in, "out": total_lmu_out},
                 "lepton_tau": {"conserved": ltau_conserved, "in": total_ltau_in, "out": total_ltau_out},
                 "magnetic_charge": {"conserved": magnetic_conserved, "in": total_mag_in, "out": total_mag_out},
+                "fermion_parity": {"conserved": fermion_parity_conserved, "in": total_fermions_in, "out": total_fermions_out},
                 "mass_energy": {"conserved": energy_conserved, "mass_in": mass_in, "mass_out": mass_out, "note": kinematics_note}
             }
         }

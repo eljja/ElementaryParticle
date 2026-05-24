@@ -1037,3 +1037,208 @@ footer a:hover {
   gap: 0.35rem;
 }
 
+/* Neutrino Oscillation Progress Bars */
+.nu-probabilities-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  background: rgba(255,255,255,0.01);
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 1.25rem;
+  border-radius: 16px;
+}
+
+.nu-probability-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.nu-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.nu-bar-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.02);
+}
+
+.nu-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+}
+
+.nu-bar-fill::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
+  animation: pulse-glow 2s infinite linear;
+}
+
+@keyframes pulse-glow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.nu-bar-fill.e-flavor {
+  background: linear-gradient(90deg, #00b0ff 0%, #00f0ff 100%);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+.nu-bar-fill.mu-flavor {
+  background: linear-gradient(90deg, #6366f1 0%, #a5b4fc 100%);
+  box-shadow: 0 0 10px rgba(165, 180, 252, 0.4);
+}
+.nu-bar-fill.tau-flavor {
+  background: linear-gradient(90deg, #d400ff 0%, #ec4899 100%);
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+}
+
+/* Advanced Decay Cascade & Angular Lab Style Extensions */
+.physics-select {
+  background: rgba(9, 12, 30, 0.95);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  width: 100%;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+.physics-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+.decay-tree-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.decay-node-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.decay-node-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.decay-node-symbol {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.decay-node-name {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.decay-branch-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #a5b4fc;
+  margin: 0.2rem 0;
+  position: relative;
+  width: 100%;
+}
+
+.decay-branch-arrow::before {
+  content: "";
+  width: 1px;
+  height: 20px;
+  background: linear-gradient(180deg, #6366f1, #a855f7);
+  display: block;
+}
+
+.decay-probability-tag {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  margin-top: 0.1rem;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.decay-children-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+/* Line connections simulation in CSS */
+.decay-children-container::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.physics-formula-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.physics-formula-math {
+  font-family: var(--font-mono);
+  color: #38bdf8;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.4rem;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  text-align: center;
+  border: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+
+

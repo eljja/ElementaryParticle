@@ -63,6 +63,17 @@ def test_physical_reactions():
     res4 = db.verify_reaction(reactants=["t"], products=["b", "W-"])
     assert res4["is_physically_allowed"] is False
     assert res4["conservations"]["electric_charge"]["conserved"] is False
+    
+    # 5. Fermion Parity violating decay: n -> p + e-
+    # (Conserves charge [0 -> 1 - 1 = 0], but violates fermion parity [1 fermion -> 2 fermions])
+    res5 = db.verify_reaction(reactants=["n"], products=["p", "e-"])
+    assert res5["is_physically_allowed"] is False
+    assert res5["conservations"]["fermion_parity"]["conserved"] is False
+
+    # 6. Correct beta decay with anti-neutrino: n -> p + e- + anti_nu_e
+    # (Conserves charge, baryon number, lepton number, and fermion parity [1 fermion -> 3 fermions])
+    res6 = db.verify_reaction(reactants=["n"], products=["p", "e-", "anti_nu_e"])
+    assert res6["is_physically_allowed"] is True
 
 def test_bsm_reactions():
     """Test that BSM reactions behave correctly under conservation laws."""

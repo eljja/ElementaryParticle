@@ -4,7 +4,7 @@ let currentTab = 'standard-model';
 let viewAntiparticles = false;
 
 // Right Panel Active Tab
-let rightPanelTab = 'collision'; // 'collision' or 'builder'
+let rightPanelTab = 'collision'; // 'collision', 'builder', or 'neutrino'
 
 // Simulator Slots (Collision Lab)
 let reactants = [];
@@ -15,6 +15,9 @@ let activeSlot = 'reactants'; // 'reactants' or 'products'
 let builderSlots = [null, null, null]; // Quarks inside slots
 let builderColors = [null, null, null]; // Color charges inside slots
 let selectedSlotIdx = 0; // Current slot selected for editing
+
+// Neutrino Oscillation State
+let initialNeutrinoFlavor = 'nu_e'; // 'nu_e', 'nu_mu', 'nu_tau'
 
 // Canvas Animation
 let canvas, ctx;
@@ -47,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Init Hadron Builder UI
       selectBuilderSlot(0);
+      
+      // Init Decay Cascade
+      initDecayCascadeSelector();
     })
     .catch(err => {
       console.error("Failed to load particle database:", err);
@@ -265,11 +271,9 @@ function formatLifetime(s) {
 
 // CKM Matrix transition probabilities (V_ij^2)
 const ckmMatrix = {
-  // Up type quarks
   "u": { "d": 0.949, "s": 0.051, "b": 0.00001, "note": "V_ud, V_us, V_ub" },
   "c": { "d": 0.051, "s": 0.947, "b": 0.0017, "note": "V_cd, V_cs, V_cb" },
   "t": { "d": 0.00008, "s": 0.0016, "b": 0.998, "note": "V_td, V_ts, V_tb" },
-  // Down type quarks (antiquarks behave similarly)
   "anti_u": { "anti_d": 0.949, "anti_s": 0.051, "anti_b": 0.00001 },
   "anti_c": { "anti_d": 0.051, "anti_s": 0.947, "anti_b": 0.0017 },
   "anti_t": { "anti_d": 0.00008, "anti_s": 0.0016, "anti_b": 0.998 }
@@ -315,7 +319,6 @@ function showParticleDetails(p) {
     `;
   }
 
-  // Rigorous Physics: CKM Matrix Decays
   let ckmHtml = '';
   if (p.type === 'quark' && ckmMatrix[p.symbol]) {
     const transitions = ckmMatrix[p.symbol];
@@ -486,12 +489,18 @@ function verifyReactionJS(reactList, prodList) {
   const mass_in = sumProp(rObjs, 'mass_mev');
   const mass_out = sumProp(pObjs, 'mass_mev');
   
+  // Calculate fermion counts (spin is half-integer)
+  const isFermion = p => (p.spin % 1.0) === 0.5;
+  const fermions_in = rObjs.filter(isFermion).length;
+  const fermions_out = pObjs.filter(isFermion).length;
+  
   const q_ok = Math.abs(total_q_in - total_q_out) < 1e-4;
   const b_ok = Math.abs(total_b_in - total_b_out) < 1e-4;
   const le_ok = Math.abs(total_le_in - total_le_out) < 1e-4;
   const lmu_ok = Math.abs(total_lmu_in - total_lmu_out) < 1e-4;
   const ltau_ok = Math.abs(total_ltau_in - total_ltau_out) < 1e-4;
   const mag_ok = Math.abs(total_mag_in - total_mag_out) < 1e-4;
+  const fermion_parity_ok = (fermions_in % 2) === (fermions_out % 2);
   
   const has_colored_outputs = pObjs.some(p => p.color_charge !== 'none');
   const confinement_ok = !has_colored_outputs;
@@ -509,7 +518,7 @@ function verifyReactionJS(reactList, prodList) {
       : "정지 질량 반응 허용 (충돌 속도가 없어도 자발 반응 가능)";
   }
 
-  const all_ok = q_ok && b_ok && le_ok && lmu_ok && ltau_ok && mag_ok && energy_ok && confinement_ok;
+  const all_ok = q_ok && b_ok && le_ok && lmu_ok && ltau_ok && mag_ok && fermion_parity_ok && energy_ok && confinement_ok;
   
   return {
     is_physically_allowed: all_ok,
@@ -521,6 +530,7 @@ function verifyReactionJS(reactList, prodList) {
       lepton_mu: { conserved: lmu_ok, in: total_lmu_in, out: total_lmu_out },
       lepton_tau: { conserved: ltau_ok, in: total_ltau_in, out: total_ltau_out },
       magnetic_charge: { conserved: mag_ok, in: total_mag_in, out: total_mag_out },
+      fermion_parity: { conserved: fermion_parity_ok, in: fermions_in, out: fermions_out },
       color_confinement: { conserved: confinement_ok, in: rObjs.some(p => p.color_charge !== 'none') ? "Colored" : "White", out: has_colored_outputs ? "Colored Quarks" : "White Hadrons" },
       mass_energy: { conserved: energy_ok, mass_in, mass_out, note: kinematics_note }
     }
@@ -562,6 +572,7 @@ function runReactionAudit() {
         ${renderLawRow('렙톤수-뮤온 맛깔 (Lμ)', result.conservations.lepton_mu, '')}
         ${renderLawRow('렙톤수-타우 맛깔 (Lτ)', result.conservations.lepton_tau, '')}
         ${renderLawRow('자기전하 보존 (Magnetic Chg)', result.conservations.magnetic_charge, 'g')}
+        ${renderLawRow('페르미온 패리티 (Fermion Parity)', result.conservations.fermion_parity, '')}
         
         <div class="audit-law-row">
           <span class="law-name">강력 색가둠 (Color Confinement)</span>
@@ -1019,29 +1030,68 @@ function switchRightTab(tab) {
   
   const collisionBtn = document.getElementById('btn-tab-collision');
   const builderBtn = document.getElementById('btn-tab-builder');
+  const neutrinoBtn = document.getElementById('btn-tab-neutrino');
+  const cascadeBtn = document.getElementById('btn-tab-cascade');
+  const angularBtn = document.getElementById('btn-tab-angular');
+  
   const collisionContent = document.getElementById('tab-collision');
   const builderContent = document.getElementById('tab-builder');
+  const neutrinoContent = document.getElementById('tab-neutrino');
+  const cascadeContent = document.getElementById('tab-cascade');
+  const angularContent = document.getElementById('tab-angular');
+  
+  // Reset tab button statuses
+  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn].forEach(b => {
+    if (b) b.classList.remove('active');
+  });
+  
+  // Reset tab contents
+  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent].forEach(c => {
+    if (c) c.classList.remove('active');
+  });
+  
+  // Stop ongoing 3D polarization loop if switching away from angular
+  if (tab !== 'angular' && ang3DAnimationId) {
+    cancelAnimationFrame(ang3DAnimationId);
+    ang3DAnimationId = null;
+  }
   
   if (tab === 'collision') {
     collisionBtn.classList.add('active');
-    builderBtn.classList.remove('active');
     collisionContent.classList.add('active');
-    builderContent.classList.remove('active');
-  } else {
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+    drawEmptyCanvas();
+  } else if (tab === 'builder') {
     builderBtn.classList.add('active');
-    collisionBtn.classList.remove('active');
     builderContent.classList.add('active');
-    collisionContent.classList.remove('active');
-    
-    // Clear reports and render builder slots on tab open
     renderBuilderSlots();
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+    drawEmptyCanvas();
+  } else if (tab === 'neutrino') {
+    neutrinoBtn.classList.add('active');
+    neutrinoContent.classList.add('active');
+    updateNeutrinoOscillation(); // Immediately render PMNS calculations and trigger wave!
+  } else if (tab === 'cascade') {
+    cascadeBtn.classList.add('active');
+    cascadeContent.classList.add('active');
+    initDecayCascadeSelector();
+    runDecayCascade(); // Render initial decay cascade
+  } else if (tab === 'angular') {
+    angularBtn.classList.add('active');
+    angularContent.classList.add('active');
+    selectAngularBoson(selectedAngularBoson); // Render polarization axes and graphics!
   }
 }
 
 function selectBuilderSlot(idx) {
   selectedSlotIdx = idx;
   
-  // Highlight UI slot
   for (let i = 0; i < 3; i++) {
     const slotEl = document.getElementById(`quark-slot-${i}`);
     if (i === idx) {
@@ -1055,14 +1105,12 @@ function selectBuilderSlot(idx) {
     }
   }
   
-  // Update Color Assigner button active states
   updateColorButtons();
 }
 
 function addQuarkToBuilder(symbol) {
   builderSlots[selectedSlotIdx] = symbol;
   
-  // Automatically assign standard color charge if not set
   if (!builderColors[selectedSlotIdx]) {
     const isAnti = symbol.startsWith('anti_');
     if (selectedSlotIdx === 0) builderColors[selectedSlotIdx] = isAnti ? 'anti_red' : 'red';
@@ -1073,7 +1121,6 @@ function addQuarkToBuilder(symbol) {
   renderBuilderSlots();
   updateColorButtons();
   
-  // Advance selected slot automatically
   if (selectedSlotIdx < 2) {
     selectBuilderSlot(selectedSlotIdx + 1);
   }
@@ -1099,14 +1146,12 @@ function renderBuilderSlots() {
     const symbolEl = slotEl.querySelector('.slot-quark-symbol');
     const dotEl = document.getElementById(`color-dot-${i}`);
     
-    // Reset colors
     slotEl.classList.remove('red-charge', 'green-charge', 'blue-charge', 'anti-red-charge', 'anti-green-charge');
     dotEl.className = 'color-dot-indicator';
     
     if (sym) {
       symbolEl.textContent = sym.replace('anti_', 'anti-');
       
-      // Apply color charge styles
       if (color) {
         dotEl.classList.add(color);
         if (color === 'red') slotEl.classList.add('red-charge');
@@ -1124,17 +1169,15 @@ function renderBuilderSlots() {
 function updateColorButtons() {
   const color = builderColors[selectedSlotIdx];
   
-  // Reset active classes
   const btns = ['red', 'green', 'blue', 'anti_red', 'anti_green', 'anti_blue'];
   btns.forEach(c => {
     const btn = document.getElementById(`btn-pick-${c}`);
-    btn.className = `color-pick-btn pick-${c.replace('anti_', '')}`;
+    if (btn) btn.className = `color-pick-btn pick-${c.replace('anti_', '')}`;
   });
   
-  // Apply active to selected color
   if (color) {
     const activeBtn = document.getElementById(`btn-pick-${color}`);
-    activeBtn.classList.add(`active-${color.replace('anti_', '')}`);
+    if (activeBtn) activeBtn.classList.add(`active-${color.replace('anti_', '')}`);
   }
 }
 
@@ -1171,10 +1214,6 @@ function synthesizeHadron() {
   const total_q = qObjs.reduce((sum, o) => sum + o.charge, 0);
   const total_b = qObjs.reduce((sum, o) => sum + o.baryon, 0);
   
-  // Color confinement check (confinement math):
-  // White state combinations:
-  // Meson (2 quarks): 1 quark + 1 antiquark, and colors must be color + anticolor pair (e.g. red + anti_red)
-  // Baryon (3 quarks): 3 quarks (or 3 antiquarks), colors must be red + green + blue (or anti_red + anti_green + anti_blue)
   let color_confinement_passed = false;
   let color_notes = "색 미보존: 색전하 합이 흰색(White)이 되지 않습니다.";
   
@@ -1183,11 +1222,10 @@ function synthesizeHadron() {
     const hasAntiparticlePair = (q1.isAnti && !q2.isAnti) || (!q1.isAnti && q2.isAnti);
     
     if (hasAntiparticlePair) {
-      // Check color + anti-color combination
       const colors = [q1.color, q2.color];
       const redAntiRed = colors.includes('red') && colors.includes('anti_red');
       const greenAntiGreen = colors.includes('green') && colors.includes('anti_green');
-      const blueAntiBlue = colors.includes('blue') && colors.includes('anti_blue'); // anti_blue represents standard anti-blue
+      const blueAntiBlue = colors.includes('blue') && colors.includes('anti_blue');
       
       if (redAntiRed || greenAntiGreen || blueAntiBlue || (q1.color && q1.color.startsWith('anti') && q2.color && !q2.color.startsWith('anti') && q1.color.replace('anti_', '') === q2.color)) {
         color_confinement_passed = true;
@@ -1223,23 +1261,18 @@ function synthesizeHadron() {
     }
   }
   
-  // Mass and Spin coupling estimation
   let possible_spins = "";
   if (qObjs.length === 2) possible_spins = "0 ℏ (Pseudoscalar) 또는 1 ℏ (Vector Meson)";
   else if (qObjs.length === 3) possible_spins = "1/2 ℏ (Octet Baryon) 또는 3/2 ℏ (Decuplet Baryon)";
   
-  // Binding energy and mass estimate
-  // Hadron mass = constituent quark masses + binding energy (approximation)
   const quarkMassesSum = qObjs.reduce((sum, o) => sum + o.mass, 0);
-  const bindingEnergy = qObjs.length === 2 ? 140 : 310; // Simple phenomenological approximation
+  const bindingEnergy = qObjs.length === 2 ? 140 : 310;
   const estimatedMass = quarkMassesSum + bindingEnergy;
   
-  // Try to find match in database
   let matchName = "이종 가상 강입자 (Exotic Hadron)";
   let matchSymbol = "X";
   let isKnown = false;
   
-  // Get quark symbols sorted
   const searchQuarks = qObjs.map(o => o.symbol).sort().join(',');
   
   particlesData.forEach(p => {
@@ -1253,7 +1286,6 @@ function synthesizeHadron() {
     }
   });
 
-  // If unknown, name dynamically based on quark content
   if (!isKnown) {
     const qCount = {};
     qObjs.forEach(o => {
@@ -1340,8 +1372,6 @@ function synthesizeHadron() {
   
   reportContainer.innerHTML = reportHtml;
 
-  // Visualizer trigger inside builder:
-  // Trigger a custom canvas color string integration animation!
   if (allowed) {
     animateHadronBuilderSynthesis(qObjs);
   }
@@ -1358,14 +1388,12 @@ function animateHadronBuilderSynthesis(qObjs) {
   const vertexX = w / 2;
   const vertexY = h / 2;
 
-  // Create 3 virtual colored quarks merging into the vertex
   qObjs.forEach((q, idx) => {
     const angle = (idx * Math.PI * 2) / qObjs.length - Math.PI / 2;
     const startX = vertexX + Math.cos(angle) * (w / 3);
     const startY = vertexY + Math.sin(angle) * (h / 3);
     
-    // Choose color mapped to standard CSS
-    let trackColor = '#ff3366'; // default Red
+    let trackColor = '#ff3366';
     if (q.color === 'green') trackColor = '#00ffaa';
     else if (q.color === 'blue') trackColor = '#00f0ff';
     else if (q.color === 'anti_red') trackColor = '#ffaa00';
@@ -1407,7 +1435,6 @@ function animateHadronBuilderSynthesis(qObjs) {
 
     let merged = true;
     
-    // Update merging quarks
     tracks.forEach(track => {
       if (track.progress < 1) {
         track.progress += track.speed;
@@ -1416,14 +1443,12 @@ function animateHadronBuilderSynthesis(qObjs) {
       }
       
       const curX = track.startX + (track.endX - track.startX) * track.progress;
-      // Wavy gluonic path
       const wiggle = Math.sin(track.progress * Math.PI * 6) * 5;
       const curY = track.startY + (track.endY - track.startY) * track.progress + wiggle;
       
       track.path.push({x: curX, y: curY});
       if (track.path.length > 25) track.path.shift();
       
-      // Draw colored quark track
       if (track.path.length > 1) {
         ctx.beginPath();
         ctx.moveTo(track.path[0].x, track.path[0].y);
@@ -1434,7 +1459,6 @@ function animateHadronBuilderSynthesis(qObjs) {
         ctx.lineWidth = 2.5;
         ctx.stroke();
         
-        // Symbol label
         const head = track.path[track.path.length - 1];
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = 'bold 9px Space Grotesk';
@@ -1442,11 +1466,9 @@ function animateHadronBuilderSynthesis(qObjs) {
       }
     });
 
-    // Draw merging color explosion and synthesis hologram!
     if (merged) {
-      const synthesisAge = frameCount - 67; // 1 / 0.015 = 67 frames to merge
+      const synthesisAge = frameCount - 67;
       
-      // Draw radial white glow representing white state neutralization
       const radius = Math.min(60, synthesisAge * 3);
       const gradient = ctx.createRadialGradient(vertexX, vertexY, 0, vertexX, vertexY, Math.max(1, radius));
       gradient.addColorStop(0, '#ffffff');
@@ -1459,7 +1481,6 @@ function animateHadronBuilderSynthesis(qObjs) {
       ctx.arc(vertexX, vertexY, Math.max(1, radius), 0, Math.PI * 2);
       ctx.fill();
       
-      // Draw rotating quantum halo circles (holographic resonance)
       ctx.strokeStyle = 'rgba(0, 255, 170, 0.4)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([6, 12]);
@@ -1473,7 +1494,6 @@ function animateHadronBuilderSynthesis(qObjs) {
       ctx.stroke();
       ctx.setLineDash([]);
       
-      // Render text halo
       if (synthesisAge < 40) {
         ctx.fillStyle = '#00ffaa';
         ctx.font = 'bold 10px Space Grotesk';
@@ -1489,4 +1509,850 @@ function animateHadronBuilderSynthesis(qObjs) {
   }
 
   animate();
+}
+
+// ----------------------------------------------------
+// NEUTRINO OSCILLATION LAB (Quantum PMNS Matrix Calculations)
+// ----------------------------------------------------
+
+function selectInitialNeutrino(flavor) {
+  initialNeutrinoFlavor = flavor;
+  
+  // Highlight buttons
+  document.getElementById('btn-nu-e').className = 'color-pick-btn';
+  document.getElementById('btn-nu-e').style.background = 'rgba(255,255,255,0.02)';
+  document.getElementById('btn-nu-e').style.borderColor = 'rgba(255,255,255,0.05)';
+  
+  document.getElementById('btn-nu-mu').className = 'color-pick-btn';
+  document.getElementById('btn-nu-mu').style.background = 'rgba(255,255,255,0.02)';
+  document.getElementById('btn-nu-mu').style.borderColor = 'rgba(255,255,255,0.05)';
+  
+  document.getElementById('btn-nu-tau').className = 'color-pick-btn';
+  document.getElementById('btn-nu-tau').style.background = 'rgba(255,255,255,0.02)';
+  document.getElementById('btn-nu-tau').style.borderColor = 'rgba(255,255,255,0.05)';
+
+  const activeBtn = document.getElementById(`btn-nu-${flavor.replace('nu_', '')}`);
+  activeBtn.className = 'color-pick-btn active-lepton';
+  activeBtn.style.background = 'rgba(0, 240, 255, 0.15)';
+  activeBtn.style.borderColor = 'var(--color-lepton)';
+  activeBtn.style.color = '#fff';
+
+  updateNeutrinoOscillation();
+}
+
+// 3-Flavor Neutrino Oscillation Quantum Math Loader
+function calculate3FlavorOscillation(alphaIdx, E_gev, L_km) {
+  // PMNS mixing angles in radians
+  const t12 = 33.82 * Math.PI / 180;
+  const t23 = 48.3 * Math.PI / 180;
+  const t13 = 8.61 * Math.PI / 180;
+
+  const s12 = Math.sin(t12), c12 = Math.cos(t12);
+  const s23 = Math.sin(t23), c23 = Math.cos(t23);
+  const s13 = Math.sin(t13), c13 = Math.cos(t13);
+
+  // PMNS 3x3 mixing matrix U (completely real approximation, CP phase delta = 0)
+  const U = [
+    [ c12 * c13, s12 * c13, s13 ],
+    [ -s12 * c23 - c12 * s23 * s13, c12 * c23 - s12 * s23 * s13, s23 * c13 ],
+    [ s12 * s23 - c12 * c23 * s13, -c12 * s23 - s12 * c23 * s13, c23 * c13 ]
+  ];
+
+  // Mass differences squared in eV^2
+  const dm21 = 7.53e-5; 
+  const dm31 = 2.52e-3; 
+  const dm32 = dm31 - dm21;
+
+  // Quantum phases
+  const arg21 = 1.267 * dm21 * L_km / E_gev;
+  const arg31 = 1.267 * dm31 * L_km / E_gev;
+  const arg32 = 1.267 * dm32 * L_km / E_gev;
+
+  const p = [0, 0, 0]; // Electron, Muon, Tau probabilities
+
+  for (let beta = 0; beta < 3; beta++) {
+    const term1 = U[alphaIdx][0] * U[beta][0] * U[alphaIdx][1] * U[beta][1] * Math.sin(arg21)**2;
+    const term2 = U[alphaIdx][0] * U[beta][0] * U[alphaIdx][2] * U[beta][2] * Math.sin(arg31)**2;
+    const term3 = U[alphaIdx][1] * U[beta][1] * U[alphaIdx][2] * U[beta][2] * Math.sin(arg32)**2;
+
+    const delta = (alphaIdx === beta) ? 1 : 0;
+    p[beta] = delta - 4 * (term1 + term2 + term3);
+    p[beta] = Math.max(0, Math.min(1, p[beta])); // Clamp
+  }
+
+  return p;
+}
+
+function updateNeutrinoOscillation() {
+  if (rightPanelTab !== 'neutrino') return;
+
+  const energy = parseFloat(document.getElementById('slider-nu-energy').value);
+  const distance = parseFloat(document.getElementById('slider-nu-distance').value);
+
+  document.getElementById('label-nu-energy').textContent = `${energy.toFixed(2)} GeV`;
+  document.getElementById('label-nu-distance').textContent = `${distance} km`;
+
+  // Mapped indexes: nu_e = 0, nu_mu = 1, nu_tau = 2
+  const alphaIdx = initialNeutrinoFlavor === 'nu_e' ? 0 : (initialNeutrinoFlavor === 'nu_mu' ? 1 : 2);
+  const probs = calculate3FlavorOscillation(alphaIdx, energy, distance);
+
+  // Render bars
+  const pContainer = document.getElementById('neutrino-probability-panel');
+  pContainer.innerHTML = `
+    <div class="nu-probabilities-container" style="animation: fadeIn 0.3s ease-out;">
+      <span style="font-size:0.75rem; text-transform:uppercase; color:var(--color-text-muted); font-weight:600; letter-spacing:0.05em; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem; margin-bottom:0.25rem;">
+        🌀 Quantum Flavor Superposition Probability
+      </span>
+      
+      <!-- Electron Neutrino -->
+      <div class="nu-probability-item">
+        <div class="nu-label-row">
+          <span>Electron Neutrino (ν_e 수득률)</span>
+          <span style="color: #00f0ff;">${(probs[0]*100).toFixed(2)}%</span>
+        </div>
+        <div class="nu-bar-track">
+          <div class="nu-bar-fill e-flavor" style="width: ${probs[0]*100}%;"></div>
+        </div>
+      </div>
+
+      <!-- Muon Neutrino -->
+      <div class="nu-probability-item">
+        <div class="nu-label-row">
+          <span>Muon Neutrino (ν_μ 수득률)</span>
+          <span style="color: #a5b4fc;">${(probs[1]*100).toFixed(2)}%</span>
+        </div>
+        <div class="nu-bar-track">
+          <div class="nu-bar-fill mu-flavor" style="width: ${probs[1]*100}%;"></div>
+        </div>
+      </div>
+
+      <!-- Tau Neutrino -->
+      <div class="nu-probability-item">
+        <div class="nu-label-row">
+          <span>Tau Neutrino (ν_τ 수득률)</span>
+          <span style="color: #ec4899;">${(probs[2]*100).toFixed(2)}%</span>
+        </div>
+        <div class="nu-bar-track">
+          <div class="nu-bar-fill tau-flavor" style="width: ${probs[2]*100}%;"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Run wave chameleon animation!
+  animateNeutrinoOscillation(alphaIdx, energy, distance);
+}
+
+function animateNeutrinoOscillation(alphaIdx, E_gev, L_max_km) {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+  let offset = 0;
+
+  function animate() {
+    offset += 0.08;
+    ctx.fillStyle = '#020308';
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw detector grid lines
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.03)';
+    ctx.lineWidth = 0.5;
+    const gridSize = 25;
+    for (let x = 0; x < w; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y < h; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    // Propagate wave across canvas
+    // Each x coordinate maps to a fractional propagation distance L_eff
+    ctx.lineWidth = 4.5;
+    
+    // Draw propagating wave in segments
+    const pointsCount = 180;
+    const paddingX = 40;
+    const waveLength = w - paddingX * 2;
+    
+    ctx.beginPath();
+    
+    for (let i = 0; i < pointsCount; i++) {
+      const x = paddingX + (i / (pointsCount - 1)) * waveLength;
+      
+      // Calculate effective distance at this point along the propagation path
+      const L_eff = (i / (pointsCount - 1)) * L_max_km;
+      const probs = calculate3FlavorOscillation(alphaIdx, E_gev, L_eff);
+      
+      // Chameleon blending: Mix colors based on flavor probabilities
+      // ν_e = Cyan (0, 240, 255)
+      // ν_μ = Purple (99, 102, 241)
+      // ν_τ = Magenta (212, 0, 255)
+      const r = Math.round(probs[0]*0 + probs[1]*99 + probs[2]*212);
+      const g = Math.round(probs[0]*240 + probs[1]*102 + probs[2]*0);
+      const b = Math.round(probs[0]*255 + probs[1]*241 + probs[2]*255);
+      
+      const curY = h / 2 + Math.sin(i * 0.12 - offset) * 20;
+      
+      // Draw small line segments to change strokeStyle continuously
+      if (i > 0) {
+        ctx.beginPath();
+        const prevX = paddingX + ((i - 1) / (pointsCount - 1)) * waveLength;
+        const prevL = ((i - 1) / (pointsCount - 1)) * L_max_km;
+        const prevProbs = calculate3FlavorOscillation(alphaIdx, E_gev, prevL);
+        const prevY = h / 2 + Math.sin((i - 1) * 0.12 - offset) * 20;
+        
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(x, curY);
+        
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = `rgb(${r}, ${g}, ${b})`;
+        ctx.stroke();
+      }
+    }
+    
+    ctx.shadowBlur = 0; // Reset shadow
+
+    // Draw source and detector badges
+    ctx.fillStyle = '#00f0ff';
+    ctx.beginPath(); ctx.arc(paddingX, h/2, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 8px Space Grotesk';
+    ctx.fillText('SOURCE ν', paddingX - 18, h/2 - 10);
+
+    ctx.fillStyle = '#ec4899';
+    ctx.beginPath(); ctx.arc(w - paddingX, h/2, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillText('DETECTOR', w - paddingX - 22, h/2 - 10);
+
+    // Overlay text showing distance grid
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.font = '8px Space Grotesk';
+    ctx.fillText('0 km', paddingX - 8, h/2 + 35);
+    ctx.fillText(`${(L_max_km / 2).toFixed(0)} km`, w/2 - 15, h/2 + 35);
+    ctx.fillText(`${L_max_km.toFixed(0)} km`, w - paddingX - 18, h/2 + 35);
+
+    animationId = requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+
+// ----------------------------------------------------
+// ADVANCED MONTE CARLO DECAY CASCADE LAB
+// ----------------------------------------------------
+
+let selectDecayParentEl;
+let cascadeCanvas, cascadeCtx;
+let cascadeAnimationId = null;
+
+function initDecayCascadeSelector() {
+  selectDecayParentEl = document.getElementById('select-decay-parent');
+  if (!selectDecayParentEl) return;
+  
+  selectDecayParentEl.innerHTML = '';
+  
+  // Find particles that are unstable and have decay modes
+  const unstableParticles = particlesData.filter(p => !p.stable && p.decay_modes && p.decay_modes.length > 0);
+  
+  // Sort by mass descending
+  unstableParticles.sort((a, b) => b.mass_mev - a.mass_mev);
+  
+  unstableParticles.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.symbol;
+    opt.textContent = `${p.name} (${p.symbol}) - ${formatMass(p.mass_mev)}`;
+    selectDecayParentEl.appendChild(opt);
+  });
+}
+
+function simulateDecayChain(symbol, depth = 0, parentBranching = 1.0) {
+  const p = particlesBySymbol[symbol];
+  if (!p) {
+    return { symbol, name: symbol, stable: true, children: [], mass_mev: 0, branching: parentBranching };
+  }
+  
+  const node = {
+    symbol: p.symbol,
+    name: p.name,
+    stable: p.stable,
+    mass_mev: p.mass_mev,
+    branching: parentBranching,
+    children: []
+  };
+  
+  if (p.stable || !p.decay_modes || p.decay_modes.length === 0 || depth >= 7) {
+    return node;
+  }
+  
+  // Select a decay mode using Monte Carlo (weighted random)
+  const r = Math.random();
+  let cumulative = 0;
+  let selectedMode = null;
+  
+  const totalBR = p.decay_modes.reduce((s, m) => s + m.branching_ratio, 0);
+  
+  for (const mode of p.decay_modes) {
+    const normBR = mode.branching_ratio / (totalBR || 1.0);
+    cumulative += normBR;
+    if (r <= cumulative) {
+      selectedMode = mode;
+      break;
+    }
+  }
+  
+  if (!selectedMode && p.decay_modes.length > 0) {
+    selectedMode = p.decay_modes[0];
+  }
+  
+  if (selectedMode) {
+    node.decayChannelName = selectedMode.channel;
+    node.channelBR = selectedMode.branching_ratio;
+    
+    selectedMode.products.forEach(prodSymbol => {
+      const childNode = simulateDecayChain(prodSymbol, depth + 1, parentBranching * selectedMode.branching_ratio);
+      node.children.push(childNode);
+    });
+  }
+  
+  return node;
+}
+
+function renderDecayTreeHTML(node) {
+  let html = `<div class="decay-tree-wrapper">`;
+  
+  const categoryColor = getParticleCategoryColor(node.symbol);
+  html += `
+    <div class="decay-node-card" style="box-shadow: 0 0 15px ${categoryColor}30; border-color: ${categoryColor}60;">
+      <span class="decay-node-symbol" style="color: ${categoryColor};">${node.symbol}</span>
+      <span class="decay-node-name">${node.name}</span>
+      ${node.channelBR ? `<span class="decay-probability-tag">BR: ${(node.channelBR * 100).toFixed(1)}%</span>` : ''}
+    </div>
+  `;
+  
+  if (node.children && node.children.length > 0) {
+    html += `<div class="decay-branch-arrow">↳ 붕괴: ${node.decayChannelName || ''}</div>`;
+    html += `<div class="decay-children-container">`;
+    node.children.forEach(child => {
+      html += renderDecayTreeHTML(child);
+    });
+    html += `</div>`;
+  }
+  
+  html += `</div>`;
+  return html;
+}
+
+function getParticleCategoryColor(symbol) {
+  const p = particlesBySymbol[symbol];
+  if (!p) return '#fff';
+  if (p.category === 'Beyond Standard Model') return 'var(--color-bsm)';
+  if (p.type === 'quark') return 'var(--color-quark)';
+  if (p.type === 'lepton') return 'var(--color-lepton)';
+  if (p.type === 'gauge_boson') return 'var(--color-boson)';
+  if (p.type === 'scalar_boson') return 'var(--color-scalar)';
+  return '#10b981'; // Composite Hadrons / default
+}
+
+function runDecayCascade() {
+  const selectEl = document.getElementById('select-decay-parent');
+  if (!selectEl) return;
+  const parentSymbol = selectEl.value;
+  if (!parentSymbol) return;
+  
+  const decayTree = simulateDecayChain(parentSymbol);
+  
+  const outputEl = document.getElementById('decay-tree-output');
+  outputEl.innerHTML = `
+    <div style="font-size: 0.9rem; color: #fff; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem; display: flex; justify-content: space-between;">
+      <span>🔮 Monte Carlo 붕괴 계통도 (Decay Tree)</span>
+      <span style="color: var(--color-text-muted); font-size: 0.75rem;">(분기 가중치에 따른 자발적 붕괴 체인 시각화)</span>
+    </div>
+    ${renderDecayTreeHTML(decayTree)}
+  `;
+  
+  animateCascadeTracks(decayTree);
+}
+
+function animateCascadeTracks(tree) {
+  cascadeCanvas = document.getElementById('canvas-cascade-visualizer');
+  if (!cascadeCanvas) return;
+  cascadeCtx = cascadeCanvas.getContext('2d');
+  
+  const rect = cascadeCanvas.getBoundingClientRect();
+  cascadeCanvas.width = rect.width * window.devicePixelRatio;
+  cascadeCanvas.height = rect.height * window.devicePixelRatio;
+  cascadeCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const w = rect.width;
+  const h = rect.height;
+  
+  if (cascadeAnimationId) {
+    cancelAnimationFrame(cascadeAnimationId);
+    cascadeAnimationId = null;
+  }
+  
+  const tracksList = [];
+  
+  function buildTracks(node, startX, startY, startAngle, timeOffset, parentColor) {
+    const color = getParticleCategoryColor(node.symbol);
+    const length = node.stable ? 120 : (40 + Math.random() * 30);
+    const endX = startX + Math.cos(startAngle) * length;
+    const endY = startY + Math.sin(startAngle) * length;
+    
+    const isNeutral = (particlesBySymbol[node.symbol]?.charge || 0) === 0;
+    
+    tracksList.push({
+      symbol: node.symbol,
+      startX, startY, endX, endY,
+      color,
+      isNeutral,
+      timeOffset,
+      duration: node.stable ? 80 : 35,
+      progress: 0
+    });
+    
+    if (node.children && node.children.length > 0) {
+      const childrenCount = node.children.length;
+      const spread = Math.PI / 3; 
+      node.children.forEach((child, idx) => {
+        let childAngle = startAngle;
+        if (childrenCount > 1) {
+          childAngle = startAngle - spread/2 + (idx / (childrenCount - 1)) * spread;
+        } else {
+          childAngle = startAngle + (Math.random() - 0.5) * 0.4;
+        }
+        buildTracks(child, endX, endY, childAngle, timeOffset + 35, color);
+      });
+    }
+  }
+  
+  buildTracks(tree, 30, h / 2, 0, 0, '#fff');
+  
+  let frame = 0;
+  function animate() {
+    cascadeCtx.fillStyle = 'rgba(5, 7, 20, 0.25)';
+    cascadeCtx.fillRect(0, 0, w, h);
+    
+    cascadeCtx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+    cascadeCtx.lineWidth = 1;
+    for (let x = 0; x < w; x += 30) {
+      cascadeCtx.beginPath(); cascadeCtx.moveTo(x, 0); cascadeCtx.lineTo(x, h); cascadeCtx.stroke();
+    }
+    for (let y = 0; y < h; y += 30) {
+      cascadeCtx.beginPath(); cascadeCtx.moveTo(0, y); cascadeCtx.lineTo(w, y); cascadeCtx.stroke();
+    }
+    
+    let finishedAll = true;
+    
+    tracksList.forEach(t => {
+      if (frame >= t.timeOffset) {
+        if (t.progress < t.duration) {
+          t.progress++;
+          finishedAll = false;
+        }
+        
+        const p = t.progress / t.duration;
+        const curX = t.startX + (t.endX - t.startX) * p;
+        const curY = t.startY + (t.endY - t.startY) * p;
+        
+        cascadeCtx.beginPath();
+        cascadeCtx.lineWidth = 2.5;
+        cascadeCtx.strokeStyle = t.color;
+        
+        if (t.isNeutral) {
+          cascadeCtx.setLineDash([3, 4]);
+        } else {
+          cascadeCtx.setLineDash([]);
+          const charge = particlesBySymbol[t.symbol]?.charge || 0.0;
+          if (charge !== 0.0) {
+            cascadeCtx.arc(t.startX, t.startY + (charge * 50), charge * 50, -Math.PI/2, Math.PI/2);
+          }
+        }
+        
+        cascadeCtx.moveTo(t.startX, t.startY);
+        cascadeCtx.lineTo(curX, curY);
+        cascadeCtx.stroke();
+        cascadeCtx.setLineDash([]);
+        
+        if (t.progress >= t.duration) {
+          cascadeCtx.fillStyle = '#fff';
+          cascadeCtx.font = 'bold 9px Space Grotesk';
+          cascadeCtx.fillText(t.symbol, t.endX + 3, t.endY + 3);
+        }
+      } else {
+        finishedAll = false;
+      }
+    });
+    
+    frame++;
+    if (!finishedAll) {
+      cascadeAnimationId = requestAnimationFrame(animate);
+    }
+  }
+  
+  animate();
+}
+
+// ----------------------------------------------------
+// ELECTROWEAK POLARIZATION & ANGULAR LAB
+// ----------------------------------------------------
+
+let selectedAngularBoson = 'Z0';
+let selectedPolarization = 'unpolarized';
+let angCanvas2D, angCtx2D;
+let angCanvas3D, angCtx3D;
+let ang3DAnimationId = null;
+
+function selectAngularBoson(symbol) {
+  selectedAngularBoson = symbol;
+  
+  const ZBtn = document.getElementById('btn-ang-z');
+  const WBtn = document.getElementById('btn-ang-w');
+  const HBtn = document.getElementById('btn-ang-h');
+  
+  if (ZBtn && WBtn && HBtn) {
+    [ZBtn, WBtn, HBtn].forEach(b => {
+      b.classList.remove('active-lepton');
+      b.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+      b.style.background = 'transparent';
+      b.style.color = 'var(--color-text-muted)';
+    });
+    
+    let targetBtn = ZBtn;
+    if (symbol === 'W+') targetBtn = WBtn;
+    if (symbol === 'H0') targetBtn = HBtn;
+    
+    const accentColor = symbol === 'H0' ? 'var(--color-scalar)' : 'var(--color-boson)';
+    targetBtn.classList.add('active-lepton');
+    targetBtn.style.borderColor = accentColor;
+    targetBtn.style.background = symbol === 'H0' ? 'rgba(0, 255, 170, 0.15)' : 'rgba(168, 85, 247, 0.15)';
+    targetBtn.style.color = '#fff';
+  }
+  
+  updateAngularLab();
+}
+
+function selectPolarization(mode) {
+  selectedPolarization = mode;
+  
+  const unpolBtn = document.getElementById('btn-pol-unpol');
+  const transBtn = document.getElementById('btn-pol-trans');
+  const longBtn = document.getElementById('btn-pol-long');
+  
+  if (unpolBtn && transBtn && longBtn) {
+    [unpolBtn, transBtn, longBtn].forEach(b => {
+      b.classList.remove('active-lepton');
+      b.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+      b.style.background = 'transparent';
+      b.style.color = 'var(--color-text-muted)';
+    });
+    
+    let targetBtn = unpolBtn;
+    if (mode === 'transverse') targetBtn = transBtn;
+    if (mode === 'longitudinal') targetBtn = longBtn;
+    
+    const accentColor = 'var(--color-boson)';
+    targetBtn.classList.add('active-lepton');
+    targetBtn.style.borderColor = accentColor;
+    targetBtn.style.background = 'rgba(168, 85, 247, 0.15)';
+    targetBtn.style.color = '#fff';
+  }
+  
+  const descEl = document.getElementById('label-pol-desc');
+  if (descEl) {
+    if (mode === 'unpolarized') {
+      descEl.textContent = "무편광: 고전적인 무작위 또는 앙상블 평균화 상태를 모사합니다. 각도에 구애받지 않는 표준 분포를 보입니다.";
+    } else if (mode === 'transverse') {
+      descEl.textContent = "횡편광 (Transverse): 스핀 방향이 보손 진행 방향에 수직(m_s = ±1)인 빔입니다. 분포가 양쪽 극단(0도 및 180도) 부근으로 강화됩니다.";
+    } else if (mode === 'longitudinal') {
+      descEl.textContent = "종편광 (Longitudinal): 질량을 획득한 게이지 보손(W, Z)에만 관찰되는 모드로, 진행 축에 완전 수직 방향(90도)으로 지향성을 가집니다.";
+    }
+  }
+  
+  updateAngularLab();
+}
+
+function getAngularProbabilityDensity(thetaRad, boson, polarization) {
+  if (boson === 'H0') {
+    return 1.0; 
+  }
+  
+  if (polarization === 'unpolarized') {
+    return 0.375 * (1 + Math.cos(thetaRad) * Math.cos(thetaRad));
+  } else if (polarization === 'transverse') {
+    return 0.375 * (1 + Math.cos(thetaRad) * Math.cos(thetaRad));
+  } else if (polarization === 'longitudinal') {
+    return 0.75 * Math.sin(thetaRad) * Math.sin(thetaRad);
+  }
+  
+  return 1.0;
+}
+
+function updateAngularLab() {
+  angCanvas2D = document.getElementById('canvas-angular-plot');
+  angCanvas3D = document.getElementById('canvas-polarization-3d');
+  if (!angCanvas2D || !angCanvas3D) return;
+  
+  angCtx2D = angCanvas2D.getContext('2d');
+  angCtx3D = angCanvas3D.getContext('2d');
+  
+  const w2D = angCanvas2D.clientWidth;
+  const h2D = angCanvas2D.clientHeight;
+  angCanvas2D.width = w2D * window.devicePixelRatio;
+  angCanvas2D.height = h2D * window.devicePixelRatio;
+  angCtx2D.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  const w3D = angCanvas3D.clientWidth;
+  const h3D = angCanvas3D.clientHeight;
+  angCanvas3D.width = w3D * window.devicePixelRatio;
+  angCanvas3D.height = h3D * window.devicePixelRatio;
+  angCtx3D.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  draw2DAngularChart(w2D, h2D);
+  start3DAngularSimulation(w3D, h3D);
+  renderAngularPhysicalFormulas();
+}
+
+function draw2DAngularChart(w, h) {
+  angCtx2D.clearRect(0, 0, w, h);
+  
+  const padX = 40;
+  const padY = 30;
+  const graphW = w - padX * 2;
+  const graphH = h - padY * 2;
+  
+  angCtx2D.strokeStyle = 'rgba(255,255,255,0.1)';
+  angCtx2D.lineWidth = 1;
+  angCtx2D.beginPath();
+  angCtx2D.moveTo(padX, padY);
+  angCtx2D.lineTo(padX, h - padY);
+  angCtx2D.lineTo(w - padX, h - padY);
+  angCtx2D.stroke();
+  
+  angCtx2D.fillStyle = 'rgba(255,255,255,0.4)';
+  angCtx2D.font = '8px Space Grotesk';
+  angCtx2D.textAlign = 'center';
+  
+  const tickAngles = [0, 45, 90, 135, 180];
+  tickAngles.forEach(deg => {
+    const x = padX + (deg / 180) * graphW;
+    angCtx2D.beginPath();
+    angCtx2D.moveTo(x, h - padY);
+    angCtx2D.lineTo(x, h - padY + 4);
+    angCtx2D.stroke();
+    angCtx2D.fillText(`${deg}°`, x, h - padY + 12);
+  });
+  
+  angCtx2D.textAlign = 'right';
+  angCtx2D.fillText("0.8", padX - 8, padY + 5);
+  angCtx2D.fillText("0.4", padX - 8, padY + graphH/2 + 5);
+  angCtx2D.fillText("0", padX - 8, h - padY + 2);
+  
+  const points = [];
+  const pointsCount = 100;
+  let maxVal = 0.8;
+  
+  for (let i = 0; i <= pointsCount; i++) {
+    const deg = (i / pointsCount) * 180;
+    const rad = deg * Math.PI / 180;
+    const val = getAngularProbabilityDensity(rad, selectedAngularBoson, selectedPolarization);
+    points.push({ deg, val });
+  }
+  
+  angCtx2D.beginPath();
+  points.forEach((pt, idx) => {
+    const x = padX + (pt.deg / 180) * graphW;
+    const y = (h - padY) - (pt.val / maxVal) * graphH;
+    if (idx === 0) angCtx2D.moveTo(x, y);
+    else angCtx2D.lineTo(x, y);
+  });
+  
+  const accentColor = selectedAngularBoson === 'H0' ? '#00ffaa' : '#a855f7';
+  
+  angCtx2D.strokeStyle = accentColor;
+  angCtx2D.lineWidth = 2.5;
+  angCtx2D.shadowBlur = 10;
+  angCtx2D.shadowColor = accentColor;
+  angCtx2D.stroke();
+  angCtx2D.shadowBlur = 0;
+  
+  angCtx2D.fillStyle = '#fff';
+  angCtx2D.font = 'bold 9px Space Grotesk';
+  angCtx2D.textAlign = 'left';
+  angCtx2D.fillText(`PDF Curve: ${selectedAngularBoson} Decay (Polarization: ${selectedPolarization})`, padX + 5, padY - 10);
+}
+
+function start3DAngularSimulation(w, h) {
+  if (ang3DAnimationId) {
+    cancelAnimationFrame(ang3DAnimationId);
+    ang3DAnimationId = null;
+  }
+  
+  const particles = [];
+  const centerX = w / 2;
+  const centerY = h / 2;
+  
+  function spawnParticle() {
+    let thetaRad, pdfValue;
+    let attempts = 0;
+    
+    do {
+      thetaRad = Math.random() * Math.PI; 
+      pdfValue = getAngularProbabilityDensity(thetaRad, selectedAngularBoson, selectedPolarization);
+      attempts++;
+    } while (Math.random() * 1.0 > pdfValue && attempts < 100);
+    
+    const sign = Math.random() > 0.5 ? 1 : -1;
+    const finalAngle = Math.PI / 2 + sign * thetaRad; 
+    
+    const speed = 2.0 + Math.random() * 1.5;
+    const color = selectedAngularBoson === 'H0' ? '#00ffaa' : '#a855f7';
+    
+    particles.push({
+      x: centerX,
+      y: centerY,
+      vx: Math.cos(finalAngle) * speed,
+      vy: Math.sin(finalAngle) * speed,
+      size: 2.0 + Math.random() * 1.5,
+      color,
+      alpha: 1.0,
+      decayTime: 50 + Math.random() * 40
+    });
+  }
+  
+  let frame = 0;
+  
+  function draw() {
+    angCtx3D.fillStyle = 'rgba(5, 7, 20, 0.2)';
+    angCtx3D.fillRect(0, 0, w, h);
+    
+    const pulse = 12 + Math.sin(frame * 0.1) * 3;
+    const color = selectedAngularBoson === 'H0' ? 'rgba(0, 255, 170, 0.4)' : 'rgba(168, 85, 247, 0.4)';
+    const coreColor = selectedAngularBoson === 'H0' ? '#00ffaa' : '#a855f7';
+    
+    angCtx3D.shadowBlur = 15;
+    angCtx3D.shadowColor = coreColor;
+    
+    angCtx3D.fillStyle = color;
+    angCtx3D.beginPath();
+    angCtx3D.arc(centerX, centerY, pulse, 0, Math.PI * 2);
+    angCtx3D.fill();
+    
+    angCtx3D.fillStyle = coreColor;
+    angCtx3D.beginPath();
+    angCtx3D.arc(centerX, centerY, 4, 0, Math.PI * 2);
+    angCtx3D.fill();
+    
+    angCtx3D.shadowBlur = 0;
+    
+    if (selectedPolarization !== 'unpolarized' && selectedAngularBoson !== 'H0') {
+      angCtx3D.strokeStyle = 'rgba(255,255,255,0.15)';
+      angCtx3D.lineWidth = 1;
+      angCtx3D.setLineDash([4, 4]);
+      angCtx3D.beginPath();
+      angCtx3D.moveTo(centerX, centerY - h/2.5);
+      angCtx3D.lineTo(centerX, centerY + h/2.5);
+      angCtx3D.stroke();
+      angCtx3D.setLineDash([]);
+      
+      angCtx3D.fillStyle = '#fff';
+      angCtx3D.font = 'bold 8px Space Grotesk';
+      angCtx3D.fillText('SPIN AXIS (Z)', centerX - 25, centerY - h/2.5 - 5);
+    }
+    
+    if (frame % 3 === 0) spawnParticle();
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 1.0 / p.decayTime;
+      
+      if (p.alpha <= 0 || p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
+        particles.splice(i, 1);
+        continue;
+      }
+      
+      angCtx3D.fillStyle = p.color;
+      angCtx3D.globalAlpha = p.alpha;
+      angCtx3D.beginPath();
+      angCtx3D.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      angCtx3D.fill();
+      angCtx3D.globalAlpha = 1.0; 
+    }
+    
+    frame++;
+    ang3DAnimationId = requestAnimationFrame(draw);
+  }
+  
+  draw();
+}
+
+function renderAngularPhysicalFormulas() {
+  const container = document.getElementById('polarization-physics-details');
+  if (!container) return;
+  
+  let html = '';
+  
+  if (selectedAngularBoson === 'H0') {
+    html = `
+      <div class="physics-formula-title">
+        <span>⚛️ 힉스 보손 (Spin-0 Scalar Higgs) 양자 각분포</span>
+        <span style="color: var(--color-scalar); font-weight: bold;">J = 0</span>
+      </div>
+      <p style="margin-bottom: 0.5rem;">
+        힉스 보손($H^0$)은 양자장론에서 <b>스핀 0</b>인 대표적인 스칼라 필드입니다. 스핀이 존재하지 않으므로 어떠한 물리적 편광 축도 정의되지 않습니다.
+      </p>
+      <div class="physics-formula-math">
+        \\frac{d\\Gamma}{d\\cos\\theta} \\propto \\text{Isotropic (상수)}
+      </div>
+      <p style="font-size: 0.75rem;">
+        따라서 힉스가 $H^0 \\to W^+ W^-$ 또는 $H^0 \\to f\\bar{f}$ 등으로 붕괴될 때 방출각 $\\theta$에 대한 확률밀도곡선은 완벽한 <b>등방성(Isotropic)</b>을 보입니다. 즉, 방향 선택이 완전히 균일합니다.
+      </p>
+    `;
+  } else {
+    let polMath = '';
+    let polDesc = '';
+    
+    if (selectedPolarization === 'unpolarized') {
+      polMath = '\\frac{d\\Gamma}{d\\cos\\theta} \\propto 1 + \\cos^2\\theta';
+      polDesc = '무편광 앙상블 상태는 여러 횡편광 스핀 상태들이 중첩된 평균값으로, $\\cos\\theta$의 제곱에 비례하는 넓고 완벽한 2차 쌍곡선 각분포를 이룹니다.';
+    } else if (selectedPolarization === 'transverse') {
+      polMath = '\\frac{d\\Gamma}{d\\cos\\theta} \\propto 1 + \\cos^2\\theta';
+      polDesc = '횡편광($m_s = \\pm 1$) 상태는 전자기 횡파와 유사하게 스핀 대칭축에 평행한 방향($0^\\circ$와 $180^\\circ$)으로 극대 방출강도를 보입니다.';
+    } else if (selectedPolarization === 'longitudinal') {
+      polMath = '\\frac{d\\Gamma}{d\\cos\\theta} \\propto \\sin^2\\theta';
+      polDesc = '종편광($m_s = 0$) 상태는 질량을 획득한 게이지 보손(W, Z)에만 관찰되는 모드로, 진행 축에 완전 수직 방향($90^\\circ$)으로 솟구치는 분포를 형성합니다.';
+    }
+    
+    let extraZPhysics = '';
+    if (selectedAngularBoson === 'Z0') {
+      extraZPhysics = `
+        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.08); font-size: 0.75rem; color: #a5b4fc;">
+          🧪 <b>Z 보손 전약력 비대칭 보정 (Parity Violation)</b>: Z 보손은 좌/우반신 맛깔과의 결합도가 달라 약한 중성전류 붕괴 시 미세한 전방-후방 비대칭성($A_{FB} \\approx 2 A_e A_f \\cos\\theta$)을 유발합니다. 이는 와인버그 각 $\\sin^2\\theta_W \\approx 0.231$에 기인합니다.
+        </div>
+      `;
+    }
+    
+    html = `
+      <div class="physics-formula-title">
+        <span>🌀 벡터 보손 (${selectedAngularBoson}, Spin-1) 각도 확률밀도</span>
+        <span style="color: var(--color-boson); font-weight: bold;">J = 1</span>
+      </div>
+      <p style="margin-bottom: 0.5rem;">
+        스핀-1인 벡터 게이지 보손의 양자역학적 붕괴는 입자의 스핀 자영 상태 $m_s$에 따라 서로 다른 구면 조화 텐서 결합을 보입니다.
+      </p>
+      <div class="physics-formula-math">
+        ${polMath}
+      </div>
+      <p style="font-size: 0.75rem;">
+        ${polDesc}
+      </p>
+      ${extraZPhysics}
+    `;
+  }
+  
+  container.innerHTML = html;
 }

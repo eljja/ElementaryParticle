@@ -70,12 +70,21 @@
       </div>
 
       <!-- Tabs for Right Side -->
-      <div class="right-tabs-header">
+      <div class="right-tabs-header" style="flex-wrap: wrap; gap: 4px;">
         <button class="right-tab-btn active" id="btn-tab-collision" onclick="switchRightTab('collision')">
-          💥 Collision & Decay Lab
+          💥 Collision Lab
         </button>
         <button class="right-tab-btn" id="btn-tab-builder" onclick="switchRightTab('builder')">
-          ⚛️ Hadron Builder (강입자 조립)
+          ⚛️ Hadron Builder
+        </button>
+        <button class="right-tab-btn" id="btn-tab-neutrino" onclick="switchRightTab('neutrino')">
+          🌀 Neutrino Osc.
+        </button>
+        <button class="right-tab-btn" id="btn-tab-cascade" onclick="switchRightTab('cascade')">
+          📊 Decay Cascade
+        </button>
+        <button class="right-tab-btn" id="btn-tab-angular" onclick="switchRightTab('angular')">
+          📐 Angular Lab
         </button>
       </div>
 
@@ -191,6 +200,162 @@
             <div id="hadron-synthesis-report">
               <!-- Rendered dynamically by app.js -->
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content C: Neutrino Oscillation Lab -->
+      <div class="tab-content" id="tab-neutrino">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Neutrino Oscillation Lab (중성미자 진동 연구소)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              중성미자는 질량 고유 상태와 맛깔 고유 상태가 어긋나 비행 거리(L)와 에너지(E)에 따라 다른 맛깔로 스스로 변신(진동)합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 1rem;">
+              <!-- Starting Neutrino Flavor Selector -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Select Initial Neutrino Type (출발 중성미자)</span>
+                <div class="color-buttons-container" style="margin-top: 0.25rem;">
+                  <button class="color-pick-btn active-lepton" id="btn-nu-e" onclick="selectInitialNeutrino('nu_e')" style="background: rgba(0, 240, 255, 0.15); border-color: var(--color-lepton); color: #fff;">Electron ν_e</button>
+                  <button class="color-pick-btn" id="btn-nu-mu" onclick="selectInitialNeutrino('nu_mu')" style="border-color: rgba(255, 255, 255, 0.05);">Muon ν_μ</button>
+                  <button class="color-pick-btn" id="btn-nu-tau" onclick="selectInitialNeutrino('nu_tau')" style="border-color: rgba(255, 255, 255, 0.05);">Tau ν_τ</button>
+                </div>
+              </div>
+
+              <!-- Energy Slider -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>NEUTRINO ENERGY (중성미자 에너지, E)</span>
+                  <span id="label-nu-energy" style="color: var(--color-lepton); font-family: var(--font-mono);">1.00 GeV</span>
+                </div>
+                <input type="range" id="slider-nu-energy" min="0.1" max="10" step="0.1" value="1.0" oninput="updateNeutrinoOscillation()" style="width: 100%; margin-top: 0.5rem; accent-color: #00f0ff;">
+              </div>
+
+              <!-- Distance Slider -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>PROPAGATION DISTANCE (비행 거리, L)</span>
+                  <span id="label-nu-distance" style="color: var(--color-scalar); font-family: var(--font-mono);">150 km</span>
+                </div>
+                <input type="range" id="slider-nu-distance" min="10" max="2500" step="10" value="150" oninput="updateNeutrinoOscillation()" style="width: 100%; margin-top: 0.5rem; accent-color: var(--color-scalar);">
+              </div>
+            </div>
+
+            <!-- Real-time Quantum Probabilities -->
+            <div id="neutrino-probability-panel" style="margin-top: 1rem;">
+              <!-- Rendered dynamically by app.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content D: Decay Cascade Lab -->
+      <div class="tab-content" id="tab-cascade">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Monte Carlo Decay Cascade Lab (붕괴 연쇄 연구소)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              불안정한 입자를 선택하여 안정 입자(전자, 중성미자, 양성자, 광자 등)가 될 때까지의 다단계 붕괴 연쇄(Decay Chain)를 몬테카를로 기법으로 모사하고 계통도를 확인해 보세요.
+            </p>
+
+            <div class="builder-workspace" style="gap: 1rem;">
+              <!-- Select Particle to Decay -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Select Parent Particle (붕괴 대상 입자 선택)</span>
+                <select id="select-decay-parent" class="physics-select" style="width: 100%; margin-top: 0.5rem; background: rgba(9, 12, 30, 0.9); border: 1px solid var(--border-color); color: #fff; padding: 0.5rem; border-radius: 8px; font-family: var(--font-sans);">
+                  <!-- Populated by app.js -->
+                </select>
+              </div>
+
+              <!-- Simulator Actions -->
+              <div class="sim-actions" style="width: 100%;">
+                <button class="action-btn" id="btn-run-cascade" onclick="runDecayCascade()" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: #fff; font-weight: 700; width: 100%; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);">
+                  🔮 SIMULATE DECAY CASCADE (몬테카를로 붕괴 시작)
+                </button>
+              </div>
+            </div>
+
+            <!-- Visual Cascade Chamber Canvas -->
+            <div class="visualizer-wrapper" style="margin-top: 1rem; height: 180px;">
+              <canvas id="canvas-cascade-visualizer"></canvas>
+              <div class="canvas-overlay">[ CASCADE TRACKS CHAMBER // ACTIVE ]</div>
+            </div>
+
+            <!-- Interative Decay Tree Graph -->
+            <div id="decay-tree-output" style="margin-top: 1rem; max-height: 350px; overflow-y: auto; padding: 0.5rem;">
+              <div style="text-align: center; color: var(--color-text-muted); font-size: 0.85rem; padding: 1.5rem;">
+                붕괴 시작 버튼을 누르면 이종 붕괴 분기 경로와 몬테카를로 붕괴 트리가 이곳에 생성됩니다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content E: Electroweak Angular Lab -->
+      <div class="tab-content" id="tab-angular">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Electroweak Polarization & Angular Lab (편광 및 각분포)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              스핀-1 벡터 보손($W^\pm$, $Z^0$) 또는 스핀-0 힉스 보손($H^0$)의 2체 붕괴 시 방출 입자들의 양자역학적 편광 상태별 각도 분포를 실시간으로 플로팅하고 분석합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Boson Select -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Select Decaying Boson (보손 선택)</span>
+                <div class="color-buttons-container" style="margin-top: 0.25rem;">
+                  <button class="color-pick-btn active-lepton" id="btn-ang-z" onclick="selectAngularBoson('Z0')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Z⁰ Boson</button>
+                  <button class="color-pick-btn" id="btn-ang-w" onclick="selectAngularBoson('W+')" style="border-color: rgba(255, 255, 255, 0.05);">W⁺ Boson</button>
+                  <button class="color-pick-btn" id="btn-ang-h" onclick="selectAngularBoson('H0')" style="border-color: rgba(255, 255, 255, 0.05);">H⁰ Higgs</button>
+                </div>
+              </div>
+
+              <!-- Polarization State -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Polarization Spin State (스핀 편광 모드)</span>
+                <div class="color-buttons-container" style="margin-top: 0.25rem;">
+                  <button class="color-pick-btn active-lepton" id="btn-pol-unpol" onclick="selectPolarization('unpolarized')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Unpolarized (무편광)</button>
+                  <button class="color-pick-btn" id="btn-pol-trans" onclick="selectPolarization('transverse')">Transverse (횡편광)</button>
+                  <button class="color-pick-btn" id="btn-pol-long" onclick="selectPolarization('longitudinal')">Longitudinal (종편광)</button>
+                </div>
+                <p id="label-pol-desc" style="font-size: 0.75rem; color: #a5b4fc; margin-top: 0.35rem; font-style: italic;">
+                  무편광: 고전적인 등방적 또는 균일 평균 분포 상태를 나타냅니다.
+                </p>
+              </div>
+
+              <!-- 2D Line Chart Canvas for Angular PDF -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Angular Probability Density (방출각 θ 분포 PDF)</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-angular-plot" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- 3D projection representation -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Bubble Chamber 3D Angular Beam (스핀 대칭 분사 궤적)</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-polarization-3d" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Physical Formula Panel -->
+              <div id="polarization-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.4; width: 100%;">
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
