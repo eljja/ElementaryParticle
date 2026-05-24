@@ -1,8 +1,8 @@
 {
   "database_metadata": {
-    "version": "1.0.0",
-    "last_updated": "2026-05-22",
-    "description": "Standard Model and Beyond the Standard Model (BSM) Elementary Particles Database for Physics Simulators",
+    "version": "1.1.0",
+    "last_updated": "2026-05-24",
+    "description": "Standard Model, BSM, and Composite Hadron Particles Database for Physics Simulators",
     "mass_unit": "MeV/c^2",
     "charge_unit": "elementary charge (e)",
     "spin_unit": "hbar",
@@ -440,13 +440,11 @@
       "decay_modes": [
         {
           "channels": ["s", "W+"],
-          "branching_ratio": 0.95,
-          "note": "Cabibbo-favored decay"
+          "branching_ratio": 0.95
         },
         {
           "channels": ["d", "W+"],
-          "branching_ratio": 0.05,
-          "note": "Cabibbo-suppressed decay"
+          "branching_ratio": 0.05
         }
       ],
       "is_antiparticle": false,
@@ -562,8 +560,7 @@
       "decay_modes": [
         {
           "channels": ["b", "W+"],
-          "branching_ratio": 0.957,
-          "note": "Almost exclusive decay channel"
+          "branching_ratio": 0.957
         },
         {
           "channels": ["s", "W+"],
@@ -635,8 +632,7 @@
       "decay_modes": [
         {
           "channels": ["c", "W-"],
-          "branching_ratio": 0.983,
-          "note": "CKM favored"
+          "branching_ratio": 0.983
         },
         {
           "channels": ["u", "W-"],
@@ -699,8 +695,7 @@
       "decay_width_gev": 0.0,
       "decay_modes": [],
       "is_antiparticle": false,
-      "antiparticle_symbol": "gamma",
-      "antiparticle_note": "Self-conjugate"
+      "antiparticle_symbol": "gamma"
     },
     {
       "name": "Gluon",
@@ -728,8 +723,7 @@
       "decay_width_gev": 0.0,
       "decay_modes": [],
       "is_antiparticle": false,
-      "antiparticle_symbol": "g",
-      "antiparticle_note": "Self-conjugate"
+      "antiparticle_symbol": "g"
     },
     {
       "name": "W+ Boson",
@@ -765,8 +759,7 @@
         },
         {
           "channels": ["u", "anti_d"],
-          "branching_ratio": 0.337,
-          "note": "Hadronic decays (simplified)"
+          "branching_ratio": 0.337
         },
         {
           "channels": ["c", "anti_s"],
@@ -854,8 +847,7 @@
         },
         {
           "channels": ["nu_e", "anti_nu_e"],
-          "branching_ratio": 0.0667,
-          "note": "Invisible decay"
+          "branching_ratio": 0.0667
         },
         {
           "channels": ["nu_mu", "anti_nu_mu"],
@@ -887,8 +879,7 @@
         }
       ],
       "is_antiparticle": false,
-      "antiparticle_symbol": "Z0",
-      "antiparticle_note": "Self-conjugate"
+      "antiparticle_symbol": "Z0"
     },
     {
       "name": "Higgs Boson",
@@ -948,8 +939,213 @@
         }
       ],
       "is_antiparticle": false,
-      "antiparticle_symbol": "H0",
-      "antiparticle_note": "Self-conjugate"
+      "antiparticle_symbol": "H0"
+    },
+    {
+      "name": "Proton",
+      "symbol": "p",
+      "category": "Composite Hadron",
+      "type": "baryon",
+      "generation": null,
+      "mass_mev": 938.272,
+      "charge": 1.0,
+      "spin": 0.5,
+      "baryon_number": 1.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": 0.5,
+      "weak_hypercharge": 1.0,
+      "color_charge": "none",
+      "quark_content": ["u", "u", "d"],
+      "stable": true,
+      "lifetime_s": null,
+      "decay_width_gev": 0.0,
+      "decay_modes": [],
+      "is_antiparticle": false,
+      "antiparticle_symbol": "anti_p"
+    },
+    {
+      "name": "Antiproton",
+      "symbol": "anti_p",
+      "category": "Composite Hadron",
+      "type": "baryon",
+      "generation": null,
+      "mass_mev": 938.272,
+      "charge": -1.0,
+      "spin": 0.5,
+      "baryon_number": -1.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": -0.5,
+      "weak_hypercharge": -1.0,
+      "color_charge": "none",
+      "quark_content": ["anti_u", "anti_u", "anti_d"],
+      "stable": true,
+      "lifetime_s": null,
+      "decay_width_gev": 0.0,
+      "decay_modes": [],
+      "is_antiparticle": true,
+      "antiparticle_symbol": "p"
+    },
+    {
+      "name": "Neutron",
+      "symbol": "n",
+      "category": "Composite Hadron",
+      "type": "baryon",
+      "generation": null,
+      "mass_mev": 939.565,
+      "charge": 0.0,
+      "spin": 0.5,
+      "baryon_number": 1.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": -0.5,
+      "weak_hypercharge": 1.0,
+      "color_charge": "none",
+      "quark_content": ["u", "d", "d"],
+      "stable": false,
+      "lifetime_s": 879.4,
+      "decay_width_gev": 7.4e-28,
+      "decay_modes": [
+        {
+          "channels": ["p", "e-", "anti_nu_e"],
+          "branching_ratio": 1.0,
+          "note": "Beta Decay"
+        }
+      ],
+      "is_antiparticle": false,
+      "antiparticle_symbol": "anti_n"
+    },
+    {
+      "name": "Antineutron",
+      "symbol": "anti_n",
+      "category": "Composite Hadron",
+      "type": "baryon",
+      "generation": null,
+      "mass_mev": 939.565,
+      "charge": 0.0,
+      "spin": 0.5,
+      "baryon_number": -1.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": 0.5,
+      "weak_hypercharge": -1.0,
+      "color_charge": "none",
+      "quark_content": ["anti_u", "anti_d", "anti_d"],
+      "stable": false,
+      "lifetime_s": 879.4,
+      "decay_width_gev": 7.4e-28,
+      "decay_modes": [
+        {
+          "channels": ["anti_p", "e+", "nu_e"],
+          "branching_ratio": 1.0
+        }
+      ],
+      "is_antiparticle": true,
+      "antiparticle_symbol": "n"
+    },
+    {
+      "name": "Pion+",
+      "symbol": "pi+",
+      "category": "Composite Hadron",
+      "type": "meson",
+      "generation": null,
+      "mass_mev": 139.570,
+      "charge": 1.0,
+      "spin": 0.0,
+      "baryon_number": 0.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": 1.0,
+      "weak_hypercharge": 0.0,
+      "color_charge": "none",
+      "quark_content": ["u", "anti_d"],
+      "stable": false,
+      "lifetime_s": 2.6033e-8,
+      "decay_width_gev": 2.528e-17,
+      "decay_modes": [
+        {
+          "channels": ["mu+", "nu_mu"],
+          "branching_ratio": 0.9998
+        },
+        {
+          "channels": ["e+", "nu_e"],
+          "branching_ratio": 0.000123
+        }
+      ],
+      "is_antiparticle": false,
+      "antiparticle_symbol": "pi-"
+    },
+    {
+      "name": "Pion-",
+      "symbol": "pi-",
+      "category": "Composite Hadron",
+      "type": "meson",
+      "generation": null,
+      "mass_mev": 139.570,
+      "charge": -1.0,
+      "spin": 0.0,
+      "baryon_number": 0.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": -1.0,
+      "weak_hypercharge": 0.0,
+      "color_charge": "none",
+      "quark_content": ["anti_u", "d"],
+      "stable": false,
+      "lifetime_s": 2.6033e-8,
+      "decay_width_gev": 2.528e-17,
+      "decay_modes": [
+        {
+          "channels": ["mu-", "anti_nu_mu"],
+          "branching_ratio": 0.9998
+        },
+        {
+          "channels": ["e-", "anti_nu_e"],
+          "branching_ratio": 0.000123
+        }
+      ],
+      "is_antiparticle": true,
+      "antiparticle_symbol": "pi+"
+    },
+    {
+      "name": "Pion0",
+      "symbol": "pi0",
+      "category": "Composite Hadron",
+      "type": "meson",
+      "generation": null,
+      "mass_mev": 134.976,
+      "charge": 0.0,
+      "spin": 0.0,
+      "baryon_number": 0.0,
+      "lepton_number_e": 0.0,
+      "lepton_number_mu": 0.0,
+      "lepton_number_tau": 0.0,
+      "weak_isospin_3": 0.0,
+      "weak_hypercharge": 0.0,
+      "color_charge": "none",
+      "quark_content": ["1/sqrt(2) * (u anti_u - d anti_d)"],
+      "stable": false,
+      "lifetime_s": 8.43e-17,
+      "decay_width_gev": 7.8e-6,
+      "decay_modes": [
+        {
+          "channels": ["gamma", "gamma"],
+          "branching_ratio": 0.9882
+        },
+        {
+          "channels": ["e-", "e+", "gamma"],
+          "branching_ratio": 0.0117
+        }
+      ],
+      "is_antiparticle": false,
+      "antiparticle_symbol": "pi0"
     },
     {
       "name": "Graviton",
@@ -972,8 +1168,7 @@
       "decay_width_gev": 0.0,
       "decay_modes": [],
       "is_antiparticle": false,
-      "antiparticle_symbol": "G",
-      "note": "Hypothetical gauge boson of quantum gravity"
+      "antiparticle_symbol": "G"
     },
     {
       "name": "Axion",
@@ -982,7 +1177,6 @@
       "type": "scalar_boson",
       "generation": null,
       "mass_mev": 1.0e-11,
-      "mass_note": "Extremely light hypothetical particle (~10^-5 eV = 10^-11 MeV). Plausible dark matter candidate.",
       "charge": 0.0,
       "spin": 0.0,
       "baryon_number": 0.0,
@@ -994,13 +1188,11 @@
       "color_charge": "none",
       "stable": false,
       "lifetime_s": 1.0e+50,
-      "lifetime_note": "Essentially stable on cosmological scales",
       "decay_width_gev": 0.0,
       "decay_modes": [
         {
           "channels": ["gamma", "gamma"],
-          "branching_ratio": 1.0,
-          "note": "Decays into two photons via Primakoff effect"
+          "branching_ratio": 1.0
         }
       ],
       "is_antiparticle": false,
@@ -1013,7 +1205,6 @@
       "type": "lepton",
       "generation": null,
       "mass_mev": 0.003,
-      "mass_note": "Typical keV-scale sterile neutrino candidate for warm dark matter (e.g., 3 keV = 0.003 MeV)",
       "charge": 0.0,
       "spin": 0.5,
       "baryon_number": 0.0,
@@ -1025,7 +1216,6 @@
       "color_charge": "none",
       "stable": false,
       "lifetime_s": 1.0e+25,
-      "lifetime_note": "Very long-lived, decays extremely slowly via mixing with active neutrinos",
       "decay_width_gev": 0.0,
       "decay_modes": [
         {
@@ -1071,7 +1261,6 @@
       "type": "gauge_boson",
       "generation": null,
       "mass_mev": 3000000.0,
-      "mass_note": "Hypothetical heavy gauge boson (e.g., 3 TeV = 3,000,000 MeV)",
       "charge": 0.0,
       "spin": 1.0,
       "baryon_number": 0.0,
@@ -1103,8 +1292,7 @@
         }
       ],
       "is_antiparticle": false,
-      "antiparticle_symbol": "Zp",
-      "antiparticle_note": "Self-conjugate"
+      "antiparticle_symbol": "Zp"
     },
     {
       "name": "W-prime+ Boson",
@@ -1113,7 +1301,6 @@
       "type": "gauge_boson",
       "generation": null,
       "mass_mev": 3000000.0,
-      "mass_note": "Hypothetical heavy charged gauge boson (e.g., 3 TeV)",
       "charge": 1.0,
       "spin": 1.0,
       "baryon_number": 0.0,
@@ -1186,7 +1373,6 @@
       "type": "supersymmetric_particle",
       "generation": null,
       "mass_mev": 100000.0,
-      "mass_note": "Lightest Supersymmetric Particle (LSP) in MSSM, potential Dark Matter candidate (~100 GeV)",
       "charge": 0.0,
       "spin": 0.5,
       "baryon_number": 0.0,
@@ -1197,13 +1383,11 @@
       "weak_hypercharge": 0.0,
       "color_charge": "none",
       "stable": true,
-      "stable_note": "Assuming R-parity is conserved",
       "lifetime_s": null,
       "decay_width_gev": 0.0,
       "decay_modes": [],
       "is_antiparticle": false,
-      "antiparticle_symbol": "~chi1_0",
-      "antiparticle_note": "Majorana fermion (self-conjugate)"
+      "antiparticle_symbol": "~chi1_0"
     },
     {
       "name": "Gluino",
@@ -1212,7 +1396,6 @@
       "type": "supersymmetric_particle",
       "generation": null,
       "mass_mev": 2000000.0,
-      "mass_note": "Supersymmetric partner of gluon (~2 TeV)",
       "charge": 0.0,
       "spin": 0.5,
       "baryon_number": 0.0,
@@ -1228,13 +1411,11 @@
       "decay_modes": [
         {
           "channels": ["q", "anti_q", "~chi1_0"],
-          "branching_ratio": 1.0,
-          "note": "Decays to quarks and LSP (simplified)"
+          "branching_ratio": 1.0
         }
       ],
       "is_antiparticle": false,
-      "antiparticle_symbol": "~g",
-      "antiparticle_note": "Majorana fermion (self-conjugate)"
+      "antiparticle_symbol": "~g"
     },
     {
       "name": "Selectron",
@@ -1243,7 +1424,6 @@
       "type": "supersymmetric_particle",
       "generation": 1,
       "mass_mev": 200000.0,
-      "mass_note": "Supersymmetric partner of electron (~200 GeV)",
       "charge": -1.0,
       "spin": 0.0,
       "baryon_number": 0.0,
@@ -1259,8 +1439,7 @@
       "decay_modes": [
         {
           "channels": ["e-", "~chi1_0"],
-          "branching_ratio": 1.0,
-          "note": "Decays into standard electron and LSP"
+          "branching_ratio": 1.0
         }
       ],
       "is_antiparticle": false,
@@ -1301,7 +1480,6 @@
       "type": "supersymmetric_particle",
       "generation": null,
       "mass_mev": 1000.0,
-      "mass_note": "Supersymmetric partner of graviton (mass highly model dependent, e.g., 1 GeV)",
       "charge": 0.0,
       "spin": 1.5,
       "baryon_number": 0.0,
@@ -1312,7 +1490,6 @@
       "weak_hypercharge": 0.0,
       "color_charge": "none",
       "stable": true,
-      "stable_note": "Often stable LSP or extremely long-lived",
       "lifetime_s": null,
       "decay_width_gev": 0.0,
       "decay_modes": [],
@@ -1326,10 +1503,8 @@
       "type": "topological_defect",
       "generation": null,
       "mass_mev": 1.0e+16,
-      "mass_note": "Hypothetical heavy particle carrying magnetic charge (~10^13 GeV = 10^16 MeV)",
       "charge": 0.0,
       "magnetic_charge": 1.0,
-      "magnetic_charge_note": "Dirac magnetic charge g = e / (2 * alpha) ~ 68.5 e",
       "spin": 0.0,
       "baryon_number": 0.0,
       "lepton_number_e": 0.0,
