@@ -124,6 +124,31 @@ class Particle:
             return True
         return abs(theory_lifetime - self.lifetime_s) / self.lifetime_s < 0.10
 
+    def verify_higgs_mass_derivation(self) -> bool:
+        """
+        Verifies the gauge boson mass derivation from spontaneous symmetry breaking (SSB)
+        of the Higgs mechanism.
+        MW = 1/2 * g * v
+        MZ = 1/2 * sqrt(g^2 + g'^2) * v
+        where v = 246.22 GeV, g = 0.6517, g' = 0.3572.
+        Only valid for gauge bosons W+, W-, Z0.
+        """
+        if self.symbol not in ['W+', 'W-', 'Z0']:
+            return True
+            
+        v = 246.22 * 1000.0  # GeV to MeV/c^2
+        g = 0.6517
+        g_prime = 0.3572
+        
+        if self.symbol in ['W+', 'W-']:
+            theory_mass = 0.5 * g * v
+        else:  # Z0
+            import math
+            theory_mass = 0.5 * math.sqrt(g*g + g_prime*g_prime) * v
+            
+        # Check within 5% error margin
+        return abs(theory_mass - self.mass_mev) / self.mass_mev < 0.05
+
     def verify_antiparticle_conjugation(self, other: 'Particle') -> bool:
         """
         Verifies if another particle is the mathematically correct antiparticle of this one.

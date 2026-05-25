@@ -149,3 +149,17 @@ def test_uncertainty_lifetime():
     # Check that stable particles yield None for uncertainty lifetime
     photon = db.get_particle("gamma")
     assert photon.uncertainty_lifetime_s is None
+
+def test_higgs_mass_derivation():
+    """Test that W and Z gauge boson masses are correctly derived from Higgs SSB mechanism within 5%."""
+    db = ParticleDatabase()
+    
+    w_plus = db.get_particle("W+")
+    assert w_plus.verify_higgs_mass_derivation() is True
+    
+    z_boson = db.get_particle("Z0")
+    assert z_boson.verify_higgs_mass_derivation() is True
+    
+    # Non-gauge bosons should return True by default
+    electron = db.get_particle("e-")
+    assert electron.verify_higgs_mass_derivation() is True

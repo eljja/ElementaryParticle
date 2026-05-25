@@ -89,6 +89,9 @@
         <button class="right-tab-btn" id="btn-tab-collider-lab" onclick="switchRightTab('collider-lab')">
           🎯 Collider Lab
         </button>
+        <button class="right-tab-btn" id="btn-tab-higgs-ssb" onclick="switchRightTab('higgs-ssb')">
+          ✨ Higgs SSB
+        </button>
       </div>
 
       <!-- Tab Content A: Collision & Decay Simulator -->
@@ -430,6 +433,68 @@
 
               <!-- Uncertainty & Breit-Wigner Math Panel -->
               <div id="collider-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content G: Higgs SSB & Mexican Hat Lab -->
+      <div class="tab-content" id="tab-higgs-ssb">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Higgs SSB & Mexican Hat Lab (힉스 자발적 대칭성 깨짐)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              복소 힉스 필드 공간의 3차원 포텐셜 곡면 $V(\Phi) = -\mu^2|\Phi|^2 + \lambda|\Phi|^4$ 상에서 자발적 대칭성 깨짐(SSB)을 시각화합니다. 
+              대칭성 붕괴(SSB) 시 힉스 구체가 원점에서 골짜기로 낙하하며 게이지 보손에 질량을 부여하는 메커니즘을 입증합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Potential Parameter Control Sliders -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>POTENTIAL PARAMETER &mu;&sup2; (포텐셜 곡률)</span>
+                  <span id="label-higgs-mu2" style="color: var(--color-scalar); font-family: var(--font-mono);">2.0</span>
+                </div>
+                <input type="range" id="slider-higgs-mu2" min="0.0" max="5.0" step="0.1" value="2.0" oninput="updateHiggsPotential()" style="width: 100%; accent-color: #a855f7;">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.25rem;">
+                  <span>QUARTIC COUPLING &lambda; (자체 상호작용 강도)</span>
+                  <span id="label-higgs-lambda" style="color: var(--color-scalar); font-family: var(--font-mono);">0.5</span>
+                </div>
+                <input type="range" id="slider-higgs-lambda" min="0.1" max="2.0" step="0.05" value="0.5" oninput="updateHiggsPotential()" style="width: 100%; accent-color: #a855f7;">
+              </div>
+
+              <!-- Higgs Symmetry Control Buttons -->
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <button class="color-pick-btn" id="btn-trigger-ssb" onclick="triggerSSB()" style="flex: 1; border-color: var(--color-boson); background: rgba(168, 85, 247, 0.15); color: #fff;">
+                  ⚡ Trigger SSB (대칭성 깨짐 가동)
+                </button>
+                <button class="color-pick-btn" id="btn-restore-symmetry" onclick="restoreSymmetry()" style="flex: 1; border-color: rgba(255, 255, 255, 0.1); color: #ccc;">
+                  🔄 Restore Symmetry (대칭성 복원)
+                </button>
+              </div>
+
+              <!-- SSB State Alert -->
+              <div id="higgs-ssb-status-alert" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--color-text-muted);">
+                SYMMETRIC STATE (대칭 상태, &Phi; = 0)
+              </div>
+
+              <!-- 3D wireframe potential plot + 3D particle path -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Complex Higgs Field Space V(&Phi;) (3D 멕시칸 모자 및 힉스 볼)</span>
+                <div class="visualizer-wrapper" style="height: 320px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-higgs-ssb"></canvas>
+                  <div class="canvas-overlay">[ HIGGS SSB CHAMBER // 3D PROJECTION ]</div>
+                </div>
+              </div>
+
+              <!-- VEV & Gauge Boson Mass Mass Math Board -->
+              <div id="higgs-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
               </div>
             </div>
 
