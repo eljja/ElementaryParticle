@@ -149,6 +149,22 @@ class Particle:
         # Check within 5% error margin
         return abs(theory_mass - self.mass_mev) / self.mass_mev < 0.05
 
+    @property
+    def r_parity(self) -> float:
+        """
+        Returns the R-parity quantum number of the particle.
+        R = (-1)^(3*(B - L) + 2*S)
+        where B is the baryon number, L is the total lepton number, and S is the spin.
+        For all Standard Model particles, R = +1.
+        For all Supersymmetric particles, R = -1.
+        """
+        if self.type == "supersymmetric_particle" or self.symbol.startswith("~"):
+            return -1.0
+        
+        # Calculate theoretically
+        power = int(round(3.0 * (self.baryon_number - self.lepton_number) + 2.0 * self.spin))
+        return 1.0 if (power % 2 == 0) else -1.0
+
     def verify_antiparticle_conjugation(self, other: 'Particle') -> bool:
         """
         Verifies if another particle is the mathematically correct antiparticle of this one.
@@ -292,6 +308,17 @@ class ParticleDatabase:
         magnetic_conserved = abs(total_mag_in - total_mag_out) < 1e-5
         fermion_parity_conserved = (total_fermions_in % 2) == (total_fermions_out % 2)
         
+        # R-parity conservation (multiplicative product of R-parities)
+        r_parity_in = 1.0
+        for p in reactant_objs:
+            r_parity_in *= p.r_parity
+            
+        r_parity_out = 1.0
+        for p in product_objs:
+            r_parity_out *= p.r_parity
+            
+        r_parity_conserved = abs(r_parity_in - r_parity_out) < 1e-5
+        
         # Energy threshold check (Decay can only happen if reactant mass > product mass)
         energy_conserved = True
         kinematics_note = "Kinematically allowed"
@@ -310,6 +337,7 @@ class ParticleDatabase:
             ltau_conserved and 
             magnetic_conserved and 
             fermion_parity_conserved and
+            r_parity_conserved and
             energy_conserved
         )
         
@@ -323,6 +351,7 @@ class ParticleDatabase:
                 "lepton_tau": {"conserved": ltau_conserved, "in": total_ltau_in, "out": total_ltau_out},
                 "magnetic_charge": {"conserved": magnetic_conserved, "in": total_mag_in, "out": total_mag_out},
                 "fermion_parity": {"conserved": fermion_parity_conserved, "in": total_fermions_in, "out": total_fermions_out},
+                "r_parity": {"conserved": r_parity_conserved, "in": r_parity_in, "out": r_parity_out},
                 "mass_energy": {"conserved": energy_conserved, "mass_in": mass_in, "mass_out": mass_out, "note": kinematics_note}
             }
         }

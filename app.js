@@ -22,6 +22,19 @@ let canvasHiggsSsb = null;
 let ctxHiggsSsb = null;
 let higgsRotationAngle = 0; // for 3D rotation view of the Mexican Hat
 
+// SUSY & MET State
+let susyGluinoMass = 2.0;
+let susyLSPMass = 200;
+let isRParityConserved = true;
+let canvasSusyDetector = null;
+let ctxSusyDetector = null;
+let susyLoopId = null;
+let susyParticles = [];
+let susyLSPParticles = [];
+let susyCollisionActive = false;
+let susyCollisionFrame = 0;
+let susyMETVector = {x: 0, y: 0, magnitude: 0};
+
 // Simulator Slots (Collision Lab)
 let reactants = [];
 let products = [];
@@ -88,6 +101,12 @@ function resizeCanvas() {
     canvasHiggsSsb.width = rect.width * window.devicePixelRatio;
     canvasHiggsSsb.height = rect.height * window.devicePixelRatio;
     ctxHiggsSsb.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasSusyDetector) {
+    const rect = canvasSusyDetector.getBoundingClientRect();
+    canvasSusyDetector.width = rect.width * window.devicePixelRatio;
+    canvasSusyDetector.height = rect.height * window.devicePixelRatio;
+    ctxSusyDetector.scale(window.devicePixelRatio, window.devicePixelRatio);
   }
 }
 
@@ -1057,6 +1076,7 @@ function switchRightTab(tab) {
   const angularBtn = document.getElementById('btn-tab-angular');
   const colliderLabBtn = document.getElementById('btn-tab-collider-lab');
   const higgsSsbBtn = document.getElementById('btn-tab-higgs-ssb');
+  const susyBtn = document.getElementById('btn-tab-susy');
   
   const collisionContent = document.getElementById('tab-collision');
   const builderContent = document.getElementById('tab-builder');
@@ -1065,14 +1085,15 @@ function switchRightTab(tab) {
   const angularContent = document.getElementById('tab-angular');
   const colliderLabContent = document.getElementById('tab-collider-lab');
   const higgsSsbContent = document.getElementById('tab-higgs-ssb');
+  const susyContent = document.getElementById('tab-susy');
   
   // Reset tab button statuses
-  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn].forEach(b => {
+  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn].forEach(b => {
     if (b) b.classList.remove('active');
   });
   
   // Reset tab contents
-  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent].forEach(c => {
+  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent].forEach(c => {
     if (c) c.classList.remove('active');
   });
   
@@ -1092,6 +1113,12 @@ function switchRightTab(tab) {
   if (tab !== 'higgs-ssb' && higgsLoopId) {
     cancelAnimationFrame(higgsLoopId);
     higgsLoopId = null;
+  }
+
+  // Stop ongoing susy loops
+  if (tab !== 'susy' && susyLoopId) {
+    cancelAnimationFrame(susyLoopId);
+    susyLoopId = null;
   }
   
   if (tab === 'collision') {
@@ -1133,6 +1160,10 @@ function switchRightTab(tab) {
     if (higgsSsbBtn) higgsSsbBtn.classList.add('active');
     if (higgsSsbContent) higgsSsbContent.classList.add('active');
     initHiggsSSBLab();
+  } else if (tab === 'susy') {
+    if (susyBtn) susyBtn.classList.add('active');
+    if (susyContent) susyContent.classList.add('active');
+    initSUSYLab();
   }
 }
 
@@ -3551,6 +3582,556 @@ function renderHiggsPhysicsMath() {
       <p style="margin-bottom: 0.5rem; color: #ff3366;">
         $\\mu^2 = 0.0$ 이므로 자발적 대칭성 깨짐이 발생하지 않습니다. 진공 기대값(VEV) $v = 0$ 이며, 모든 게이지 보손들은 <b>질량이 없는 상태(Massless)</b>로 존재하여 전자기력과 약력이 동일한 세기로 작용합니다.
       </p>
+    `;
+  }
+  
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+// ----------------------------------------------------
+// BSM SUPERSYMMETRY & LSP DARK MATTER MET LAB LOGIC
+// ----------------------------------------------------
+
+function initSUSYLab() {
+  canvasSusyDetector = document.getElementById('canvas-susy-detector');
+  if (!canvasSusyDetector) return;
+  
+  ctxSusyDetector = canvasSusyDetector.getContext('2d');
+  
+  // Set explicit dimensions based on bounds
+  const rect = canvasSusyDetector.getBoundingClientRect();
+  canvasSusyDetector.width = rect.width * window.devicePixelRatio;
+  canvasSusyDetector.height = rect.height * window.devicePixelRatio;
+  ctxSusyDetector.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  // Reset state
+  susyParticles = [];
+  susyLSPParticles = [];
+  susyCollisionActive = false;
+  susyCollisionFrame = 0;
+  susyMETVector = {x: 0, y: 0, magnitude: 0};
+  
+  // Initialize slider states & maths
+  updateSUSYParameters();
+  
+  // Start animation loop
+  if (susyLoopId) {
+    cancelAnimationFrame(susyLoopId);
+  }
+  
+  function play() {
+    if (rightPanelTab !== 'susy') return;
+    
+    // Physics & Frame update
+    updateSUSYPhysics();
+    
+    // Render Detector
+    drawSUSYChamber();
+    
+    susyLoopId = requestAnimationFrame(play);
+  }
+  
+  play();
+}
+
+function updateSUSYParameters() {
+  const gluinoSlider = document.getElementById('slider-susy-gluino');
+  const lspSlider = document.getElementById('slider-susy-lsp');
+  
+  if (gluinoSlider) {
+    susyGluinoMass = parseFloat(gluinoSlider.value);
+    document.getElementById('label-susy-gluino').innerText = susyGluinoMass.toFixed(1) + " TeV";
+  }
+  
+  if (lspSlider && gluinoSlider) {
+    // Dynamic constraint: LSP mass must be strictly lighter than gluino mass for decay to be kinematically allowed
+    const maxLSP = Math.floor(susyGluinoMass * 1000 - 150); // Margin of 150 GeV
+    let currentLSP = parseInt(lspSlider.value);
+    
+    if (currentLSP > maxLSP) {
+      currentLSP = maxLSP;
+      lspSlider.value = currentLSP;
+    }
+    
+    // Adjust slider range dynamically
+    lspSlider.max = maxLSP;
+    
+    susyLSPMass = currentLSP;
+    document.getElementById('label-susy-lsp').innerText = susyLSPMass + " GeV";
+  }
+  
+  // Update real-time mathematical panel
+  renderSUSYPhysicsMath();
+}
+
+function toggleRParityConservation() {
+  isRParityConserved = !isRParityConserved;
+  
+  const toggleBtn = document.getElementById('btn-toggle-rparity');
+  const descEl = document.getElementById('label-susy-rparity-desc');
+  
+  if (isRParityConserved) {
+    toggleBtn.innerHTML = "🛡️ R-Parity ON";
+    toggleBtn.style.color = "var(--color-boson)";
+    toggleBtn.style.borderColor = "var(--color-boson)";
+    toggleBtn.style.background = "rgba(168, 85, 247, 0.05)";
+    if (descEl) descEl.innerText = "CONSERVED: LSP is perfectly stable (Dark Matter MET active)";
+  } else {
+    toggleBtn.innerHTML = "⚠️ R-Parity OFF (RPV)";
+    toggleBtn.style.color = "#ff3366";
+    toggleBtn.style.borderColor = "#ff3366";
+    toggleBtn.style.background = "rgba(255, 51, 102, 0.05)";
+    if (descEl) descEl.innerText = "VIOLATED: LSP decays to SM leptons (MET signature vanishes)";
+  }
+  
+  // Re-render math card
+  renderSUSYPhysicsMath();
+}
+
+function triggerSUSYCollision() {
+  susyCollisionActive = true;
+  susyCollisionFrame = 0;
+  susyParticles = [];
+  susyLSPParticles = [];
+  
+  // Initialize status alert
+  const alertEl = document.getElementById('susy-status-alert');
+  if (alertEl) {
+    alertEl.innerHTML = `⚡ BEAM INJECTION ACTIVE // PP COLLISION IMMINENT`;
+    alertEl.style.color = '#00f0ff';
+    alertEl.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+    alertEl.style.background = 'rgba(0, 240, 255, 0.03)';
+  }
+}
+
+function updateSUSYPhysics() {
+  if (!susyCollisionActive) return;
+  
+  susyCollisionFrame++;
+  
+  // Frame 25: Beam Collide & Create Sparticle shower
+  if (susyCollisionFrame === 25) {
+    const alertEl = document.getElementById('susy-status-alert');
+    if (alertEl) {
+      alertEl.innerHTML = `💥 SUSY SPARTICLE PAIR PRODUCTION DETECTED (R-PARITY ACTIVE)`;
+      alertEl.style.color = '#ff3366';
+      alertEl.style.borderColor = 'rgba(255, 51, 102, 0.3)';
+      alertEl.style.background = 'rgba(255, 51, 102, 0.05)';
+    }
+    
+    // Calculate theoretical transverse missing momentum (MET) based on masses
+    // Larger gluino mass creates higher energy jets, larger LSP mass changes the proportion
+    const baseMET = (susyGluinoMass * 380) * (1.0 - (susyLSPMass / (susyGluinoMass * 1000)) * 0.35);
+    
+    // Visible Jets (biased strongly to the right: e.g. angle -45 to 45 deg)
+    // 3 highly collimated visible jets to represent Quark Jets
+    const visibleAngles = [-0.4, 0.1, 0.5];
+    const visibleSpeeds = [2.2, 3.1, 2.5];
+    
+    visibleAngles.forEach((angle, idx) => {
+      const speed = visibleSpeeds[idx];
+      // Visible particle representing Quark Jet
+      susyParticles.push({
+        x: 0,
+        y: 0,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: idx === 1 ? '#eab308' : '#f97316', // yellow/orange
+        size: 3.5,
+        type: 'quark_jet',
+        decayed: false,
+        trail: []
+      });
+    });
+    
+    // Under R-parity conservation: LSP escapes unseen
+    // Under R-parity violation: LSP decays inside tracker
+    if (isRParityConserved) {
+      // 2 unseen Neutralino LSPs moving to the left (violating transverse momentum balance)
+      // Angle: 140 to 220 degrees
+      const lspAngles = [2.6, 3.6];
+      const lspSpeeds = [2.8, 2.1];
+      
+      lspAngles.forEach((angle, idx) => {
+        const speed = lspSpeeds[idx];
+        susyLSPParticles.push({
+          x: 0,
+          y: 0,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 4,
+          trail: []
+        });
+      });
+      
+      // Calculate missing momentum vector (pointing opposite to visible jets)
+      // Pointing towards the left (approx 180 degrees)
+      susyMETVector = {
+        x: -Math.cos(0.0) * baseMET, // opposite to visible jets bias
+        y: -Math.sin(0.1) * baseMET * 0.2,
+        magnitude: baseMET
+      };
+    } else {
+      // RPV mode: Neutralinos are created but instantly decay inside the tracker volume
+      // Creating multi-lepton symmetric tracks
+      const lspAngles = [2.6, 3.6];
+      const lspSpeeds = [2.8, 2.1];
+      
+      lspAngles.forEach((angle, idx) => {
+        const speed = lspSpeeds[idx];
+        // These LSPs will decay at frame 55 (inside tracking chamber)
+        susyLSPParticles.push({
+          x: 0,
+          y: 0,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 4,
+          willDecay: true,
+          decayFrame: 50,
+          trail: []
+        });
+      });
+      
+      // Since everything decays to visible particles in RPV, MET vanishes!
+      susyMETVector = {
+        x: 0,
+        y: 0,
+        magnitude: 5.0 + Math.random() * 8.0 // tiny noise only
+      };
+      
+      if (alertEl) {
+        alertEl.innerHTML = `⚠️ RPV MODE: LSP DECAY CASCADE DETECTED // MET SIGNAL VETOED`;
+        alertEl.style.color = '#eab308';
+        alertEl.style.borderColor = 'rgba(234, 179, 8, 0.3)';
+        alertEl.style.background = 'rgba(234, 179, 8, 0.05)';
+      }
+    }
+  }
+  
+  // Update normal particle positions
+  susyParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.trail.push({x: p.x, y: p.y});
+    if (p.trail.length > 40) p.trail.shift();
+  });
+  
+  // Update LSP particle positions
+  susyLSPParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.trail.push({x: p.x, y: p.y});
+    if (p.trail.length > 40) p.trail.shift();
+    
+    // Handle LSP decay in R-parity Violation mode
+    if (p.willDecay && susyCollisionFrame === p.decayFrame && !p.decayed) {
+      p.decayed = true;
+      
+      // LSP decays into 3 SM particles (leptons/quarks)
+      // Creating symmetrical tracks going in random directions
+      const baseAngle = Math.atan2(p.vy, p.vx);
+      const decayAngles = [baseAngle - 0.9, baseAngle + 0.9, baseAngle + Math.PI];
+      
+      decayAngles.forEach((angle, idx) => {
+        susyParticles.push({
+          x: p.x,
+          y: p.y,
+          vx: Math.cos(angle) * 2.2,
+          vy: Math.sin(angle) * 2.2,
+          color: idx === 0 ? '#38bdf8' : '#ff3366', // blue lepton & red lepton
+          size: 2.5,
+          type: 'rpv_decay_lepton',
+          trail: []
+        });
+      });
+    }
+  });
+  
+  // End of collision animation
+  if (susyCollisionFrame > 140) {
+    susyCollisionActive = false;
+    const alertEl = document.getElementById('susy-status-alert');
+    if (alertEl) {
+      if (isRParityConserved) {
+        alertEl.innerHTML = `🏆 AMH DM SIGNATURE CONFIRMED // MET = ${susyMETVector.magnitude.toFixed(1)} GeV`;
+        alertEl.style.color = '#00ffa0';
+        alertEl.style.borderColor = 'rgba(0, 255, 160, 0.4)';
+        alertEl.style.background = 'rgba(0, 255, 160, 0.08)';
+      } else {
+        alertEl.innerHTML = `🔒 SYMMETRIC SHOWER COMPLETE // NO DARK MATTER CAPTURED`;
+        alertEl.style.color = 'var(--color-text-muted)';
+        alertEl.style.borderColor = 'var(--border-color)';
+        alertEl.style.background = 'rgba(255, 255, 255, 0.02)';
+      }
+    }
+  }
+  
+  // Sync live math calculations on card
+  renderSUSYPhysicsMath();
+}
+
+function drawSUSYChamber() {
+  if (!ctxSusyDetector) return;
+  
+  const w = canvasSusyDetector.width / window.devicePixelRatio;
+  const h = canvasSusyDetector.height / window.devicePixelRatio;
+  const cx = w / 2;
+  const cy = h / 2;
+  
+  // Clean canvas
+  ctxSusyDetector.fillStyle = '#03040a';
+  ctxSusyDetector.fillRect(0, 0, w, h);
+  
+  // Draw radar-like grid detector lines
+  ctxSusyDetector.strokeStyle = 'rgba(99, 102, 241, 0.03)';
+  ctxSusyDetector.lineWidth = 1;
+  const maxRadius = Math.min(w, h) / 2.2;
+  
+  for (let r = maxRadius / 5; r <= maxRadius; r += maxRadius / 5) {
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.arc(cx, cy, r, 0, Math.PI * 2);
+    ctxSusyDetector.stroke();
+  }
+  
+  // Angular dividers
+  for (let a = 0; a < 8; a++) {
+    const angle = (a / 8) * Math.PI * 2;
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.moveTo(cx, cy);
+    ctxSusyDetector.lineTo(cx + Math.cos(angle) * maxRadius, cy + Math.sin(angle) * maxRadius);
+    ctxSusyDetector.stroke();
+  }
+  
+  // Draw outer calorimeter circle (LHC hardware)
+  ctxSusyDetector.strokeStyle = 'rgba(0, 240, 255, 0.12)';
+  ctxSusyDetector.lineWidth = 2;
+  ctxSusyDetector.beginPath();
+  ctxSusyDetector.arc(cx, cy, maxRadius, 0, Math.PI*2);
+  ctxSusyDetector.stroke();
+  
+  // Outer calorimeter ticks
+  ctxSusyDetector.strokeStyle = 'rgba(0, 240, 255, 0.07)';
+  for (let d = 0; d < 360; d += 10) {
+    const rad = (d * Math.PI) / 180;
+    const len = d % 30 === 0 ? 8 : 4;
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.moveTo(cx + Math.cos(rad) * maxRadius, cy + Math.sin(rad) * maxRadius);
+    ctxSusyDetector.lineTo(cx + Math.cos(rad) * (maxRadius - len), cy + Math.sin(rad) * (maxRadius - len));
+    ctxSusyDetector.stroke();
+  }
+  
+  // 1. Draw Incoming proton beams before collide
+  if (susyCollisionActive && susyCollisionFrame < 25) {
+    const beamDist = (25 - susyCollisionFrame) * 8; // move inwards
+    
+    // Left proton beam
+    ctxSusyDetector.shadowColor = '#00f0ff';
+    ctxSusyDetector.shadowBlur = 10;
+    ctxSusyDetector.fillStyle = '#00f0ff';
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.arc(cx - beamDist, cy, 3, 0, Math.PI*2);
+    ctxSusyDetector.fill();
+    
+    // Right proton beam
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.arc(cx + beamDist, cy, 3, 0, Math.PI*2);
+    ctxSusyDetector.fill();
+    
+    // Beam trace lines
+    ctxSusyDetector.shadowBlur = 0;
+    ctxSusyDetector.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+    ctxSusyDetector.lineWidth = 1;
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.moveTo(0, cy);
+    ctxSusyDetector.lineTo(cx - beamDist, cy);
+    ctxSusyDetector.moveTo(w, cy);
+    ctxSusyDetector.lineTo(cx + beamDist, cy);
+    ctxSusyDetector.stroke();
+  }
+  
+  // 2. Collide burst flash
+  if (susyCollisionActive && susyCollisionFrame >= 24 && susyCollisionFrame <= 28) {
+    const burstSize = (susyCollisionFrame - 23) * 15;
+    const flashGrad = ctxSusyDetector.createRadialGradient(cx, cy, 0, cx, cy, burstSize);
+    flashGrad.addColorStop(0, '#ffffff');
+    flashGrad.addColorStop(0.3, 'rgba(0, 240, 255, 0.8)');
+    flashGrad.addColorStop(1, 'transparent');
+    
+    ctxSusyDetector.fillStyle = flashGrad;
+    ctxSusyDetector.beginPath();
+    ctxSusyDetector.arc(cx, cy, burstSize, 0, Math.PI*2);
+    ctxSusyDetector.fill();
+  }
+  
+  // 3. Draw Visible Particle Trails (Quark Jets and RPV Leptons)
+  if (susyCollisionActive && susyCollisionFrame > 25) {
+    susyParticles.forEach(p => {
+      if (p.trail.length > 1) {
+        ctxSusyDetector.beginPath();
+        ctxSusyDetector.moveTo(cx + p.trail[0].x, cy + p.trail[0].y);
+        for (let i = 1; i < p.trail.length; i++) {
+          ctxSusyDetector.lineTo(cx + p.trail[i].x, cy + p.trail[i].y);
+        }
+        ctxSusyDetector.strokeStyle = p.color;
+        ctxSusyDetector.lineWidth = p.type === 'quark_jet' ? 2.5 : 1.5;
+        ctxSusyDetector.stroke();
+      }
+      
+      // Draw lead particle sphere
+      ctxSusyDetector.beginPath();
+      ctxSusyDetector.arc(cx + p.x, cy + p.y, p.size, 0, Math.PI*2);
+      ctxSusyDetector.fillStyle = p.color;
+      ctxSusyDetector.fill();
+    });
+    
+    // 4. Draw Unseen LSP (Neutralino) paths (Rendered very faintly for educational view)
+    susyLSPParticles.forEach(p => {
+      const isLSPDecayed = p.decayed;
+      
+      if (!isLSPDecayed) {
+        if (p.trail.length > 1) {
+          ctxSusyDetector.save();
+          // Set dashed lines for "Invisible Ghost" LSP
+          ctxSusyDetector.setLineDash([4, 4]);
+          ctxSusyDetector.beginPath();
+          ctxSusyDetector.moveTo(cx + p.trail[0].x, cy + p.trail[0].y);
+          for (let i = 1; i < p.trail.length; i++) {
+            ctxSusyDetector.lineTo(cx + p.trail[i].x, cy + p.trail[i].y);
+          }
+          ctxSusyDetector.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctxSusyDetector.lineWidth = 1.5;
+          ctxSusyDetector.stroke();
+          ctxSusyDetector.restore();
+        }
+        
+        // Faint ghost sphere representing stable LSP Dark Matter escaping
+        ctxSusyDetector.beginPath();
+        ctxSusyDetector.arc(cx + p.x, cy + p.y, p.size, 0, Math.PI*2);
+        ctxSusyDetector.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctxSusyDetector.fill();
+        
+        // Faint label
+        ctxSusyDetector.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctxSusyDetector.font = '9px monospace';
+        ctxSusyDetector.fillText('~χ₁⁰ (LSP)', cx + p.x - 22, cy + p.y - 8);
+      }
+    });
+    
+    // 5. Draw Missing Transverse Energy (MET) vector arrow
+    // Only overlay when collision frame has evolved and MET is significant
+    if (susyCollisionFrame > 40 && susyMETVector.magnitude > 15.0) {
+      const scaleFactor = 0.55; // Map GeV scale to screen pixel length
+      const endX = susyMETVector.x * scaleFactor;
+      const endY = susyMETVector.y * scaleFactor;
+      
+      // Pulse glow effect
+      const glowBlur = 8 + Math.sin(susyCollisionFrame * 0.15) * 3;
+      ctxSusyDetector.shadowColor = '#00ffa0';
+      ctxSusyDetector.shadowBlur = glowBlur;
+      
+      // Draw Cyan-Green dashed line arrow representing Missing Momentum Vector
+      ctxSusyDetector.strokeStyle = '#00ffa0';
+      ctxSusyDetector.lineWidth = 3.0;
+      ctxSusyDetector.save();
+      ctxSusyDetector.setLineDash([6, 3]);
+      
+      ctxSusyDetector.beginPath();
+      ctxSusyDetector.moveTo(cx, cy);
+      ctxSusyDetector.lineTo(cx + endX, cy + endY);
+      ctxSusyDetector.stroke();
+      ctxSusyDetector.restore();
+      
+      // Draw arrow head
+      const arrowAngle = Math.atan2(endY, endX);
+      const headLength = 12;
+      
+      ctxSusyDetector.fillStyle = '#00ffa0';
+      ctxSusyDetector.beginPath();
+      ctxSusyDetector.moveTo(cx + endX, cy + endY);
+      ctxSusyDetector.lineTo(
+        cx + endX - headLength * Math.cos(arrowAngle - 0.4),
+        cy + endY - headLength * Math.sin(arrowAngle - 0.4)
+      );
+      ctxSusyDetector.lineTo(
+        cx + endX - headLength * Math.cos(arrowAngle + 0.4),
+        cy + endY - headLength * Math.sin(arrowAngle + 0.4)
+      );
+      ctxSusyDetector.closePath();
+      ctxSusyDetector.fill();
+      
+      ctxSusyDetector.shadowBlur = 0; // reset
+      
+      // Write MET textual label at the tip of the arrow
+      ctxSusyDetector.fillStyle = '#ffffff';
+      ctxSusyDetector.font = 'bold 11px Space Grotesk';
+      ctxSusyDetector.fillText(
+        `MET (Missing E_T): ${susyMETVector.magnitude.toFixed(1)} GeV`,
+        cx + endX + 8,
+        cy + endY + (endY > 0 ? 12 : -4)
+      );
+    }
+  }
+}
+
+function renderSUSYPhysicsMath() {
+  const container = document.getElementById('susy-physics-details');
+  if (!container) return;
+  
+  const m_g = susyGluinoMass;
+  const m_lsp = susyLSPMass;
+  
+  // Real-time live MET calculations based on mass variables
+  const baseMET = (m_g * 380) * (1.0 - (m_lsp / (m_g * 1000)) * 0.35);
+  
+  const rParityStatus = isRParityConserved
+    ? `<span style="color: var(--color-boson); font-weight: bold; text-shadow: 0 0 10px rgba(168,85,247,0.3);">🛡️ R-PARITY CONSERVED (대칭성 보존)</span>`
+    : `<span style="color: #ff3366; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,102,0.3);">⚠️ R-PARITY VIOLATED (RPV 대칭성 붕괴)</span>`;
+    
+  let html = `
+    <div class="physics-formula-title">
+      <span>🌌 Supersymmetric R-Parity & Missing Transverse Momentum</span>
+      ${rParityStatus}
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      입자 물리학 표준모형(SM) 입자와 초대칭 파트너 입자(Sparticle)를 구별하는 <b>R-패리티(R-parity)</b> 공식은 다음과 같이 산출됩니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0;">
+        P_R = (-1)^{3(B - L) + 2S}
+      </div>
+      여기서 $B$는 바리온수, $L$은 렙톤수, $S$는 입자의 스핀(Spin)입니다. 
+      공식에 따라 표준모형 입자는 항상 $P_R = +1$을 획득하고, 초대칭 파트너 입자들은 스핀 반정수 차이에 의해 $P_R = -1$을 가집니다.
+  `;
+  
+  if (isRParityConserved) {
+    html += `
+      <p style="margin-bottom: 0.5rem; margin-top: 0.5rem;">
+        <b>R-패리티 보존 조건 ($P_R$ Conserved)</b>:<br>
+        라그랑지안 내에서 R-패리티 곱이 보존되므로, 초대칭 입자는 항상 <b>쌍생성(Pair Production)</b>되어야 하며, 가장 가벼운 초대칭 입자인 <b>LSP(Lightest Supersymmetric Particle)</b> 뉴트랄리노 $\\tilde{\\chi}_1^0$은 다른 표준모형 입자로 단독 붕괴할 수 없어 **완벽하게 안정**합니다.
+      </p>
+      <div style="padding: 0.5rem; border-radius: 6px; background: rgba(0, 255, 160, 0.04); border: 1px solid rgba(0, 255, 160, 0.15); font-size: 0.78rem; margin: 0.5rem 0;">
+        <div style="color: #00ffa0; font-weight: bold; margin-bottom: 0.2rem;">LSP 암흑물질 검출 역산 (Missing Transverse Energy, MET)</div>
+        전하가 없고 안정한 뉴트랄리노($\\tilde{\\chi}_1^0$)는 검출기 챔버를 관통하여 소실됩니다. 횡방향 운동량 보존법칙에 따라, 가시적 입자 제트들의 불균형을 역산하여 결손 에너지 벡터를 도출합니다:
+        <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; background: rgba(0,0,0,0.4);">
+          \\not\\vec{E}_T = -\\sum \\vec{p}_{T, \\text{visible}} \\approx ${baseMET.toFixed(1)} \\text{ GeV}
+        </div>
+        설정된 질량 매개변수 ($m_{\\tilde{g}} = ${m_g.toFixed(1)} \\text{ TeV}$, $m_{\\tilde{\\chi}_1^0} = ${m_lsp} \\text{ GeV}$) 하에서, 뉴트랄리노가 가져간 암흑물질 결손 횡에너지는 이론적으로 약 **${baseMET.toFixed(1)} GeV**로 검출됩니다.
+      </div>
+    `;
+  } else {
+    html += `
+      <p style="margin-bottom: 0.5rem; margin-top: 0.5rem;">
+        <b>R-패리티 위반 조건 ($P_R$ Violated - RPV)</b>:<br>
+        R-패리티 대칭성을 인위적으로 붕괴시키면, 가장 가벼운 초대칭 입자인 LSP 뉴트랄리노가 더 이상 안정하지 못하고 가속기 챔버 내부에서 매우 빠르게 표준모형의 가시적인 렙톤과 쿼크로 즉시 붕괴하게 됩니다:
+      </p>
+      <div style="padding: 0.5rem; border-radius: 6px; background: rgba(255, 51, 102, 0.04); border: 1px solid rgba(255, 51, 102, 0.15); font-size: 0.78rem; margin: 0.5rem 0;">
+        <div style="color: #ff3366; font-weight: bold; margin-bottom: 0.2rem;">결손 횡에너지(MET) 신호 소거 및 다중 렙톤 대칭 방출</div>
+        $$\\tilde{\\chi}_1^0 \\to e^- + \\mu^+ + \\nu_{\\tau} \\quad \\text{(LSP 비정상 붕괴)}$$
+        이로 인해 보이지 않는 암흑물질의 이탈 신호가 제거되고, 챔버 사방으로 렙톤 트랙들이 대칭적으로 분산 방출되어 결손 횡운동량 벡터가 상쇄됩니다:
+        <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; background: rgba(0,0,0,0.4);">
+          \\not\\vec{E}_T \\approx 0 \\text{ GeV (횡방향 에너지 균형)}
+        </div>
+        암흑물질 결손 에너지가 잡히지 않으므로, 초대칭 입자의 존재를 간접 증명하는 유력한 채널인 MET 신호가 완전히 상쇄됨을 입증합니다.
+      </div>
     `;
   }
   

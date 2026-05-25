@@ -92,6 +92,9 @@
         <button class="right-tab-btn" id="btn-tab-higgs-ssb" onclick="switchRightTab('higgs-ssb')">
           ✨ Higgs SSB
         </button>
+        <button class="right-tab-btn" id="btn-tab-susy" onclick="switchRightTab('susy')">
+          🌌 SUSY & MET
+        </button>
       </div>
 
       <!-- Tab Content A: Collision & Decay Simulator -->
@@ -495,6 +498,75 @@
 
               <!-- VEV & Gauge Boson Mass Mass Math Board -->
               <div id="higgs-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content H: SUSY & LSP MET Lab -->
+      <div class="tab-content" id="tab-susy">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">BSM Supersymmetry & LSP Dark Matter Lab (초대칭성 및 암흑물질 검출)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              표준모형을 넘어서는 초대칭성(SUSY) 이론 및 가장 가벼운 초대칭 입자(LSP, 뉴트랄리노 $\tilde{\chi}_1^0$)의 존재를 가속기 결손 횡 momentum(MET, $\not\vec{E}_T$) 불균형 기하학을 통해 입증합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Mass sliders and R-parity violation controls -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>GLUINO MASS ($m_{\tilde{g}}$, 초대칭 글루온 파트너)</span>
+                  <span id="label-susy-gluino" style="color: var(--color-danger); font-family: var(--font-mono);">2.0 TeV</span>
+                </div>
+                <input type="range" id="slider-susy-gluino" min="1.0" max="3.0" step="0.1" value="2.0" oninput="updateSUSYParameters()" style="width: 100%; accent-color: var(--color-danger);">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.25rem;">
+                  <span>NEUTRALINO (LSP) MASS ($m_{\tilde{\chi}_1^0}$, 암흑물질 후보)</span>
+                  <span id="label-susy-lsp" style="color: var(--color-scalar); font-family: var(--font-mono);">200 GeV</span>
+                </div>
+                <input type="range" id="slider-susy-lsp" min="100" max="800" step="10" value="200" oninput="updateSUSYParameters()" style="width: 100%; accent-color: var(--color-scalar);">
+              </div>
+
+              <!-- R-Parity Violation Toggle Switch & Trigger Button -->
+              <div style="display: flex; gap: 0.5rem; width: 100%; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">R-Parity Conservation (R-패리티 대칭성)</span>
+                  <span id="label-susy-rparity-desc" style="font-size: 0.7rem; color: var(--color-text-muted);">CONSERVED: LSP is perfectly stable (Dark Matter MET active)</span>
+                </div>
+                <button class="color-pick-btn" id="btn-toggle-rparity" onclick="toggleRParityConservation()" style="min-width: 130px; border-color: var(--color-boson); color: var(--color-boson); background: rgba(168, 85, 247, 0.05); font-size: 0.75rem;">
+                  🛡️ R-Parity ON
+                </button>
+              </div>
+
+              <!-- Collider Trigger Button -->
+              <div style="width: 100%;">
+                <button class="color-pick-btn" id="btn-trigger-susy-collision" onclick="triggerSUSYCollision()" style="width: 100%; border-color: var(--color-lepton); background: rgba(0, 240, 255, 0.12); color: #fff; font-weight: 900; font-size: 0.85rem;">
+                  💥 TRIGGER SUSY PAIR PRODUCTION (초대칭 충돌 가동)
+                </button>
+              </div>
+
+              <!-- SUSY State Alert -->
+              <div id="susy-status-alert" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--color-text-muted);">
+                COLLIDER IDLE // READY FOR BEAM INJECTION
+              </div>
+
+              <!-- SUSY Event Detector Chamber (2D Visualizer) -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Missing Transverse Energy Chamber (횡운동량 MET 검출기)</span>
+                <div class="visualizer-wrapper" style="height: 300px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-susy-detector"></canvas>
+                  <div class="canvas-overlay">[ BSM SUSY DETECTION CHAMBER // ACTIVE ]</div>
+                </div>
+              </div>
+
+              <!-- MET & R-parity Math Board -->
+              <div id="susy-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
               </div>
             </div>
 

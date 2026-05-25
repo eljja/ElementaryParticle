@@ -163,3 +163,40 @@ def test_higgs_mass_derivation():
     # Non-gauge bosons should return True by default
     electron = db.get_particle("e-")
     assert electron.verify_higgs_mass_derivation() is True
+
+def test_r_parity_conservation():
+    """Test that particles evaluate R-parity correctly and reaction solver checks R-parity conservation."""
+    db = ParticleDatabase()
+    
+    # 1. Standard Model particles must have R-parity = +1
+    electron = db.get_particle("e-")
+    photon = db.get_particle("gamma")
+    quark_u = db.get_particle("u")
+    
+    assert electron.r_parity == 1.0
+    assert photon.r_parity == 1.0
+    assert quark_u.r_parity == 1.0
+    
+    # 2. Supersymmetric particles must have R-parity = -1
+    neutralino = db.get_particle("~chi1_0")
+    selectron = db.get_particle("~e-")
+    gluino = db.get_particle("~g")
+    
+    assert neutralino.r_parity == -1.0
+    assert selectron.r_parity == -1.0
+    assert gluino.r_parity == -1.0
+    
+    # 3. Valid SUSY decay: selectron -> electron + neutralino (converses R-parity: -1 -> 1 * -1 = -1)
+    res1 = db.verify_reaction(reactants=["~e-"], products=["e-", "~chi1_0"])
+    assert res1["is_physically_allowed"] is True
+    assert res1["conservations"]["r_parity"]["conserved"] is True
+    
+    # 4. Invalid SUSY decay violating R-parity: selectron -> electron + photon (violates R-parity: -1 -> 1 * 1 = 1)
+    res2 = db.verify_reaction(reactants=["~e-"], products=["e-", "gamma"])
+    assert res2["is_physically_allowed"] is False
+    assert res2["conservations"]["r_parity"]["conserved"] is False
+    
+    # 5. Gluino decay cascade step: gluino -> quark + antiquark + neutralino (converses R-parity: -1 -> 1 * 1 * -1 = -1)
+    res3 = db.verify_reaction(reactants=["~g"], products=["u", "anti_u", "~chi1_0"])
+    assert res3["is_physically_allowed"] is True
+    assert res3["conservations"]["r_parity"]["conserved"] is True
