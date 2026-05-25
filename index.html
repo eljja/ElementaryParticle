@@ -95,6 +95,9 @@
         <button class="right-tab-btn" id="btn-tab-susy" onclick="switchRightTab('susy')">
           🌌 SUSY & MET
         </button>
+        <button class="right-tab-btn" id="btn-tab-gut" onclick="switchRightTab('gut')">
+          🌊 GUT & Decay
+        </button>
       </div>
 
       <!-- Tab Content A: Collision & Decay Simulator -->
@@ -567,6 +570,75 @@
 
               <!-- MET & R-parity Math Board -->
               <div id="susy-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content I: Grand Unified Theory & Proton Decay Lab -->
+      <div class="tab-content" id="tab-gut">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">GUT & Proton Decay Lab (대통일 이론 및 양성자 붕괴)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              강력, 약력, 전자기력을 통합하려는 대통일 이론(GUT)과 그 대표적 예견인 <b>양성자 붕괴(Proton Decay)</b> 및 수중 **슈퍼 카미오칸데 체렌코프 고리(Cherenkov Rings)** 광학 신호를 물리적으로 검증합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Parameter sliders for GUT Scale and Coupling -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>GUT MASS SCALE ($M_X$, 대통일 게이지 보손 질량)</span>
+                  <span id="label-gut-mx" style="color: var(--color-boson); font-family: var(--font-mono);">1.0e15 GeV</span>
+                </div>
+                <input type="range" id="slider-gut-mx" min="15.0" max="16.5" step="0.1" value="15.0" oninput="updateGUTParameters()" style="width: 100%; accent-color: var(--color-boson);">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.25rem;">
+                  <span>GUT COUPLING STRENGTH (&alpha;<sub>GUT</sub>, 통합 대칭 결합 상수)</span>
+                  <span id="label-gut-alpha" style="color: var(--color-boson); font-family: var(--font-mono);">0.041 (1/24)</span>
+                </div>
+                <input type="range" id="slider-gut-alpha" min="0.02" max="0.08" step="0.001" value="0.041" oninput="updateGUTParameters()" style="width: 100%; accent-color: var(--color-boson);">
+              </div>
+
+              <!-- GUT Interaction Switch -->
+              <div style="display: flex; gap: 0.5rem; width: 100%; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">GUT Electroweak-Strong Interaction (대통일 모드)</span>
+                  <span id="label-gut-mode-desc" style="font-size: 0.7rem; color: var(--color-text-muted);">Standard Model: Lepton/Baryon violating decays strictly blocked</span>
+                </div>
+                <button class="color-pick-btn" id="btn-toggle-gutmode" onclick="toggleGUTMode()" style="min-width: 130px; border-color: var(--color-boson); color: var(--color-boson); background: rgba(168, 85, 247, 0.05); font-size: 0.75rem;">
+                  🛡️ Standard Model
+                </button>
+              </div>
+
+              <!-- Proton Decay Trigger Button -->
+              <div style="width: 100%;">
+                <button class="color-pick-btn" id="btn-trigger-proton-decay" onclick="triggerProtonDecay()" style="width: 100%; border-color: var(--color-danger); background: rgba(255, 51, 102, 0.12); color: #fff; font-weight: 900; font-size: 0.85rem;">
+                  💥 TRIGGER COSMIC PROTON DECAY (양성자 붕괴 가동)
+                </button>
+              </div>
+
+              <!-- GUT State Alert -->
+              <div id="gut-status-alert" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--color-text-muted);">
+                PROTON IN WATER TANK // DETECTOR STABLE
+              </div>
+
+              <!-- Super-K Cherenkov Detector Water Tank Chamber (2D Visualizer) -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Super-K Cherenkov Projection Chamber (체렌코프 링 수광 검출기)</span>
+                <div class="visualizer-wrapper" style="height: 320px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-gut-detector"></canvas>
+                  <div class="canvas-overlay">[ SUPER-K WATER CHERENKOV DETECTOR // ACTIVE ]</div>
+                </div>
+              </div>
+
+              <!-- GUT Physics Math Board -->
+              <div id="gut-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
               </div>
             </div>
 

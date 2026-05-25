@@ -260,15 +260,18 @@ class ParticleDatabase:
             results.append(p)
         return results
 
-    def verify_reaction(self, reactants: List[str], products: List[str]) -> Dict[str, Any]:
+    def verify_reaction(self, reactants: List[str], products: List[str], gut_mode: bool = False) -> Dict[str, Any]:
         """
-        Verifies if a proposed physical reaction or decay is possible under standard conservation laws.
+        Verifies if a proposed physical reaction or decay is possible under standard or GUT conservation laws.
         Checks:
         - Electric Charge conservation
-        - Baryon Number conservation
-        - Lepton Numbers conservation (L_e, L_mu, L_tau)
+        - Baryon Number conservation (Bypassed if gut_mode=True under B-L conservation)
+        - Lepton Numbers conservation (Bypassed if gut_mode=True under B-L conservation)
+        - B-L Number conservation (Strictly enforced in both SM and GUT)
         - Energy conservation (mass-energy threshold for decay/at-rest reaction)
         - Magnetic Charge conservation (for BSM monopoles)
+        - Fermion Parity conservation
+        - R-parity conservation
         """
         reactant_objs = [self.get_particle(sym) for sym in reactants]
         product_objs = [self.get_particle(sym) for sym in products]
@@ -301,12 +304,28 @@ class ParticleDatabase:
         
         # Check conservations
         charge_conserved = abs(total_q_in - total_q_out) < 1e-5
-        baryon_conserved = abs(total_b_in - total_b_out) < 1e-5
-        le_conserved = abs(total_le_in - total_le_out) < 1e-5
-        lmu_conserved = abs(total_lmu_in - total_lmu_out) < 1e-5
-        ltau_conserved = abs(total_ltau_in - total_ltau_out) < 1e-5
         magnetic_conserved = abs(total_mag_in - total_mag_out) < 1e-5
         fermion_parity_conserved = (total_fermions_in % 2) == (total_fermions_out % 2)
+        
+        # B-L conservation holds in both SM and GUT, but B and L can violate only in GUT
+        total_l_in = sum(p.lepton_number for p in reactant_objs)
+        total_l_out = sum(p.lepton_number for p in product_objs)
+        b_minus_l_in = total_b_in - total_l_in
+        b_minus_l_out = total_b_out - total_l_out
+        b_minus_l_conserved = abs(b_minus_l_in - b_minus_l_out) < 1e-5
+
+        if gut_mode:
+            # Under GUT, B and L individually violate, but B-L must be conserved
+            baryon_conserved = True
+            le_conserved = True
+            lmu_conserved = True
+            ltau_conserved = True
+        else:
+            # Standard Model: B and L must be strictly conserved individually
+            baryon_conserved = abs(total_b_in - total_b_out) < 1e-5
+            le_conserved = abs(total_le_in - total_le_out) < 1e-5
+            lmu_conserved = abs(total_lmu_in - total_lmu_out) < 1e-5
+            ltau_conserved = abs(total_ltau_in - total_ltau_out) < 1e-5
         
         # R-parity conservation (multiplicative product of R-parities)
         r_parity_in = 1.0
@@ -338,6 +357,7 @@ class ParticleDatabase:
             magnetic_conserved and 
             fermion_parity_conserved and
             r_parity_conserved and
+            b_minus_l_conserved and
             energy_conserved
         )
         
@@ -352,6 +372,7 @@ class ParticleDatabase:
                 "magnetic_charge": {"conserved": magnetic_conserved, "in": total_mag_in, "out": total_mag_out},
                 "fermion_parity": {"conserved": fermion_parity_conserved, "in": total_fermions_in, "out": total_fermions_out},
                 "r_parity": {"conserved": r_parity_conserved, "in": r_parity_in, "out": r_parity_out},
+                "b_minus_l": {"conserved": b_minus_l_conserved, "in": b_minus_l_in, "out": b_minus_l_out},
                 "mass_energy": {"conserved": energy_conserved, "mass_in": mass_in, "mass_out": mass_out, "note": kinematics_note}
             }
         }

@@ -200,3 +200,24 @@ def test_r_parity_conservation():
     res3 = db.verify_reaction(reactants=["~g"], products=["u", "anti_u", "~chi1_0"])
     assert res3["is_physically_allowed"] is True
     assert res3["conservations"]["r_parity"]["conserved"] is True
+
+def test_gut_proton_decay():
+    """Test that proton decay B-L conservation is only allowed under gut_mode=True."""
+    db = ParticleDatabase()
+    
+    # 1. Standard Model proton decay is forbidden (Q=1, spin=0.5 but B and L violate)
+    # Reaction: p (B=1, L=0) -> positron (B=0, L=-1) + pi0 (B=0, L=0)
+    res_sm = db.verify_reaction(reactants=["p"], products=["e+", "pi0"], gut_mode=False)
+    assert res_sm["is_physically_allowed"] is False
+    assert res_sm["conservations"]["baryon_number"]["conserved"] is False
+    
+    # 2. GUT mode proton decay is ALLOWED because B-L is strictly conserved (1 - 0 = 1, and 0 - (-1) = 1)
+    res_gut = db.verify_reaction(reactants=["p"], products=["e+", "pi0"], gut_mode=True)
+    assert res_gut["is_physically_allowed"] is True
+    assert res_gut["conservations"]["b_minus_l"]["conserved"] is True
+    
+    # 3. Double violation: p -> e- + pi0 (B-L is 1 - 0 = 1, while 0 - 1 = -1. B-L violates!)
+    # Even under GUT mode, this reaction is mathematically FORBIDDEN.
+    res_forbidden_gut = db.verify_reaction(reactants=["p"], products=["e-", "pi0"], gut_mode=True)
+    assert res_forbidden_gut["is_physically_allowed"] is False
+    assert res_forbidden_gut["conservations"]["b_minus_l"]["conserved"] is False

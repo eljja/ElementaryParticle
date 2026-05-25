@@ -35,6 +35,18 @@ let susyCollisionActive = false;
 let susyCollisionFrame = 0;
 let susyMETVector = {x: 0, y: 0, magnitude: 0};
 
+// GUT & Proton Decay State
+let gutMXScale = 15.0; // log10 of M_X in GeV
+let gutAlpha = 0.041;  // ~1/24 coupling strength
+let isGUTModeActive = false;
+let canvasGUTDetector = null;
+let ctxGUTDetector = null;
+let gutLoopId = null;
+let protonDecayParticles = [];
+let cherenkovRings = [];
+let gutCollisionActive = false;
+let gutCollisionFrame = 0;
+
 // Simulator Slots (Collision Lab)
 let reactants = [];
 let products = [];
@@ -107,6 +119,12 @@ function resizeCanvas() {
     canvasSusyDetector.width = rect.width * window.devicePixelRatio;
     canvasSusyDetector.height = rect.height * window.devicePixelRatio;
     ctxSusyDetector.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasGUTDetector) {
+    const rect = canvasGUTDetector.getBoundingClientRect();
+    canvasGUTDetector.width = rect.width * window.devicePixelRatio;
+    canvasGUTDetector.height = rect.height * window.devicePixelRatio;
+    ctxGUTDetector.scale(window.devicePixelRatio, window.devicePixelRatio);
   }
 }
 
@@ -1077,6 +1095,7 @@ function switchRightTab(tab) {
   const colliderLabBtn = document.getElementById('btn-tab-collider-lab');
   const higgsSsbBtn = document.getElementById('btn-tab-higgs-ssb');
   const susyBtn = document.getElementById('btn-tab-susy');
+  const gutBtn = document.getElementById('btn-tab-gut');
   
   const collisionContent = document.getElementById('tab-collision');
   const builderContent = document.getElementById('tab-builder');
@@ -1086,14 +1105,15 @@ function switchRightTab(tab) {
   const colliderLabContent = document.getElementById('tab-collider-lab');
   const higgsSsbContent = document.getElementById('tab-higgs-ssb');
   const susyContent = document.getElementById('tab-susy');
+  const gutContent = document.getElementById('tab-gut');
   
   // Reset tab button statuses
-  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn].forEach(b => {
+  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn, gutBtn].forEach(b => {
     if (b) b.classList.remove('active');
   });
   
   // Reset tab contents
-  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent].forEach(c => {
+  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent, gutContent].forEach(c => {
     if (c) c.classList.remove('active');
   });
   
@@ -1119,6 +1139,12 @@ function switchRightTab(tab) {
   if (tab !== 'susy' && susyLoopId) {
     cancelAnimationFrame(susyLoopId);
     susyLoopId = null;
+  }
+
+  // Stop ongoing gut loops
+  if (tab !== 'gut' && gutLoopId) {
+    cancelAnimationFrame(gutLoopId);
+    gutLoopId = null;
   }
   
   if (tab === 'collision') {
@@ -1164,6 +1190,10 @@ function switchRightTab(tab) {
     if (susyBtn) susyBtn.classList.add('active');
     if (susyContent) susyContent.classList.add('active');
     initSUSYLab();
+  } else if (tab === 'gut') {
+    if (gutBtn) gutBtn.classList.add('active');
+    if (gutContent) gutContent.classList.add('active');
+    initGUTLab();
   }
 }
 
@@ -4138,3 +4168,833 @@ function renderSUSYPhysicsMath() {
   html += `</div>`;
   container.innerHTML = html;
 }
+
+// ==========================================
+// 9. Grand Unified Theory (GUT) & Proton Decay Lab
+// ==========================================
+
+let gutPMTs = [];
+
+function initGUTLab() {
+  canvasGUTDetector = document.getElementById('canvas-gut-detector');
+  if (!canvasGUTDetector) return;
+  
+  ctxGUTDetector = canvasGUTDetector.getContext('2d');
+  
+  const rect = canvasGUTDetector.getBoundingClientRect();
+  canvasGUTDetector.width = rect.width * window.devicePixelRatio;
+  canvasGUTDetector.height = rect.height * window.devicePixelRatio;
+  ctxGUTDetector.scale(window.devicePixelRatio, window.devicePixelRatio);
+  
+  // Initialize PMT sensors inside the 3D cylinder
+  gutPMTs = [];
+  
+  // 1. Cylinder wall PMT Grid
+  const cylinderRadius = 80;
+  const cylinderHeight = 180;
+  const numLayers = 10;
+  const numPMTsPerLayer = 24;
+  
+  for (let i = 0; i < numLayers; i++) {
+    const y = -cylinderHeight / 2 + (i / (numLayers - 1)) * cylinderHeight;
+    for (let j = 0; j < numPMTsPerLayer; j++) {
+      const angle = (j / numPMTsPerLayer) * Math.PI * 2;
+      const x = cylinderRadius * Math.cos(angle);
+      const z = cylinderRadius * Math.sin(angle);
+      gutPMTs.push({
+        x: x, y: y, z: z,
+        baseIntensity: 0.08 + Math.random() * 0.05,
+        intensity: 0.0,
+        pulseOffset: Math.random() * Math.PI * 2
+      });
+    }
+  }
+  
+  // 2. Top and Bottom cap PMTs
+  const capRadii = [20, 42, 64, 76];
+  const capCounts = [6, 12, 18, 24];
+  
+  for (let c = 0; c < capRadii.length; c++) {
+    const r = capRadii[c];
+    const count = capCounts[c];
+    for (let j = 0; j < count; j++) {
+      const angle = (j / count) * Math.PI * 2;
+      const x = r * Math.cos(angle);
+      const z = r * Math.sin(angle);
+      
+      // Top Cap
+      gutPMTs.push({
+        x: x, y: -cylinderHeight / 2, z: z,
+        baseIntensity: 0.08 + Math.random() * 0.05,
+        intensity: 0.0,
+        pulseOffset: Math.random() * Math.PI * 2
+      });
+      
+      // Bottom Cap
+      gutPMTs.push({
+        x: x, y: cylinderHeight / 2, z: z,
+        baseIntensity: 0.08 + Math.random() * 0.05,
+        intensity: 0.0,
+        pulseOffset: Math.random() * Math.PI * 2
+      });
+    }
+  }
+  
+  // Update state description and formulas
+  updateGUTParameters();
+  
+  // Loop initialization
+  if (gutLoopId) {
+    cancelAnimationFrame(gutLoopId);
+  }
+  
+  function gutAnimationStep() {
+    updateGUTPhysics();
+    drawGUTChamber();
+    gutLoopId = requestAnimationFrame(gutAnimationStep);
+  }
+  gutLoopId = requestAnimationFrame(gutAnimationStep);
+}
+
+function updateGUTParameters() {
+  const mxSlider = document.getElementById('slider-gut-mx');
+  const alphaSlider = document.getElementById('slider-gut-alpha');
+  
+  if (mxSlider) gutMXScale = parseFloat(mxSlider.value);
+  if (alphaSlider) gutAlpha = parseFloat(alphaSlider.value);
+  
+  // Update labels
+  const mxLabel = document.getElementById('label-gut-mx');
+  if (mxLabel) {
+    mxLabel.textContent = `1.0e${gutMXScale.toFixed(1)} GeV`;
+  }
+  
+  const alphaLabel = document.getElementById('label-gut-alpha');
+  if (alphaLabel) {
+    alphaLabel.textContent = `${gutAlpha.toFixed(3)} (1/${Math.round(1 / gutAlpha)})`;
+  }
+  
+  renderGUTPhysicsMath();
+}
+
+function toggleGUTMode() {
+  isGUTModeActive = !isGUTModeActive;
+  
+  const btn = document.getElementById('btn-toggle-gutmode');
+  const desc = document.getElementById('label-gut-mode-desc');
+  const alertBox = document.getElementById('gut-status-alert');
+  
+  if (isGUTModeActive) {
+    if (btn) {
+      btn.textContent = '🔮 GUT Active';
+      btn.style.borderColor = 'var(--color-boson)';
+      btn.style.color = '#fff';
+      btn.style.background = 'rgba(168, 85, 247, 0.25)';
+      btn.style.boxShadow = '0 0 12px rgba(168, 85, 247, 0.4)';
+    }
+    if (desc) {
+      desc.textContent = 'Grand Unified Theory: B-L conserving decays (p → e⁺ + π⁰) allowed!';
+      desc.style.color = 'var(--color-boson)';
+    }
+    if (alertBox) {
+      alertBox.textContent = 'GUT COUPLING CONNECTED // PROTON INSTABILITY DETECTED';
+      alertBox.style.color = 'var(--color-boson)';
+      alertBox.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+      alertBox.style.background = 'rgba(168, 85, 247, 0.05)';
+    }
+  } else {
+    if (btn) {
+      btn.textContent = '🛡️ Standard Model';
+      btn.style.borderColor = 'var(--border-color)';
+      btn.style.color = 'var(--color-text-muted)';
+      btn.style.background = 'rgba(255, 255, 255, 0.02)';
+      btn.style.boxShadow = 'none';
+    }
+    if (desc) {
+      desc.textContent = 'Standard Model: Lepton/Baryon violating decays strictly blocked';
+      desc.style.color = 'var(--color-text-muted)';
+    }
+    if (alertBox) {
+      alertBox.textContent = 'PROTON IN WATER TANK // DETECTOR STABLE';
+      alertBox.style.color = 'var(--color-text-muted)';
+      alertBox.style.borderColor = 'var(--border-color)';
+      alertBox.style.background = 'rgba(255, 255, 255, 0.02)';
+    }
+    
+    // Reset collision state if SM is turned back on
+    gutCollisionActive = false;
+  }
+  
+  renderGUTPhysicsMath();
+}
+
+function triggerProtonDecay() {
+  const alertBox = document.getElementById('gut-status-alert');
+  
+  if (!isGUTModeActive) {
+    if (alertBox) {
+      alertBox.textContent = '🔴 [DECAY BLOCKED] SM PREVENTS BARYON VIOLATION! ENABLE GUT MODE.';
+      alertBox.style.color = 'var(--color-danger)';
+      alertBox.style.borderColor = 'rgba(255, 51, 102, 0.5)';
+      alertBox.style.background = 'rgba(255, 51, 102, 0.08)';
+      
+      // Add a quick visual shake to the alert box
+      alertBox.style.animation = 'none';
+      setTimeout(() => {
+        alertBox.style.animation = 'shake 0.4s ease';
+      }, 10);
+    }
+    return;
+  }
+  
+  // Start proton decay animation
+  gutCollisionActive = true;
+  gutCollisionFrame = 0;
+  protonDecayParticles = [];
+  cherenkovRings = [];
+  
+  if (alertBox) {
+    alertBox.textContent = '💥 [DECAY TRIGGERED] p → e⁺ + π⁰ // CHERENKOV EMISSION ACTIVE';
+    alertBox.style.color = '#00f0ff';
+    alertBox.style.borderColor = 'rgba(0, 240, 255, 0.5)';
+    alertBox.style.background = 'rgba(0, 240, 255, 0.08)';
+  }
+  
+  // 1. Define direction vector for Positron (e+)
+  // We point it in a nice diagonal 3D direction
+  const theta = 0.8; // Angle in X-Z
+  const phi = 0.5;   // Angle in Y
+  const dirX = Math.cos(theta) * Math.sin(phi);
+  const dirY = Math.cos(phi);
+  const dirZ = Math.sin(theta) * Math.sin(phi);
+  
+  // Positron (e+)
+  protonDecayParticles.push({
+    x: 0, y: 0, z: 0,
+    vx: dirX * 3.6,
+    vy: dirY * 3.6,
+    vz: dirZ * 3.6,
+    type: 'positron',
+    active: true,
+    trail: [],
+    color: '#00f0ff',
+    size: 3.5
+  });
+  
+  // Neutral Pion (pi0) - travels in exact opposite direction
+  protonDecayParticles.push({
+    x: 0, y: 0, z: 0,
+    vx: -dirX * 3.2,
+    vy: -dirY * 3.2,
+    vz: -dirZ * 3.2,
+    type: 'pion',
+    active: true,
+    trail: [],
+    color: '#a855f7',
+    size: 3.0
+  });
+  
+  // Trigger a central flash
+  cherenkovRings.push({
+    x: 0, y: 0, z: 0,
+    dirX: 0, dirY: 1, dirZ: 0,
+    radius: 0,
+    maxRadius: 40,
+    type: 'flash',
+    alpha: 1.0,
+    color: '#ffffff'
+  });
+}
+
+function updateGUTPhysics() {
+  if (!gutCollisionActive) {
+    // Normal state: slowly dissipate any leftover active PMT intensities
+    gutPMTs.forEach(pmt => {
+      pmt.intensity *= 0.95;
+    });
+    return;
+  }
+  
+  gutCollisionFrame++;
+  
+  // 1. Update Particles
+  protonDecayParticles.forEach(p => {
+    if (!p.active) return;
+    
+    // Save trail
+    p.trail.push({ x: p.x, y: p.y, z: p.z });
+    if (p.trail.length > 25) {
+      p.trail.shift();
+    }
+    
+    // Move
+    p.x += p.vx;
+    p.y += p.vy;
+    p.z += p.vz;
+    
+    // Check for pion decay at frame 15
+    if (p.type === 'pion' && gutCollisionFrame === 15) {
+      p.active = false;
+      
+      // Pion decays into two photons: pi0 -> gamma + gamma
+      // We deflect their vectors by roughly 40 degrees from the original pion line
+      const baseDirX = -p.vx / 3.2;
+      const baseDirY = -p.vy / 3.2;
+      const baseDirZ = -p.vz / 3.2;
+      
+      // Deflect photon 1
+      const p1X = baseDirX * Math.cos(0.7) - baseDirZ * Math.sin(0.7);
+      const p1Z = baseDirX * Math.sin(0.7) + baseDirZ * Math.cos(0.7);
+      const p1Y = baseDirY + 0.3; // tilt upwards
+      const len1 = Math.sqrt(p1X*p1X + p1Y*p1Y + p1Z*p1Z);
+      
+      // Deflect photon 2
+      const p2X = baseDirX * Math.cos(-0.7) - baseDirZ * Math.sin(-0.7);
+      const p2Z = baseDirX * Math.sin(-0.7) + baseDirZ * Math.cos(-0.7);
+      const p2Y = baseDirY - 0.3; // tilt downwards
+      const len2 = Math.sqrt(p2X*p2X + p2Y*p2Y + p2Z*p2Z);
+      
+      // Add photons (photons travel at speed of light, so slightly faster vx,vy,vz)
+      protonDecayParticles.push({
+        x: p.x, y: p.y, z: p.z,
+        vx: (p1X / len1) * 4.0,
+        vy: (p1Y / len1) * 4.0,
+        vz: (p1Z / len1) * 4.0,
+        type: 'photon1',
+        active: true,
+        trail: [],
+        color: 'rgba(255,255,255,0.8)',
+        size: 1.5
+      });
+      
+      protonDecayParticles.push({
+        x: p.x, y: p.y, z: p.z,
+        vx: (p2X / len2) * 4.0,
+        vy: (p2Y / len2) * 4.0,
+        vz: (p2Z / len2) * 4.0,
+        type: 'photon2',
+        active: true,
+        trail: [],
+        color: 'rgba(255,255,255,0.8)',
+        size: 1.5
+      });
+      
+      // Add small decay star flash
+      cherenkovRings.push({
+        x: p.x, y: p.y, z: p.z,
+        dirX: 0, dirY: 1, dirZ: 0,
+        radius: 0,
+        maxRadius: 15,
+        type: 'flash',
+        alpha: 0.9,
+        color: '#a855f7'
+      });
+    }
+    
+    // Check if particles hit the cylinder boundary (Radius 80, height 180)
+    const distSq = p.x * p.x + p.z * p.z;
+    const isOutOfBounds = distSq >= 80 * 80 || Math.abs(p.y) >= 90;
+    
+    if (isOutOfBounds) {
+      p.active = false;
+      
+      // Trigger Cherenkov ring at the boundary intersection point
+      // We clamp the collision point to cylinder boundary
+      let px = p.x;
+      let py = p.y;
+      let pz = p.z;
+      
+      if (distSq >= 80 * 80) {
+        const factor = 80 / Math.sqrt(distSq);
+        px *= factor;
+        pz *= factor;
+      }
+      py = Math.max(-90, Math.min(90, py));
+      
+      // Normalize velocity vector
+      const vLen = Math.sqrt(p.vx*p.vx + p.vy*p.vy + p.vz*p.vz);
+      const ndx = p.vx / vLen;
+      const ndy = p.vy / vLen;
+      const ndz = p.vz / vLen;
+      
+      if (p.type === 'positron') {
+        // Sharp Cherenkov Ring representing muon-like or electron-like track
+        // Electron-like is slightly fuzzy but distinct, muon-like is extremely sharp.
+        // We render a vibrant aqua-blue distinct circular cone ring!
+        cherenkovRings.push({
+          x: px, y: py, z: pz,
+          dirX: ndx, dirY: ndy, dirZ: ndz,
+          radius: 0,
+          maxRadius: 36,
+          type: 'sharp',
+          alpha: 1.0,
+          color: '#00f0ff'
+        });
+      } else if (p.type === 'photon1' || p.type === 'photon2') {
+        // Gamma photons trigger an electromagnetic shower in water, resulting in multiple fuzzy, overlapping rings.
+        // We spawn multiple fuzzy sub-rings to capture the high-fidelity physics of EM showers!
+        for (let k = 0; k < 3; k++) {
+          const shift = (k - 1) * 6;
+          const rx = px + (Math.random() - 0.5) * 8;
+          const ry = py + (Math.random() - 0.5) * 8;
+          const rz = pz + (Math.random() - 0.5) * 8;
+          
+          cherenkovRings.push({
+            x: rx, y: ry, z: rz,
+            dirX: ndx + (Math.random() - 0.5) * 0.1,
+            dirY: ndy + (Math.random() - 0.5) * 0.1,
+            dirZ: ndz + (Math.random() - 0.5) * 0.1,
+            radius: 0,
+            maxRadius: 28 + Math.random() * 8,
+            type: 'fuzzy',
+            alpha: 0.8,
+            color: 'rgba(0, 140, 255, 0.6)'
+          });
+        }
+      }
+    }
+  });
+  
+  // 2. Update Cherenkov Rings Expansion
+  cherenkovRings.forEach(ring => {
+    if (ring.type === 'flash') {
+      ring.radius += 2.2;
+      ring.alpha -= 0.04;
+    } else {
+      ring.radius += 1.8;
+      ring.alpha -= 0.016;
+    }
+  });
+  
+  // Clean finished rings
+  cherenkovRings = cherenkovRings.filter(r => r.alpha > 0 && r.radius < r.maxRadius);
+  
+  // 3. Compute PMT photodiode sensor charge from Cherenkov Cones
+  // We use strict physics: PMT light intensity is dependent on the Cherenkov angle (approx 42 degrees)
+  gutPMTs.forEach(pmt => {
+    // Frictional decay of intensity
+    pmt.intensity *= 0.94;
+    
+    // We check all active particles and active rings
+    protonDecayParticles.forEach(p => {
+      if (!p.active) return;
+      
+      // Direction vector of the particle from the origin
+      const dx = p.x;
+      const dy = p.y;
+      const dz = p.z;
+      const dLen = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      if (dLen < 5) return;
+      
+      // Vector from origin to PMT
+      const px = pmt.x;
+      const py = pmt.y;
+      const pz = pmt.z;
+      const pLen = Math.sqrt(px*px + py*py + pz*pz);
+      
+      // Calculate dot product to find angle
+      const dot = (dx*px + dy*py + dz*pz) / (dLen * pLen);
+      const angle = Math.acos(Math.max(-1, Math.min(1, dot)));
+      
+      // Standard Cherenkov angle in water is 42 degrees (~0.733 radians)
+      const cherenkovAngle = 42 * Math.PI / 180;
+      const angleDiff = Math.abs(angle - cherenkovAngle);
+      
+      // If the PMT lies directly in the cone field of the moving particle
+      if (angleDiff < 0.08) {
+        // High fidelity excitation: light travels at c, so it gets illuminated based on proximity
+        const intensityInc = (0.02 / (angleDiff * 8 + 0.1)) * (p.type === 'positron' ? 1.0 : 0.4);
+        pmt.intensity = Math.min(1.0, pmt.intensity + intensityInc);
+      }
+    });
+    
+    // Extra boost when ring shockwaves hit the wall
+    cherenkovRings.forEach(ring => {
+      if (ring.type === 'flash') return;
+      
+      const rx = pmt.x - ring.x;
+      const ry = pmt.y - ring.y;
+      const rz = pmt.z - ring.z;
+      const dist = Math.sqrt(rx*rx + ry*ry + rz*rz);
+      
+      // If PMT is close to the expanding ring shockwave boundary
+      const ringWidth = ring.type === 'sharp' ? 4 : 10;
+      if (Math.abs(dist - ring.radius) < ringWidth) {
+        const ringFactor = ring.type === 'sharp' ? 0.35 : 0.18;
+        pmt.intensity = Math.min(1.0, pmt.intensity + ringFactor * ring.alpha);
+      }
+    });
+  });
+  
+  // End decay if all active particles and rings are finished
+  const anyActive = protonDecayParticles.some(p => p.active) || cherenkovRings.length > 0;
+  if (!anyActive && gutCollisionFrame > 50) {
+    gutCollisionActive = false;
+    const alertBox = document.getElementById('gut-status-alert');
+    if (alertBox) {
+      alertBox.textContent = 'PROTON DECAY SOLVED // PMT SHOWER COMPLETE // CHAMBER READY';
+      alertBox.style.color = 'var(--color-boson)';
+      alertBox.style.borderColor = 'var(--border-color)';
+      alertBox.style.background = 'rgba(255, 255, 255, 0.02)';
+    }
+  }
+}
+
+function drawGUTChamber() {
+  if (!ctxGUTDetector) return;
+  
+  const w = canvasGUTDetector.width / window.devicePixelRatio;
+  const h = canvasGUTDetector.height / window.devicePixelRatio;
+  const cx = w / 2;
+  const cy = h / 2;
+  
+  // 1. Clear background with premium deep-water dark-blue glow
+  ctxGUTDetector.fillStyle = '#020309';
+  ctxGUTDetector.fillRect(0, 0, w, h);
+  
+  // Water scattering ambient glow
+  const waterGlow = ctxGUTDetector.createRadialGradient(cx, cy, 10, cx, cy, w * 0.7);
+  waterGlow.addColorStop(0, 'rgba(0, 40, 100, 0.07)');
+  waterGlow.addColorStop(0.5, 'rgba(0, 15, 45, 0.04)');
+  waterGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctxGUTDetector.fillStyle = waterGlow;
+  ctxGUTDetector.fillRect(0, 0, w, h);
+  
+  // 3D rotation angle based on time
+  const rotAngle = Date.now() * 0.0002;
+  const tiltAngle = 0.45; // tilt view for 3D depth
+  
+  // 3D Projection Helpers
+  function project(x, y, z) {
+    // Rotate Y
+    const xRot = x * Math.cos(rotAngle) - z * Math.sin(rotAngle);
+    const zRot = x * Math.sin(rotAngle) + z * Math.cos(rotAngle);
+    // Tilt X
+    const yRot = y * Math.cos(tiltAngle) - zRot * Math.sin(tiltAngle);
+    const zFinal = y * Math.sin(tiltAngle) + zRot * Math.cos(tiltAngle);
+    
+    // Perspective
+    const d = 260; // Camera distance
+    const scale = d / (d + zFinal);
+    return {
+      x: cx + xRot * scale * 1.3,
+      y: cy + yRot * scale * 1.3,
+      z: zFinal,
+      scale: scale
+    };
+  }
+  
+  // 2. Draw Cylinder Wireframe Structure
+  const cylinderRadius = 80;
+  const cylinderHeight = 180;
+  
+  ctxGUTDetector.strokeStyle = 'rgba(0, 160, 255, 0.04)';
+  ctxGUTDetector.lineWidth = 1;
+  
+  // Draw top/bottom caps rings and vertical grids
+  const steps = 32;
+  
+  // Bottom Cap Ring
+  ctxGUTDetector.beginPath();
+  for (let i = 0; i <= steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const pt = project(cylinderRadius * Math.cos(a), -cylinderHeight/2, cylinderRadius * Math.sin(a));
+    if (i === 0) ctxGUTDetector.moveTo(pt.x, pt.y);
+    else ctxGUTDetector.lineTo(pt.x, pt.y);
+  }
+  ctxGUTDetector.stroke();
+  
+  // Top Cap Ring
+  ctxGUTDetector.beginPath();
+  for (let i = 0; i <= steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const pt = project(cylinderRadius * Math.cos(a), cylinderHeight/2, cylinderRadius * Math.sin(a));
+    if (i === 0) ctxGUTDetector.moveTo(pt.x, pt.y);
+    else ctxGUTDetector.lineTo(pt.x, pt.y);
+  }
+  ctxGUTDetector.stroke();
+  
+  // Vertical support columns (8 lines)
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const pt1 = project(cylinderRadius * Math.cos(a), -cylinderHeight/2, cylinderRadius * Math.sin(a));
+    const pt2 = project(cylinderRadius * Math.cos(a), cylinderHeight/2, cylinderRadius * Math.sin(a));
+    ctxGUTDetector.beginPath();
+    ctxGUTDetector.moveTo(pt1.x, pt1.y);
+    ctxGUTDetector.lineTo(pt2.x, pt2.y);
+    ctxGUTDetector.stroke();
+  }
+  
+  // 3. Sort and Draw PMT Sensors (draw back-most PMTs first, then front PMTs for correct overlapping)
+  const projectedPMTs = gutPMTs.map(pmt => {
+    const proj = project(pmt.x, pmt.y, pmt.z);
+    return {
+      proj: proj,
+      intensity: pmt.baseIntensity + pmt.intensity,
+      pulseOffset: pmt.pulseOffset
+    };
+  });
+  
+  // Sort by depth (z-coordinate desc, so larger z is in the background and rendered first)
+  projectedPMTs.sort((a, b) => b.proj.z - a.proj.z);
+  
+  // Draw PMTs
+  projectedPMTs.forEach(p => {
+    const pulse = Math.sin(Date.now() * 0.003 + p.pulseOffset) * 0.015;
+    const finalInt = Math.max(0.01, Math.min(1.0, p.intensity + pulse));
+    
+    // Color depends on excitation level
+    let fillColor;
+    let size;
+    
+    if (finalInt > 0.3) {
+      // Excited by Cherenkov photon: brilliant neon light cyan/blue
+      const alpha = 0.5 + (finalInt - 0.3) * 0.7;
+      fillColor = `rgba(0, 240, 255, ${alpha.toFixed(2)})`;
+      size = (1.8 + finalInt * 4.2) * p.proj.scale;
+      
+      // Draw small glow ring
+      ctxGUTDetector.shadowColor = '#00f0ff';
+      ctxGUTDetector.shadowBlur = 8 * finalInt;
+    } else {
+      // Rest state: faint dark blue PMT
+      fillColor = `rgba(0, 100, 255, ${(finalInt * 0.9).toFixed(2)})`;
+      size = (1.5 + finalInt * 1.5) * p.proj.scale;
+      ctxGUTDetector.shadowBlur = 0;
+    }
+    
+    ctxGUTDetector.fillStyle = fillColor;
+    ctxGUTDetector.beginPath();
+    ctxGUTDetector.arc(p.proj.x, p.proj.y, Math.max(0.4, size), 0, Math.PI * 2);
+    ctxGUTDetector.fill();
+  });
+  
+  ctxGUTDetector.shadowBlur = 0; // Reset shadow
+  
+  // 4. Draw Particle Beams and Trails
+  if (gutCollisionActive) {
+    protonDecayParticles.forEach(p => {
+      // Draw trail
+      if (p.trail.length > 1) {
+        ctxGUTDetector.beginPath();
+        const ptStart = project(p.trail[0].x, p.trail[0].y, p.trail[0].z);
+        ctxGUTDetector.moveTo(ptStart.x, ptStart.y);
+        
+        for (let i = 1; i < p.trail.length; i++) {
+          const pt = project(p.trail[i].x, p.trail[i].y, p.trail[i].z);
+          ctxGUTDetector.lineTo(pt.x, pt.y);
+        }
+        
+        ctxGUTDetector.strokeStyle = p.color;
+        
+        if (p.type === 'positron') {
+          ctxGUTDetector.shadowColor = '#00f0ff';
+          ctxGUTDetector.shadowBlur = 6;
+          ctxGUTDetector.lineWidth = 2.0;
+          ctxGUTDetector.stroke();
+        } else if (p.type === 'pion') {
+          ctxGUTDetector.shadowColor = '#a855f7';
+          ctxGUTDetector.shadowBlur = 6;
+          ctxGUTDetector.lineWidth = 1.8;
+          ctxGUTDetector.stroke();
+        } else {
+          // Photons are neutral, show as faint dotted trace
+          ctxGUTDetector.save();
+          ctxGUTDetector.setLineDash([3, 3]);
+          ctxGUTDetector.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctxGUTDetector.lineWidth = 1.0;
+          ctxGUTDetector.stroke();
+          ctxGUTDetector.restore();
+        }
+        ctxGUTDetector.shadowBlur = 0;
+      }
+      
+      // Draw lead particle
+      if (p.active) {
+        const pt = project(p.x, p.y, p.z);
+        ctxGUTDetector.beginPath();
+        ctxGUTDetector.arc(pt.x, pt.y, p.size * pt.scale, 0, Math.PI * 2);
+        ctxGUTDetector.fillStyle = p.color;
+        
+        if (p.type === 'positron') {
+          ctxGUTDetector.shadowColor = '#00f0ff';
+          ctxGUTDetector.shadowBlur = 10;
+        } else if (p.type === 'pion') {
+          ctxGUTDetector.shadowColor = '#a855f7';
+          ctxGUTDetector.shadowBlur = 10;
+        }
+        
+        ctxGUTDetector.fill();
+        ctxGUTDetector.shadowBlur = 0;
+        
+        // Faint physics labels
+        ctxGUTDetector.fillStyle = '#ffffff';
+        ctxGUTDetector.font = '9px Space Grotesk';
+        if (p.type === 'positron') {
+          ctxGUTDetector.fillText('e⁺ (positron)', pt.x + 6, pt.y - 4);
+        } else if (p.type === 'pion') {
+          ctxGUTDetector.fillText('π⁰ (pion)', pt.x - 48, pt.y + 10);
+        }
+      }
+    });
+  }
+  
+  // 5. Draw 3D Cherenkov Projected Rings Shockwaves
+  cherenkovRings.forEach(ring => {
+    if (ring.type === 'flash') {
+      // Central flash sphere
+      const pt = project(ring.x, ring.y, ring.z);
+      const rad = ring.radius * pt.scale;
+      
+      const flashGrad = ctxGUTDetector.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rad);
+      flashGrad.addColorStop(0, '#ffffff');
+      flashGrad.addColorStop(0.3, ring.color);
+      flashGrad.addColorStop(1, 'transparent');
+      
+      ctxGUTDetector.fillStyle = flashGrad;
+      ctxGUTDetector.beginPath();
+      ctxGUTDetector.arc(pt.x, pt.y, rad, 0, Math.PI*2);
+      ctxGUTDetector.fill();
+      return;
+    }
+    
+    // Draw 3D Circle Orthogonal to its direction vector!
+    // We compute perpendicular axes a and b in 3D
+    const ux = ring.dirX;
+    const uy = ring.dirY;
+    const uz = ring.dirZ;
+    
+    let ax, ay, az;
+    if (Math.abs(ux) < 0.001 && Math.abs(uz) < 0.001) {
+      ax = 1.0; ay = 0.0; az = 0.0;
+    } else {
+      const len = Math.sqrt(ux*ux + uz*uz);
+      ax = uz / len;
+      ay = 0.0;
+      az = -ux / len;
+    }
+    
+    // b = u x a
+    const bx = uy * az - uz * ay;
+    const by = uz * ax - ux * az;
+    const bz = ux * ay - uy * ax;
+    
+    // Draw 32 segments ring
+    ctxGUTDetector.beginPath();
+    const ringSteps = 32;
+    for (let s = 0; s <= ringSteps; s++) {
+      const angle = (s / ringSteps) * Math.PI * 2;
+      const cosA = Math.cos(angle) * ring.radius;
+      const sinA = Math.sin(angle) * ring.radius;
+      
+      const rx = ring.x + cosA * ax + sinA * bx;
+      const ry = ring.y + cosA * ay + sinA * by;
+      const rz = ring.z + cosA * az + sinA * bz;
+      
+      // project
+      const pt = project(rx, ry, rz);
+      if (s === 0) ctxGUTDetector.moveTo(pt.x, pt.y);
+      else ctxGUTDetector.lineTo(pt.x, pt.y);
+    }
+    
+    ctxGUTDetector.strokeStyle = ring.color;
+    ctxGUTDetector.shadowColor = ring.color;
+    
+    if (ring.type === 'sharp') {
+      ctxGUTDetector.lineWidth = 2.0;
+      ctxGUTDetector.shadowBlur = 12 * ring.alpha;
+      ctxGUTDetector.globalAlpha = ring.alpha;
+      ctxGUTDetector.stroke();
+      
+      // Label the Cherenkov ring
+      ctxGUTDetector.globalAlpha = 1.0;
+      ctxGUTDetector.fillStyle = '#00f0ff';
+      ctxGUTDetector.font = 'bold 9px Space Grotesk';
+      const ptLabel = project(ring.x, ring.y, ring.z);
+      ctxGUTDetector.fillText('Sharp e⁺ Ring (θc ≈ 42°)', ptLabel.x + 10, ptLabel.y - 12);
+    } else {
+      ctxGUTDetector.lineWidth = 1.2;
+      ctxGUTDetector.shadowBlur = 6 * ring.alpha;
+      ctxGUTDetector.globalAlpha = ring.alpha * 0.6;
+      ctxGUTDetector.stroke();
+      
+      // Spanning electron shower
+      ctxGUTDetector.globalAlpha = 1.0;
+    }
+    
+    ctxGUTDetector.shadowBlur = 0;
+    ctxGUTDetector.globalAlpha = 1.0;
+  });
+}
+
+function renderGUTPhysicsMath() {
+  const container = document.getElementById('gut-physics-details');
+  if (!container) return;
+  
+  // Calculate real-time proton lifetime based on slider values
+  // Formula: tau_p = C * (M_X^4) / (alpha_GUT^2 * m_p^5)
+  // factor scale C adjusted so that M_X = 10^15 GeV and alpha = 0.041 yields ~8.3 * 10^32 years
+  const mxGeV = Math.pow(10, gutMXScale);
+  const mpGeV = 0.938; // proton mass
+  const cConstant = 1.0e-29;
+  const lifetimeYears = cConstant * Math.pow(mxGeV, 4) / (Math.pow(gutAlpha, 2) * Math.pow(mpGeV, 5));
+  
+  // Scientific notation formatting
+  const exponent = Math.floor(Math.log10(lifetimeYears));
+  const mantissa = lifetimeYears / Math.pow(10, exponent);
+  const formattedLifetime = `${mantissa.toFixed(2)} × 10<sup>${exponent}</sup> years`;
+  
+  // Super-K limits comparison (approx 2.4e34 years for p -> e+ pi0)
+  const skLimit = 2.4e34;
+  let statusBadge = '';
+  
+  if (lifetimeYears < skLimit) {
+    statusBadge = `
+      <div style="padding: 0.5rem; border-radius: 6px; background: rgba(255, 51, 102, 0.06); border: 1px solid rgba(255, 51, 102, 0.25); font-size: 0.78rem; margin: 0.5rem 0;">
+        <span style="color: #ff3366; font-weight: bold;">🚨 EXCLUDED REGION (실험적 하한 기각 영역)</span><br>
+        현재 설정된 양성자 수명(${formattedLifetime})은 <b>Super-Kamiokande 실험 하한선(${skLimit.toExponential(1)}년)</b>보다 짧습니다. 
+        이 통합 모델 스케일은 이미 실험적으로 기각되었으므로 게이지 보손 질량 $M_X$를 높여 튜닝해야 합니다.
+      </div>
+    `;
+  } else {
+    statusBadge = `
+      <div style="padding: 0.5rem; border-radius: 6px; background: rgba(0, 255, 160, 0.06); border: 1px solid rgba(0, 255, 160, 0.25); font-size: 0.78rem; margin: 0.5rem 0;">
+        <span style="color: #00ffa0; font-weight: bold;">✅ VIABLE GUT REGION (물리학적 생존 가능 영역)</span><br>
+        현재 양성자 수명(${formattedLifetime})은 실험적 제약을 우회하며, 차세대 <b>Hyper-Kamiokande 검출기</b>의 탐색 범위에 해당하는 생존 가능한 물리 매개변수 공간입니다.
+      </div>
+    `;
+  }
+  
+  const gutStatus = isGUTModeActive
+    ? `<span style="color: var(--color-boson); font-weight: bold; text-shadow: 0 0 10px rgba(168,85,247,0.3);">🔮 GUT MODEL ACTIVE (대통일 이론 가동)</span>`
+    : `<span style="color: var(--color-text-muted); font-weight: bold;">🛡️ STANDARD MODEL STRICT (렙톤수/바리온수 개별 보존)</span>`;
+    
+  let html = `
+    <div class="physics-formula-title">
+      <span>🌊 Georgi-Glashow SU(5) GUT & Proton Decay Physics</span>
+      ${gutStatus}
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      대통일 이론(GUT) 하에서는 표준모형의 $SU(3)_C \times SU(2)_L \times U(1)_Y$ 게이지 대칭이 더 큰 단일 게이지 대칭군인 <b>$SU(5)$</b> 등으로 병합됩니다. 
+      이에 따라 표준모형에서 보존되던 바리온수($B$)와 렙톤수($L$)가 깨지고 초대형 질량을 가진 게이지 보손 $X, Y$ 가 반응을 매개하게 되지만, <b>$B - L$ 대칭성은 여전히 엄격하게 보존</b>됩니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0;">
+        \\Delta(B - L) = 0 \\quad \\text{so} \\quad p \\to e^+ + \\pi^0 \\quad (\\Delta B = -1, \\Delta L = -1)
+      </div>
+      대통일 게이지 보손 질량 $M_X$ 와 결합 상수 $\\alpha_{GUT}$ 에 다른 양성자의 이론적 수명 공식은 다음과 같습니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0;">
+        \\tau_p \\approx \\frac{1}{\\alpha_{GUT}^2} \\frac{M_X^4}{m_p^5}
+      </div>
+      이 공식에 맞춰 연산한 현재 양성자의 수명 예측치는 약 <b style="color: var(--color-boson); font-family: var(--font-mono);">${formattedLifetime}</b> 입니다.
+      ${statusBadge}
+      
+      <p style="margin-top: 0.4rem; font-size: 0.76rem; color: var(--color-text-muted);">
+        <b>물 수중 체렌코프 복사 기하학 (Cherenkov Cone Geometry)</b>:<br>
+        붕괴 부산물로 사출된 고에너지 양전자($e^+$)는 물의 굴절률 $n_{\\text{water}} = 1.33$ 환경에서 매질 내 광속 $c/n$ 보다 빠르게 질주하며 $\\cos\\theta_c = 1/n\\beta$ 조건에 의해 진행 방향 기준 정확히 <b>$\\theta_c \\approx 42^\\circ$</b> 각도의 Cherenkov 방사 원추를 형성합니다.
+        이 원추가 원통형 실린더 PMT 벽면에 부딪힐 때의 구면 및 원통 교선 각도를 매 60FPS마다 3D 벡터 내적으로 정밀 계산하여 투영한 물리 시각화 신호입니다.
+      </p>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
