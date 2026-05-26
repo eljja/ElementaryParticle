@@ -47,6 +47,21 @@ let cherenkovRings = [];
 let gutCollisionActive = false;
 let gutCollisionFrame = 0;
 
+// CKM Matrix Lab State
+let ckmTheta12 = 13.04; // in degrees
+let ckmTheta23 = 2.38;  // in degrees
+let ckmTheta13 = 0.201; // in degrees
+let ckmDelta = 68.8;    // in degrees
+let canvasCKMTriangle = null;
+let ctxCKMTriangle = null;
+let ckmLoopId = null;   // for micro-animation of CP violation
+
+// RGE Unification Lab State
+let isRGEMSSM = false;  // false for SM, true for MSSM
+let canvasRGEGraph = null;
+let ctxRGEGraph = null;
+let rgeLoopId = null;   // for micro-animation of coupling running waves
+
 // Simulator Slots (Collision Lab)
 let reactants = [];
 let products = [];
@@ -125,6 +140,18 @@ function resizeCanvas() {
     canvasGUTDetector.width = rect.width * window.devicePixelRatio;
     canvasGUTDetector.height = rect.height * window.devicePixelRatio;
     ctxGUTDetector.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasCKMTriangle) {
+    const rect = canvasCKMTriangle.getBoundingClientRect();
+    canvasCKMTriangle.width = rect.width * window.devicePixelRatio;
+    canvasCKMTriangle.height = rect.height * window.devicePixelRatio;
+    ctxCKMTriangle.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasRGEGraph) {
+    const rect = canvasRGEGraph.getBoundingClientRect();
+    canvasRGEGraph.width = rect.width * window.devicePixelRatio;
+    canvasRGEGraph.height = rect.height * window.devicePixelRatio;
+    ctxRGEGraph.scale(window.devicePixelRatio, window.devicePixelRatio);
   }
 }
 
@@ -1096,6 +1123,8 @@ function switchRightTab(tab) {
   const higgsSsbBtn = document.getElementById('btn-tab-higgs-ssb');
   const susyBtn = document.getElementById('btn-tab-susy');
   const gutBtn = document.getElementById('btn-tab-gut');
+  const ckmBtn = document.getElementById('btn-tab-ckm');
+  const rgeBtn = document.getElementById('btn-tab-rge');
   
   const collisionContent = document.getElementById('tab-collision');
   const builderContent = document.getElementById('tab-builder');
@@ -1106,14 +1135,16 @@ function switchRightTab(tab) {
   const higgsSsbContent = document.getElementById('tab-higgs-ssb');
   const susyContent = document.getElementById('tab-susy');
   const gutContent = document.getElementById('tab-gut');
+  const ckmContent = document.getElementById('tab-ckm');
+  const rgeContent = document.getElementById('tab-rge');
   
   // Reset tab button statuses
-  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn, gutBtn].forEach(b => {
+  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn, gutBtn, ckmBtn, rgeBtn].forEach(b => {
     if (b) b.classList.remove('active');
   });
   
   // Reset tab contents
-  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent, gutContent].forEach(c => {
+  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent, gutContent, ckmContent, rgeContent].forEach(c => {
     if (c) c.classList.remove('active');
   });
   
@@ -1145,6 +1176,18 @@ function switchRightTab(tab) {
   if (tab !== 'gut' && gutLoopId) {
     cancelAnimationFrame(gutLoopId);
     gutLoopId = null;
+  }
+
+  // Stop ongoing ckm loops
+  if (tab !== 'ckm' && ckmLoopId) {
+    cancelAnimationFrame(ckmLoopId);
+    ckmLoopId = null;
+  }
+
+  // Stop ongoing rge loops
+  if (tab !== 'rge' && rgeLoopId) {
+    cancelAnimationFrame(rgeLoopId);
+    rgeLoopId = null;
   }
   
   if (tab === 'collision') {
@@ -1194,6 +1237,14 @@ function switchRightTab(tab) {
     if (gutBtn) gutBtn.classList.add('active');
     if (gutContent) gutContent.classList.add('active');
     initGUTLab();
+  } else if (tab === 'ckm') {
+    if (ckmBtn) ckmBtn.classList.add('active');
+    if (ckmContent) ckmContent.classList.add('active');
+    initCKMLab();
+  } else if (tab === 'rge') {
+    if (rgeBtn) rgeBtn.classList.add('active');
+    if (rgeContent) rgeContent.classList.add('active');
+    initRGELab();
   }
 }
 
@@ -4997,4 +5048,707 @@ function renderGUTPhysicsMath() {
   
   container.innerHTML = html;
 }
+
+
+// ============================================================================
+// PART J: CKM Matrix & CP Violation Lab
+// ============================================================================
+
+function initCKMLab() {
+  canvasCKMTriangle = document.getElementById('canvas-ckm-triangle');
+  if (canvasCKMTriangle) {
+    ctxCKMTriangle = canvasCKMTriangle.getContext('2d');
+  }
+  
+  // Set initial slider values
+  document.getElementById('slider-ckm-theta12').value = ckmTheta12;
+  document.getElementById('slider-ckm-theta23').value = ckmTheta23;
+  document.getElementById('slider-ckm-theta13').value = ckmTheta13;
+  document.getElementById('slider-ckm-delta').value = ckmDelta;
+  
+  resizeCanvas();
+  updateCKMParameters();
+  
+  // Micro-animation loop to make CP Violation visualizer "responsive and alive"
+  if (ckmLoopId) cancelAnimationFrame(ckmLoopId);
+  
+  let animFrame = 0;
+  function loop() {
+    if (rightPanelTab !== 'ckm') return;
+    animFrame++;
+    
+    // Draw unitarity triangle with a subtle breath animation representing CP quantum phase rotation
+    drawUnitarityTriangle(animFrame);
+    
+    ckmLoopId = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function updateCKMParameters() {
+  ckmTheta12 = parseFloat(document.getElementById('slider-ckm-theta12').value);
+  ckmTheta23 = parseFloat(document.getElementById('slider-ckm-theta23').value);
+  ckmTheta13 = parseFloat(document.getElementById('slider-ckm-theta13').value);
+  ckmDelta = parseFloat(document.getElementById('slider-ckm-delta').value);
+  
+  // Update labels
+  const r12 = (ckmTheta12 * Math.PI) / 180;
+  const r23 = (ckmTheta23 * Math.PI) / 180;
+  const r13 = (ckmTheta13 * Math.PI) / 180;
+  const rDelta = (ckmDelta * Math.PI) / 180;
+  
+  document.getElementById('label-ckm-theta12').innerHTML = `${ckmTheta12.toFixed(2)}° (${r12.toFixed(4)} rad)`;
+  document.getElementById('label-ckm-theta23').innerHTML = `${ckmTheta23.toFixed(2)}° (${r23.toFixed(4)} rad)`;
+  document.getElementById('label-ckm-theta13').innerHTML = `${ckmTheta13.toFixed(3)}° (${r13.toFixed(4)} rad)`;
+  document.getElementById('label-ckm-delta').innerHTML = `${ckmDelta.toFixed(1)}° (${rDelta.toFixed(4)} rad)`;
+  
+  // Compute CKM Matrix
+  const V = computeCKMMatrixJS(r12, r23, r13, rDelta);
+  
+  // Display matrix elements in UI
+  updateCKMMatrixUI(V);
+  
+  // Compute Jarlskog Invariant
+  const J = computeJarlskogJS(V);
+  const jarlskogBadge = document.getElementById('ckm-jarlskog-badge');
+  if (jarlskogBadge) {
+    jarlskogBadge.innerHTML = `JARLSKOG J: ${(J * 1e5).toFixed(3)} &times; 10<sup>-5</sup>`;
+    if (Math.abs(J) < 1e-7) {
+      jarlskogBadge.style.background = 'rgba(255, 255, 255, 0.05)';
+      jarlskogBadge.style.borderColor = 'var(--border-color)';
+      jarlskogBadge.style.color = 'var(--color-text-muted)';
+      jarlskogBadge.innerHTML = `JARLSKOG J: 0.00 (CP CONSERVED)`;
+    } else {
+      jarlskogBadge.style.background = 'rgba(255, 51, 102, 0.08)';
+      jarlskogBadge.style.borderColor = 'var(--color-danger)';
+      jarlskogBadge.style.color = 'var(--color-danger)';
+    }
+  }
+  
+  // Verify Unitarity
+  const unitarityVerified = verifyCKMUnitarityJS(V);
+  const unitarityBadge = document.getElementById('ckm-unitarity-badge');
+  if (unitarityBadge) {
+    if (unitarityVerified) {
+      unitarityBadge.innerHTML = `UNITARITY: V<sup>&dagger;</sup>V = I (100.0% VERIFIED)`;
+      unitarityBadge.style.background = 'rgba(0, 240, 255, 0.08)';
+      unitarityBadge.style.borderColor = 'var(--color-lepton)';
+      unitarityBadge.style.color = 'var(--color-lepton)';
+    } else {
+      unitarityBadge.innerHTML = `UNITARITY VIOLATION DETECTED`;
+      unitarityBadge.style.background = 'rgba(255, 51, 102, 0.1)';
+      unitarityBadge.style.borderColor = 'var(--color-danger)';
+      unitarityBadge.style.color = 'var(--color-danger)';
+    }
+  }
+  
+  // Draw triangle statically once (in case loop isn't active)
+  drawUnitarityTriangle(0);
+  
+  // Render Math Board
+  renderCKMPhysicsMath();
+}
+
+function computeCKMMatrixJS(t12, t23, t13, delta) {
+  const c12 = Math.cos(t12);
+  const s12 = Math.sin(t12);
+  const c23 = Math.cos(t23);
+  const s23 = Math.sin(t23);
+  const c13 = Math.cos(t13);
+  const s13 = Math.sin(t13);
+  
+  const cosD = Math.cos(delta);
+  const sinD = Math.sin(delta);
+  
+  return {
+    ud: { re: c12 * c13, im: 0 },
+    us: { re: s12 * c13, im: 0 },
+    ub: { re: s13 * cosD, im: -s13 * sinD },
+    
+    cd: { re: -s12 * c23 - c12 * s23 * s13 * cosD, im: -c12 * s23 * s13 * sinD },
+    cs: { re: c12 * c23 - s12 * s23 * s13 * cosD, im: -s12 * s23 * s13 * sinD },
+    cb: { re: s23 * c13, im: 0 },
+    
+    td: { re: s12 * s23 - c12 * c23 * s13 * cosD, im: -c12 * c23 * s13 * sinD },
+    ts: { re: -c12 * s23 - s12 * c23 * s13 * cosD, im: -s12 * c23 * s13 * sinD },
+    tb: { re: c23 * c13, im: 0 }
+  };
+}
+
+function computeJarlskogJS(V) {
+  const V_us = V.us.re;
+  const V_cb = V.cb.re;
+  const V_ub_conj = { re: V.ub.re, im: -V.ub.im };
+  const V_cs_conj = { re: V.cs.re, im: -V.cs.im };
+  
+  const prod_im = V_ub_conj.re * V_cs_conj.im + V_ub_conj.im * V_cs_conj.re;
+  return V_us * V_cb * prod_im;
+}
+
+function verifyCKMUnitarityJS(V) {
+  const cols = [
+    [V.ud, V.cd, V.td],
+    [V.us, V.cs, V.ts],
+    [V.ub, V.cb, V.tb]
+  ];
+  
+  let maxError = 0;
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      let re = 0, im = 0;
+      for (let k = 0; k < 3; k++) {
+        const z1 = cols[i][k];
+        const z2 = cols[j][k];
+        re += z1.re * z2.re + z1.im * z2.im;
+        im += z1.re * z2.im - z1.im * z2.re;
+      }
+      
+      const target_re = (i === j) ? 1.0 : 0.0;
+      const error = Math.sqrt((re - target_re)**2 + im**2);
+      if (error > maxError) maxError = error;
+    }
+  }
+  return maxError < 1e-5;
+}
+
+function updateCKMMatrixUI(V) {
+  const elements = ['ud', 'us', 'ub', 'cd', 'cs', 'cb', 'td', 'ts', 'tb'];
+  
+  elements.forEach(el => {
+    const valEl = document.getElementById(`ckm-v${el}-val`);
+    const phaseEl = document.getElementById(`ckm-v${el}-phase`);
+    if (valEl && phaseEl) {
+      const z = V[el];
+      const magnitude = Math.sqrt(z.re * z.re + z.im * z.im);
+      let phase = Math.atan2(z.im, z.re) * 180 / Math.PI;
+      if (Math.abs(magnitude) < 1e-6) phase = 0;
+      
+      valEl.innerHTML = magnitude.toFixed(el === 'ub' || el === 'td' ? 5 : 4);
+      phaseEl.innerHTML = `${phase.toFixed(1)}°`;
+      if (Math.abs(phase) > 1e-2) {
+        phaseEl.style.color = 'var(--color-danger)';
+      } else {
+        phaseEl.style.color = 'var(--color-text-muted)';
+      }
+    }
+  });
+}
+
+function drawUnitarityTriangle(animFrame) {
+  if (!canvasCKMTriangle || !ctxCKMTriangle) return;
+  
+  const w = canvasCKMTriangle.width / window.devicePixelRatio;
+  const h = canvasCKMTriangle.height / window.devicePixelRatio;
+  
+  ctxCKMTriangle.fillStyle = '#050714';
+  ctxCKMTriangle.fillRect(0, 0, w, h);
+  
+  const cx = w * 0.55;
+  const cy = h * 0.65;
+  
+  ctxCKMTriangle.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+  ctxCKMTriangle.lineWidth = 1;
+  for (let x = 0; x < w; x += 30) {
+    ctxCKMTriangle.beginPath();
+    ctxCKMTriangle.moveTo(x, 0);
+    ctxCKMTriangle.lineTo(x, h);
+    ctxCKMTriangle.stroke();
+  }
+  for (let y = 0; y < h; y += 30) {
+    ctxCKMTriangle.beginPath();
+    ctxCKMTriangle.moveTo(0, y);
+    ctxCKMTriangle.lineTo(w, y);
+    ctxCKMTriangle.stroke();
+  }
+  
+  ctxCKMTriangle.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctxCKMTriangle.beginPath();
+  ctxCKMTriangle.moveTo(10, cy);
+  ctxCKMTriangle.lineTo(w - 10, cy);
+  ctxCKMTriangle.stroke();
+  ctxCKMTriangle.beginPath();
+  ctxCKMTriangle.moveTo(cx, 10);
+  ctxCKMTriangle.lineTo(cx, h - 10);
+  ctxCKMTriangle.stroke();
+  
+  ctxCKMTriangle.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctxCKMTriangle.font = '9px var(--font-mono)';
+  ctxCKMTriangle.fillText('Re', w - 25, cy - 6);
+  ctxCKMTriangle.fillText('Im', cx + 6, 20);
+  
+  const r12 = (ckmTheta12 * Math.PI) / 180;
+  const r23 = (ckmTheta23 * Math.PI) / 180;
+  const r13 = (ckmTheta13 * Math.PI) / 180;
+  const rDelta = (ckmDelta * Math.PI) / 180;
+  
+  const V = computeCKMMatrixJS(r12, r23, r13, rDelta);
+  
+  const V_cb_conj = { re: V.cb.re, im: -V.cb.im };
+  const z1 = {
+    re: V.cd.re * V_cb_conj.re - V.cd.im * V_cb_conj.im,
+    im: V.cd.re * V_cb_conj.im + V.cd.im * V_cb_conj.re
+  };
+  
+  const V_tb_conj = { re: V.tb.re, im: -V.tb.im };
+  const z2 = {
+    re: V.td.re * V_tb_conj.re - V.td.im * V_tb_conj.im,
+    im: V.td.re * V_tb_conj.im + V.td.im * V_tb_conj.re
+  };
+  
+  const V_ub_conj = { re: V.ub.re, im: -V.ub.im };
+  const z3 = {
+    re: V.ud.re * V_ub_conj.re - V.ud.im * V_ub_conj.im,
+    im: V.ud.re * V_ub_conj.im + V.ud.im * V_ub_conj.re
+  };
+  
+  const scale = 16000;
+  
+  const p0 = { x: cx, y: cy };
+  const p1 = { x: cx + z1.re * scale, y: cy - z1.im * scale };
+  const p2 = { x: p1.x + z2.re * scale, y: p1.y - z2.im * scale };
+  
+  ctxCKMTriangle.fillStyle = 'rgba(99, 102, 241, 0.04)';
+  ctxCKMTriangle.beginPath();
+  ctxCKMTriangle.moveTo(p0.x, p0.y);
+  ctxCKMTriangle.lineTo(p1.x, p1.y);
+  ctxCKMTriangle.lineTo(p2.x, p2.y);
+  ctxCKMTriangle.closePath();
+  ctxCKMTriangle.fill();
+  
+  const breath = Math.sin(animFrame * 0.05) * 4;
+  
+  drawGlowingVector(ctxCKMTriangle, p0, p1, 'rgba(0, 240, 255, 0.85)', 'rgba(0, 240, 255, 0.3)', 3, 6 + breath);
+  drawGlowingVector(ctxCKMTriangle, p1, p2, 'rgba(212, 0, 255, 0.85)', 'rgba(212, 0, 255, 0.3)', 3, 6 + breath);
+  drawGlowingVector(ctxCKMTriangle, p2, p0, 'rgba(255, 51, 102, 0.9)', 'rgba(255, 51, 102, 0.3)', 3, 6 + breath);
+  
+  [p0, p1, p2].forEach((pt) => {
+    ctxCKMTriangle.fillStyle = '#fff';
+    ctxCKMTriangle.shadowColor = '#fff';
+    ctxCKMTriangle.shadowBlur = 10;
+    ctxCKMTriangle.beginPath();
+    ctxCKMTriangle.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+    ctxCKMTriangle.fill();
+    ctxCKMTriangle.shadowBlur = 0;
+  });
+  
+  ctxCKMTriangle.font = '10px var(--font-sans)';
+  ctxCKMTriangle.fillStyle = 'rgba(0, 240, 255, 0.9)';
+  ctxCKMTriangle.fillText('V_cd V_cb*', (p0.x + p1.x)/2 - 20, (p0.y + p1.y)/2 + 15);
+  
+  ctxCKMTriangle.fillStyle = 'rgba(212, 0, 255, 0.9)';
+  ctxCKMTriangle.fillText('V_td V_tb*', (p1.x + p2.x)/2 + 10, (p1.y + p2.y)/2 - 5);
+  
+  ctxCKMTriangle.fillStyle = 'rgba(255, 51, 102, 0.95)';
+  ctxCKMTriangle.fillText('V_ud V_ub*', (p2.x + p0.x)/2 - 40, (p2.y + p0.y)/2 - 10);
+  
+  const J = computeJarlskogJS(V);
+  if (Math.abs(J) > 1e-7) {
+    ctxCKMTriangle.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctxCKMTriangle.font = '11px var(--font-mono)';
+    ctxCKMTriangle.fillText('γ', p0.x - 12, p0.y - 12);
+    ctxCKMTriangle.fillText('β', p1.x + 8, p1.y + 12);
+    ctxCKMTriangle.fillText('α', p2.x - 15, p2.y + 8);
+  } else {
+    ctxCKMTriangle.fillStyle = 'rgba(255, 51, 102, 0.6)';
+    ctxCKMTriangle.font = 'bold 11px var(--font-sans)';
+    ctxCKMTriangle.fillText('DEGENERATE TRIANGLE (J = 0 // NO CP VIOLATION)', 15, 30);
+  }
+}
+
+function drawGlowingVector(ctx, from, to, color, shadowColor, width, glow) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.shadowColor = shadowColor;
+  ctx.shadowBlur = glow;
+  
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+  
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  const arrowSize = 8;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(to.x, to.y);
+  ctx.lineTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+function renderCKMPhysicsMath() {
+  const container = document.getElementById('ckm-physics-details');
+  if (!container) return;
+  
+  const r12 = (ckmTheta12 * Math.PI) / 180;
+  const r23 = (ckmTheta23 * Math.PI) / 180;
+  const r13 = (ckmTheta13 * Math.PI) / 180;
+  const rDelta = (ckmDelta * Math.PI) / 180;
+  const V = computeCKMMatrixJS(r12, r23, r13, rDelta);
+  const J = computeJarlskogJS(V);
+  
+  let cpViolationStatus = "";
+  if (Math.abs(J) < 1e-7) {
+    cpViolationStatus = `<b style="color: var(--color-text-muted);">[ CP CONSERVED (CP 대칭성 보존) ]</b><br>
+    CP 위상 위상 &delta;<sub>CP</sub> 또는 결합각 중 하나가 0이 되어 Jarlskog 불변량이 0이 되었습니다. 유니터리 삼각형이 직선으로 완전히 접히고(Degenerate), 물질과 반물질 사이의 반응 비대칭성이 소멸합니다.`;
+  } else {
+    cpViolationStatus = `<b style="color: var(--color-danger);">[ CP VIOLATED (CP 대칭성 위반 활성화) ]</b><br>
+    복소 위상인 &delta;<sub>CP</sub>에 의해 CKM 행렬에 복소 허수 성분이 존재하여 양의 Jarlskog 불변량($J \\approx ${(J * 1e5).toFixed(2)} \\times 10^{-5}$)이 산출되었습니다. 이는 우주 초기에 물질이 반물질보다 더 많이 남게 된 <b>사하로프 조건(Sakharov Conditions)</b>의 핵심 요소인 CP 대칭성 위반의 크기를 뜻합니다.`;
+  }
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>🔀 CKM Matrix & CP Violation Physics Board</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      카비보-고바야시-마스카와(CKM) 행렬은 소립자 물리학에서 <b>약한 전류 상호작용(Weak Charge Current)</b> 하에서의 쿼크 맛깔 전환 세기를 결정하는 유니터리 복소 혼합 행렬입니다.
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        V_{CKM} = \\begin{pmatrix} V_{ud} & V_{us} & V_{ub} \\\\ V_{cd} & V_{cs} & V_{cb} \\\\ V_{td} & V_{ts} & V_{tb} \\end{pmatrix}
+      </div>
+      세 가지 혼합 오일러 각 $\\theta_{12}, \\theta_{23}, \\theta_{13}$과 CP 위반을 야기하는 단 하나의 Dirac CP 위상 $\\delta_{CP}$에 의해 완전히 매개변수화됩니다.
+      
+      <p style="margin-top: 0.4rem;">
+        <b>유니터리 삼각형 무결성 증명 (Unitarity Triangle)</b>:<br>
+        행렬의 유니터리성($V_{CKM}^\\dagger V_{CKM} = I$) 중 대표적인 아래 직교 조건식은 복소평면 위에서 닫힌 삼각형을 형성합니다:
+      </p>
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        V_{ud}V_{ub}^* + V_{cd}V_{cb}^* + V_{td}V_{tb}^* = 0
+      </div>
+      이 삼각형의 면적은 임의의 쿼크 맛깔 재정의에 불변인 <b>Jarlskog 불변량 $J$</b>의 절반과 정확히 일치하며 다음과 같이 표현됩니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        J = c_{12}s_{12}c_{23}s_{23}c_{13}^2 s_{13}\\sin\\delta_{CP} \\approx ${(J * 1e5).toFixed(3)} \\times 10^{-5}
+      </div>
+      <p style="margin-top: 0.4rem; font-size: 0.78rem; color: var(--color-text-muted);">
+        ${cpViolationStatus}
+      </p>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
+
+// ============================================================================
+// PART K: RGE Running Coupling & Gauge Unification Lab
+// ============================================================================
+
+function initRGELab() {
+  canvasRGEGraph = document.getElementById('canvas-rge-graph');
+  if (canvasRGEGraph) {
+    ctxRGEGraph = canvasRGEGraph.getContext('2d');
+  }
+  
+  updateRGEModelButtonUI();
+  resizeCanvas();
+  
+  // Initial draw
+  drawRGEGraph(0);
+  
+  if (rgeLoopId) cancelAnimationFrame(rgeLoopId);
+  
+  let animFrame = 0;
+  function loop() {
+    if (rightPanelTab !== 'rge') return;
+    animFrame++;
+    
+    drawRGEGraph(animFrame);
+    rgeLoopId = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function toggleRGEModel() {
+  isRGEMSSM = !isRGEMSSM;
+  updateRGEModelButtonUI();
+  
+  const unification = findGUTIntersectionJS();
+  const scaleVal = document.getElementById('rge-scale-val');
+  const alphaVal = document.getElementById('rge-alpha-val');
+  
+  if (scaleVal && alphaVal) {
+    if (isRGEMSSM) {
+      scaleVal.innerHTML = `~ ${unification.MX.toExponential(2)} GeV`;
+      alphaVal.innerHTML = `~ ${unification.alphaGUTInv.toFixed(1)} (${(1/unification.alphaGUTInv).toFixed(4)})`;
+      scaleVal.style.color = 'var(--color-bsm)';
+      alphaVal.style.color = 'var(--color-scalar)';
+    } else {
+      scaleVal.innerHTML = `No Unification (발산)`;
+      alphaVal.innerHTML = `M_X spreads by 10^4`;
+      scaleVal.style.color = 'var(--color-danger)';
+      alphaVal.style.color = 'var(--color-text-muted)';
+    }
+  }
+  
+  drawRGEGraph(0);
+  renderRGEPhysicsMath();
+}
+
+function updateRGEModelButtonUI() {
+  const btn = document.getElementById('btn-toggle-rgemodel');
+  const desc = document.getElementById('label-rge-model-desc');
+  if (btn && desc) {
+    if (isRGEMSSM) {
+      btn.innerHTML = '🌌 MSSM (초대칭 대통일)';
+      btn.style.borderColor = 'var(--color-bsm)';
+      btn.style.color = 'var(--color-bsm)';
+      btn.style.background = 'rgba(0, 255, 170, 0.08)';
+      desc.innerHTML = 'MSSM: Supersymmetric partners converge couplings at GUT scale';
+    } else {
+      btn.innerHTML = '🛡️ Standard Model (SM)';
+      btn.style.borderColor = 'var(--color-lepton)';
+      btn.style.color = 'var(--color-lepton)';
+      btn.style.background = 'rgba(0, 240, 255, 0.05)';
+      desc.innerHTML = 'Standard Model: Couplings do not meet at a single energy point';
+    }
+  }
+}
+
+function computeRunningCouplingJS(alphaInvMZ, b, log10_Q) {
+  const log10_MZ = Math.log10(91.1876);
+  const factor = (b * Math.log(10)) / (2 * Math.PI);
+  return alphaInvMZ - factor * (log10_Q - log10_MZ);
+}
+
+function findGUTIntersectionJS() {
+  const alpha1_MZ = 58.98;
+  const alpha2_MZ = 29.57;
+  
+  const b1 = isRGEMSSM ? 6.6 : 4.1;
+  const b2 = isRGEMSSM ? 1.0 : -19/6;
+  
+  const log10_MZ = Math.log10(91.1876);
+  const log10_MX = log10_MZ + (2 * Math.PI / Math.log(10)) * (alpha1_MZ - alpha2_MZ) / (b2 - b1);
+  const MX = Math.pow(10, log10_MX);
+  const alphaGUTInv = computeRunningCouplingJS(alpha1_MZ, b1, log10_MX);
+  
+  return {
+    log10_MX,
+    MX,
+    alphaGUTInv
+  };
+}
+
+function drawRGEGraph(animFrame) {
+  if (!canvasRGEGraph || !ctxRGEGraph) return;
+  
+  const w = canvasRGEGraph.width / window.devicePixelRatio;
+  const h = canvasRGEGraph.height / window.devicePixelRatio;
+  
+  ctxRGEGraph.fillStyle = '#050714';
+  ctxRGEGraph.fillRect(0, 0, w, h);
+  
+  const paddingLeft = 45;
+  const paddingRight = 20;
+  const paddingTop = 25;
+  const paddingBottom = 30;
+  
+  const graphWidth = w - paddingLeft - paddingRight;
+  const graphHeight = h - paddingTop - paddingBottom;
+  
+  ctxRGEGraph.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctxRGEGraph.lineWidth = 1;
+  
+  const minX = 2.0;
+  const maxX = 18.0;
+  const minY = 0.0;
+  const maxY = 65.0;
+  
+  function getCanvasX(logQ) {
+    return paddingLeft + ((logQ - minX) / (maxX - minX)) * graphWidth;
+  }
+  
+  function getCanvasY(alphaInv) {
+    return paddingTop + graphHeight - ((alphaInv - minY) / (maxY - minY)) * graphHeight;
+  }
+  
+  ctxRGEGraph.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctxRGEGraph.font = '8px var(--font-mono)';
+  
+  for (let logQ = 2; logQ <= 18; logQ += 2) {
+    const x = getCanvasX(logQ);
+    ctxRGEGraph.beginPath();
+    ctxRGEGraph.moveTo(x, paddingTop);
+    ctxRGEGraph.lineTo(x, paddingTop + graphHeight);
+    ctxRGEGraph.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctxRGEGraph.stroke();
+    
+    ctxRGEGraph.fillText(`10^${logQ}`, x - 10, paddingTop + graphHeight + 12);
+  }
+  
+  for (let val = 10; val <= 60; val += 10) {
+    const y = getCanvasY(val);
+    ctxRGEGraph.beginPath();
+    ctxRGEGraph.moveTo(paddingLeft, y);
+    ctxRGEGraph.lineTo(w - paddingRight, y);
+    ctxRGEGraph.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctxRGEGraph.stroke();
+    
+    ctxRGEGraph.fillText(val, paddingLeft - 18, y + 3);
+  }
+  
+  ctxRGEGraph.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctxRGEGraph.lineWidth = 1;
+  ctxRGEGraph.beginPath();
+  ctxRGEGraph.moveTo(paddingLeft, paddingTop);
+  ctxRGEGraph.lineTo(paddingLeft, paddingTop + graphHeight);
+  ctxRGEGraph.lineTo(w - paddingRight, paddingTop + graphHeight);
+  ctxRGEGraph.stroke();
+  
+  ctxRGEGraph.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctxRGEGraph.font = '8px var(--font-sans)';
+  ctxRGEGraph.fillText('Energy Scale Q (GeV)', w - 100, paddingTop + graphHeight + 25);
+  
+  ctxRGEGraph.save();
+  ctxRGEGraph.translate(12, paddingTop + 60);
+  ctxRGEGraph.rotate(-Math.PI / 2);
+  ctxRGEGraph.fillText('Coupling Strength α_i^-1(Q)', 0, 0);
+  ctxRGEGraph.restore();
+  
+  const alpha1_MZ = 58.98;
+  const alpha2_MZ = 29.57;
+  const alpha3_MZ = 8.47;
+  
+  const b1 = isRGEMSSM ? 6.6 : 4.1;
+  const b2 = isRGEMSSM ? 1.0 : -19/6;
+  const b3 = isRGEMSSM ? -3.0 : -7.0;
+  
+  const curves = [
+    { alphaInvMZ: alpha1_MZ, b: b1, color: 'rgba(255, 170, 0, 0.9)', name: 'α_1^-1 (U(1)_Y)', glow: 'rgba(255, 170, 0, 0.25)' },
+    { alphaInvMZ: alpha2_MZ, b: b2, color: 'rgba(0, 240, 255, 0.9)', name: 'α_2^-1 (SU(2)_L)', glow: 'rgba(0, 240, 255, 0.25)' },
+    { alphaInvMZ: alpha3_MZ, b: b3, color: 'rgba(255, 51, 102, 0.9)', name: 'α_3^-1 (SU(3)_C)', glow: 'rgba(255, 51, 102, 0.25)' }
+  ];
+  
+  curves.forEach(curve => {
+    ctxRGEGraph.beginPath();
+    let first = true;
+    for (let logQ = 2.0; logQ <= 18.0; logQ += 0.1) {
+      const alphaInv = computeRunningCouplingJS(curve.alphaInvMZ, curve.b, logQ);
+      const cx = getCanvasX(logQ);
+      const cy = getCanvasY(alphaInv);
+      
+      if (first) {
+        ctxRGEGraph.moveTo(cx, cy);
+        first = false;
+      } else {
+        ctxRGEGraph.lineTo(cx, cy);
+      }
+    }
+    
+    ctxRGEGraph.save();
+    ctxRGEGraph.strokeStyle = curve.color;
+    ctxRGEGraph.lineWidth = 2.5;
+    ctxRGEGraph.shadowColor = curve.glow;
+    ctxRGEGraph.shadowBlur = 6;
+    ctxRGEGraph.stroke();
+    ctxRGEGraph.restore();
+    
+    const endVal = computeRunningCouplingJS(curve.alphaInvMZ, curve.b, 17.5);
+    ctxRGEGraph.fillStyle = curve.color;
+    ctxRGEGraph.font = 'bold 8px var(--font-mono)';
+    ctxRGEGraph.fillText(curve.name, getCanvasX(17.5) - 30, getCanvasY(endVal) - 6);
+  });
+  
+  const intersection = findGUTIntersectionJS();
+  
+  const wavePosition = 2.0 + (animFrame * 0.08) % 16.0;
+  curves.forEach(curve => {
+    const waveY = computeRunningCouplingJS(curve.alphaInvMZ, curve.b, wavePosition);
+    ctxRGEGraph.fillStyle = '#fff';
+    ctxRGEGraph.shadowColor = curve.color;
+    ctxRGEGraph.shadowBlur = 10;
+    ctxRGEGraph.beginPath();
+    ctxRGEGraph.arc(getCanvasX(wavePosition), getCanvasY(waveY), 3.5, 0, Math.PI * 2);
+    ctxRGEGraph.fill();
+    ctxRGEGraph.shadowBlur = 0;
+  });
+  
+  if (isRGEMSSM) {
+    const ix = getCanvasX(intersection.log10_MX);
+    const iy = getCanvasY(intersection.alphaGUTInv);
+    
+    const pulseBlur = 10 + Math.sin(animFrame * 0.1) * 6;
+    ctxRGEGraph.fillStyle = 'rgba(0, 255, 170, 0.95)';
+    ctxRGEGraph.shadowColor = 'rgba(0, 255, 170, 0.7)';
+    ctxRGEGraph.shadowBlur = pulseBlur;
+    
+    ctxRGEGraph.beginPath();
+    ctxRGEGraph.arc(ix, iy, 6, 0, Math.PI * 2);
+    ctxRGEGraph.fill();
+    
+    ctxRGEGraph.strokeStyle = 'rgba(0, 255, 170, 0.4)';
+    ctxRGEGraph.lineWidth = 1.5;
+    ctxRGEGraph.beginPath();
+    ctxRGEGraph.arc(ix, iy, 6 + (animFrame % 25) * 0.6, 0, Math.PI * 2);
+    ctxRGEGraph.stroke();
+    ctxRGEGraph.shadowBlur = 0;
+    
+    ctxRGEGraph.fillStyle = 'rgba(0, 255, 170, 0.95)';
+    ctxRGEGraph.font = 'bold 9px var(--font-sans)';
+    ctxRGEGraph.fillText('SUSY GUT Unification!', ix - 50, iy - 24);
+    ctxRGEGraph.fillStyle = '#fff';
+    ctxRGEGraph.font = '8px var(--font-mono)';
+    ctxRGEGraph.fillText(`MX = ${intersection.MX.toExponential(2)} GeV`, ix - 50, iy - 14);
+    ctxRGEGraph.fillText(`α_GUT^-1 = ${intersection.alphaGUTInv.toFixed(1)}`, ix - 50, iy - 5);
+  } else {
+    ctxRGEGraph.strokeStyle = 'rgba(255, 51, 102, 0.35)';
+    ctxRGEGraph.lineWidth = 1;
+    ctxRGEGraph.setLineDash([2, 2]);
+    
+    ctxRGEGraph.beginPath();
+    ctxRGEGraph.moveTo(getCanvasX(12.8), getCanvasY(42));
+    ctxRGEGraph.lineTo(getCanvasX(16.5), getCanvasY(33));
+    ctxRGEGraph.lineTo(getCanvasX(14.8), getCanvasY(26));
+    ctxRGEGraph.closePath();
+    ctxRGEGraph.stroke();
+    ctxRGEGraph.setLineDash([]);
+    
+    ctxRGEGraph.fillStyle = 'rgba(255, 51, 102, 0.85)';
+    ctxRGEGraph.font = '8px var(--font-sans)';
+    ctxRGEGraph.fillText('No Unification (발산)', getCanvasX(12.8) - 10, getCanvasY(42) - 10);
+  }
+}
+
+function renderRGEPhysicsMath() {
+  const container = document.getElementById('rge-physics-details');
+  if (!container) return;
+  
+  let modelPhysicsDesc = "";
+  if (isRGEMSSM) {
+    modelPhysicsDesc = `<b style="color: var(--color-bsm);">[ MSSM Unification (초대칭 대통일 극적 수렴) ]</b><br>
+    초대칭 대칭성이 가미된 최소 초대칭 표준모형(MSSM) 베타 계수($b_1 = 33/5, b_2 = 1, b_3 = -3$) 하에서는 세 커플링 라인이 거의 정확히 <b>$M_X \\approx 2.1 \\times 10^{16}$ GeV</b> 및 <b>$\\alpha_{GUT} \\approx 1/24.3$</b> 스케일의 한 지점에서 수렴합니다. 이는 양성자 붕괴와 완벽히 얽혀있어, 대통일 게이지 보손 매개 양성자 수명 예측을 높은 정밀도로 뒷받침합니다.`;
+  } else {
+    modelPhysicsDesc = `<b style="color: var(--color-danger);">[ Standard Model Divergence (표준모형 통합 실패) ]</b><br>
+    표준모형(SM)의 1-루프 베타 계수($b_1 = 41/10, b_2 = -19/6, b_3 = -7$) 하에서는 세 가지 힘의 결합상수 라인이 한 점에 모이지 않고 약 $10^{13}$ ~ $10^{17}$ GeV 범위에서 넓게 퍼져버립니다. 이는 초대칭과 같은 추가 자유도 없이는 단순한 $SU(5)$ 대통일 이론이 성립할 수 없음을 물리적으로 증명합니다.`;
+  }
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>📈 Renormalization Group (RGE) Physics Board</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      양자장론에서 게이지 대칭의 결합 상수는 상수가 아니라 에너지 스케일 $Q$에 따라 진화하는 <b>"달림(Running)"</b> 특성을 나타냅니다. 
+      이 진화는 다음과 같은 1-루프 재규격화 군 진화 방정식(RGE)으로 완벽하게 연산됩니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        \\alpha_i^{-1}(Q) = \\alpha_i^{-1}(M_Z) - \\frac{b_i}{2\\pi}\\ln\\left(\\frac{Q}{M_Z}\\right)
+      </div>
+      여기서 세 결합 상수는 각각 다음과 같습니다:
+      <ul>
+        <li><b>$\\alpha_1$</b>: $U(1)_Y$ 약한 하이퍼전하 결합상수 (GUT 정규화: $\\alpha_1 = \\frac{5}{3}\\alpha_Y$)</li>
+        <li><b>$\\alpha_2$</b>: $SU(2)_L$ 약한 등스핀 결합상수</li>
+        <li><b>$\\alpha_3$</b>: $SU(3)_C$ 강한 색전하 결합상수 ($\\alpha_s$)</li>
+      </ul>
+      
+      <p style="margin-top: 0.4rem; font-size: 0.78rem; color: var(--color-text-muted);">
+        ${modelPhysicsDesc}
+      </p>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
+
 

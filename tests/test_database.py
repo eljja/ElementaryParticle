@@ -221,3 +221,65 @@ def test_gut_proton_decay():
     res_forbidden_gut = db.verify_reaction(reactants=["p"], products=["e-", "pi0"], gut_mode=True)
     assert res_forbidden_gut["is_physically_allowed"] is False
     assert res_forbidden_gut["conservations"]["b_minus_l"]["conserved"] is False
+
+
+def test_ckm_unitarity():
+    r"""Test that CKM matrix satisfies unitary conditions V^\dagger * V = I."""
+    import math
+    from database.particles import compute_ckm_matrix, verify_ckm_unitarity
+    
+    # Standard PDG parameters: theta12 = 13.04°, theta23 = 2.38°, theta13 = 0.201°, delta_cp = 68.8°
+    theta12 = math.radians(13.04)
+    theta23 = math.radians(2.38)
+    theta13 = math.radians(0.201)
+    delta_cp = math.radians(68.8)
+    
+    V = compute_ckm_matrix(theta12, theta23, theta13, delta_cp)
+    assert verify_ckm_unitarity(V) is True
+    
+    # Test with arbitrary values
+    V_arb = compute_ckm_matrix(0.5, 0.2, 0.05, 1.2)
+    assert verify_ckm_unitarity(V_arb) is True
+
+
+def test_jarlskog_invariant():
+    """Test that Jarlskog invariant is computed correctly and is around 3e-5 for PDG values."""
+    import math
+    from database.particles import compute_ckm_matrix, compute_jarlskog_invariant
+    
+    theta12 = math.radians(13.04)
+    theta23 = math.radians(2.38)
+    theta13 = math.radians(0.201)
+    delta_cp = math.radians(68.8)
+    
+    V = compute_ckm_matrix(theta12, theta23, theta13, delta_cp)
+    J = compute_jarlskog_invariant(V)
+    
+    # Analytical Jarlskog: J = c12*s12*c23*s23*c13^2*s13*sin(delta)
+    c12 = math.cos(theta12)
+    s12 = math.sin(theta12)
+    c23 = math.cos(theta23)
+    s23 = math.sin(theta23)
+    c13 = math.cos(theta13)
+    s13 = math.sin(theta13)
+    J_theory = c12 * s12 * c23 * s23 * (c13 ** 2) * s13 * math.sin(delta_cp)
+    
+    assert J == pytest.approx(J_theory, abs=1e-12)
+    assert J == pytest.approx(3.08e-5, abs=1e-5) # PDG value is roughly around 3e-5
+
+
+def test_ckm_cp_violation_vanishes():
+    """Test that J = 0 when delta_cp = 0 or when any mixing angle is 0."""
+    import math
+    from database.particles import compute_ckm_matrix, compute_jarlskog_invariant
+    
+    # delta_cp = 0
+    V1 = compute_ckm_matrix(0.2, 0.1, 0.05, 0.0)
+    J1 = compute_jarlskog_invariant(V1)
+    assert J1 == pytest.approx(0.0, abs=1e-15)
+    
+    # theta13 = 0
+    V2 = compute_ckm_matrix(0.2, 0.1, 0.0, 1.2)
+    J2 = compute_jarlskog_invariant(V2)
+    assert J2 == pytest.approx(0.0, abs=1e-15)
+

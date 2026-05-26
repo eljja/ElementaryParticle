@@ -376,3 +376,76 @@ class ParticleDatabase:
                 "mass_energy": {"conserved": energy_conserved, "mass_in": mass_in, "mass_out": mass_out, "note": kinematics_note}
             }
         }
+
+
+def compute_ckm_matrix(theta12: float, theta23: float, theta13: float, delta_cp: float) -> List[List[complex]]:
+    """
+    Computes the 3x3 complex CKM matrix using the standard PDG parametrization.
+    Angles are in radians.
+    """
+    import math
+    import cmath
+    
+    c12 = math.cos(theta12)
+    s12 = math.sin(theta12)
+    c23 = math.cos(theta23)
+    s23 = math.sin(theta23)
+    c13 = math.cos(theta13)
+    s13 = math.sin(theta13)
+    
+    # exp(i * delta_cp) and exp(-i * delta_cp)
+    exp_i_delta = cmath.exp(1j * delta_cp)
+    exp_minus_i_delta = cmath.exp(-1j * delta_cp)
+    
+    # 3x3 matrix calculation
+    V_ud = c12 * c13
+    V_us = s12 * c13
+    V_ub = s13 * exp_minus_i_delta
+    
+    V_cd = -s12 * c23 - c12 * s23 * s13 * exp_i_delta
+    V_cs = c12 * c23 - s12 * s23 * s13 * exp_i_delta
+    V_cb = s23 * c13
+    
+    V_td = s12 * s23 - c12 * c23 * s13 * exp_i_delta
+    V_ts = -c12 * s23 - s12 * c23 * s13 * exp_i_delta
+    V_tb = c23 * c13
+    
+    return [
+        [V_ud, V_us, V_ub],
+        [V_cd, V_cs, V_cb],
+        [V_td, V_ts, V_tb]
+    ]
+
+
+def compute_jarlskog_invariant(V: List[List[complex]]) -> float:
+    """
+    Computes the Jarlskog invariant J = Im(V_us * V_cb * V_ub^* * V_cs^*)
+    which quantifies CP violation in the quark sector.
+    """
+    V_us = V[0][1]
+    V_cb = V[1][2]
+    V_ub_conj = V[0][2].conjugate()
+    V_cs_conj = V[1][1].conjugate()
+    
+    prod = V_us * V_cb * V_ub_conj * V_cs_conj
+    return prod.imag
+
+
+def verify_ckm_unitarity(V: List[List[complex]], tolerance: float = 1e-10) -> bool:
+    """
+    Verifies that the CKM matrix is unitary, i.e., V^dagger * V = I.
+    Returns True if the maximum deviation is within tolerance, False otherwise.
+    """
+    # Compute V^dagger * V
+    for i in range(3):
+        for j in range(3):
+            val = 0.0j
+            for k in range(3):
+                # V^dagger_ik = V_ki^*
+                val += V[k][i].conjugate() * V[k][j]
+            
+            expected = 1.0 if i == j else 0.0
+            if abs(val - expected) > tolerance:
+                return False
+    return True
+

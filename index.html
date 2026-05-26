@@ -98,6 +98,12 @@
         <button class="right-tab-btn" id="btn-tab-gut" onclick="switchRightTab('gut')">
           🌊 GUT & Decay
         </button>
+        <button class="right-tab-btn" id="btn-tab-ckm" onclick="switchRightTab('ckm')">
+          🔀 CKM & CP
+        </button>
+        <button class="right-tab-btn" id="btn-tab-rge" onclick="switchRightTab('rge')">
+          📈 RGE & Unify
+        </button>
       </div>
 
       <!-- Tab Content A: Collision & Decay Simulator -->
@@ -639,6 +645,182 @@
 
               <!-- GUT Physics Math Board -->
               <div id="gut-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content J: CKM & CP Violation Lab -->
+      <div class="tab-content" id="tab-ckm">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Quark Flavor Mixing & CP Violation Lab (CKM 행렬 및 CP 위반)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              약한 상호작용 하에서 쿼크들의 맛깔 혼합(Flavor Mixing)을 기술하는 카비보-고바야시-마스카와(CKM) 유니터리 복소 행렬과 CP 위반을 가시화합니다. 3개의 혼합각과 1개의 CP 위상(&delta;<sub>CP</sub>)을 조절하며 유니터리 삼각형의 퇴화 조건 및 야를스코그 불변량(J)의 실시간 소멸을 확인해 보세요.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Parameter Sliders -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>CABIBBO ANGLE / THETA 12 (&theta;<sub>12</sub>)</span>
+                  <span id="label-ckm-theta12" style="color: var(--color-quark); font-family: var(--font-mono);">13.04° (0.2276 rad)</span>
+                </div>
+                <input type="range" id="slider-ckm-theta12" min="0" max="45" step="0.05" value="13.04" oninput="updateCKMParameters()" style="width: 100%; accent-color: var(--color-quark);">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.2rem;">
+                  <span>MIXING ANGLE / THETA 23 (&theta;<sub>23</sub>)</span>
+                  <span id="label-ckm-theta23" style="color: var(--color-quark); font-family: var(--font-mono);">2.38° (0.0415 rad)</span>
+                </div>
+                <input type="range" id="slider-ckm-theta23" min="0" max="10" step="0.02" value="2.38" oninput="updateCKMParameters()" style="width: 100%; accent-color: var(--color-quark);">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.2rem;">
+                  <span>MIXING ANGLE / THETA 13 (&theta;<sub>13</sub>)</span>
+                  <span id="label-ckm-theta13" style="color: var(--color-quark); font-family: var(--font-mono);">0.201° (0.0035 rad)</span>
+                </div>
+                <input type="range" id="slider-ckm-theta13" min="0" max="2" step="0.005" value="0.201" oninput="updateCKMParameters()" style="width: 100%; accent-color: var(--color-quark);">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.2rem;">
+                  <span>CP-VIOLATING PHASE (&delta;<sub>CP</sub>)</span>
+                  <span id="label-ckm-delta" style="color: var(--color-danger); font-family: var(--font-mono);">68.8° (1.2008 rad)</span>
+                </div>
+                <input type="range" id="slider-ckm-delta" min="0" max="180" step="0.5" value="68.8" oninput="updateCKMParameters()" style="width: 100%; accent-color: var(--color-danger);">
+              </div>
+
+              <!-- Jarlskog Invariant & Unitarity Status Alert -->
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <div id="ckm-unitarity-badge" style="flex: 1; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.45rem; border-radius: 6px; background: rgba(0, 240, 255, 0.08); border: 1px solid var(--color-lepton); color: var(--color-lepton);">
+                  UNITARITY: V<sup>&dagger;</sup>V = I (100.0% VERIFIED)
+                </div>
+                <div id="ckm-jarlskog-badge" style="flex: 1; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 51, 102, 0.08); border: 1px solid var(--color-danger); color: var(--color-danger);">
+                  JARLSKOG J: 3.08 &times; 10<sup>-5</sup>
+                </div>
+              </div>
+
+              <!-- 3x3 Complex CKM Matrix Board -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">3&times;3 Complex CKM Matrix Amplitude & Phase (맛깔 혼합 복소 행렬 원소)</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; width: 100%; margin-top: 0.25rem; font-family: var(--font-mono); font-size: 0.72rem; text-align: center;">
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>ud</sub>|</strong>
+                    <span id="ckm-vud-val">0.974</span>
+                    <span id="ckm-vud-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">0.0°</span>
+                  </div>
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>us</sub>|</strong>
+                    <span id="ckm-vus-val">0.225</span>
+                    <span id="ckm-vus-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">0.0°</span>
+                  </div>
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: var(--color-danger);">|V<sub>ub</sub>|</strong>
+                    <span id="ckm-vub-val">0.0035</span>
+                    <span id="ckm-vub-phase" style="font-size: 0.55rem; color: var(--color-danger);">-68.8°</span>
+                  </div>
+
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>cd</sub>|</strong>
+                    <span id="ckm-vcd-val">0.225</span>
+                    <span id="ckm-vcd-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">180.0°</span>
+                  </div>
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>cs</sub>|</strong>
+                    <span id="ckm-vcs-val">0.973</span>
+                    <span id="ckm-vcs-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">0.0°</span>
+                  </div>
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>cb</sub>|</strong>
+                    <span id="ckm-vcb-val">0.0415</span>
+                    <span id="ckm-vcb-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">0.0°</span>
+                  </div>
+
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>td</sub>|</strong>
+                    <span id="ckm-vtd-val">0.0088</span>
+                    <span id="ckm-vtd-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">-21.8°</span>
+                  </div>
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>ts</sub>|</strong>
+                    <span id="ckm-vts-val">0.0407</span>
+                    <span id="ckm-vts-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">178.9°</span>
+                  </div>
+                  <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
+                    <strong style="color: #fff;">|V<sub>tb</sub>|</strong>
+                    <span id="ckm-vtb-val">0.9991</span>
+                    <span id="ckm-vtb-phase" style="font-size: 0.55rem; color: var(--color-text-muted);">0.0°</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Unitarity Triangle Vector Visualizer -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Unitarity Triangle Visualizer (유니터리 삼각형 가시화)</span>
+                <div class="visualizer-wrapper" style="height: 260px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-ckm-triangle"></canvas>
+                  <div class="canvas-overlay">[ UNITARITY TRIANGLE CANVAS // V<sub>ud</sub>V<sub>ub</sub><sup>*</sup> + V<sub>cd</sub>V<sub>cb</sub><sup>*</sup> + V<sub>td</sub>V<sub>tb</sub><sup>*</sup> = 0 ]</div>
+                </div>
+              </div>
+
+              <!-- CKM Physics Math Board -->
+              <div id="ckm-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content K: RGE Gauge Coupling Unification Lab -->
+      <div class="tab-content" id="tab-rge">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">RGE Running Coupling & Gauge Unification Lab (재규격화군 달림 결합상수 통합)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              에너지 스케일 Q (GeV) 축에 따른 전자기-약-강 세 가지 기본 게이지 결합 상수 (&alpha;<sub>1</sub><sup>-1</sup>, &alpha;<sub>2</sub><sup>-1</sup>, &alpha;<sub>3</sub><sup>-1</sup>)의 1-루프 재규격화 군 진화(RGE)를 실시간 계산하고, 초대칭(MSSM) 조건 하에서 대통일 이론(GUT) 통합을 실증합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Model Toggle -->
+              <div style="display: flex; gap: 0.5rem; width: 100%; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Beta Function Active Model (진화 베타함수 계수 설정)</span>
+                  <span id="label-rge-model-desc" style="font-size: 0.7rem; color: var(--color-text-muted);">Standard Model (SM): Couplings do not meet at single point</span>
+                </div>
+                <button class="color-pick-btn" id="btn-toggle-rgemodel" onclick="toggleRGEModel()" style="min-width: 140px; border-color: var(--color-boson); color: var(--color-boson); background: rgba(168, 85, 247, 0.05); font-size: 0.75rem;">
+                  🛡️ Standard Model (SM)
+                </button>
+              </div>
+
+              <!-- Unification scale readings -->
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <div class="color-assign-btn" style="flex: 1; padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column; text-align: center; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.01);">
+                  <strong style="color: var(--color-lepton); font-size: 0.7rem;">ESTIMATED GUT SCALE (M<sub>X</sub>)</strong>
+                  <span id="rge-scale-val" style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #fff;">~ 2.1 &times; 10<sup>16</sup> GeV</span>
+                </div>
+                <div class="color-assign-btn" style="flex: 1; padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column; text-align: center; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.01);">
+                  <strong style="color: var(--color-boson); font-size: 0.7rem;">GUT COUPLING strength (&alpha;<sub>GUT</sub><sup>-1</sup>)</strong>
+                  <span id="rge-alpha-val" style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #fff;">~ 24.3</span>
+                </div>
+              </div>
+
+              <!-- RGE Running Coupling Graph Visualizer -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Gauge Coupling Running Curve &alpha;<sub>i</sub><sup>-1</sup>(Q) (결합상수 달림 곡선 그래프)</span>
+                <div class="visualizer-wrapper" style="height: 280px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-rge-graph"></canvas>
+                  <div class="canvas-overlay">[ GAUGE COUPLING RUNNING AND UNIFICATION VISUALIZER ]</div>
+                </div>
+              </div>
+
+              <!-- RGE Physics Math Board -->
+              <div id="rge-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
               </div>
             </div>
 
