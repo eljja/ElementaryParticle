@@ -2,6 +2,26 @@ let particlesData = [];
 let particlesBySymbol = {};
 let currentTab = 'standard-model';
 let viewAntiparticles = false;
+let currentLang = 'en'; // 'en' or 'ko'
+
+function toggleLanguage() {
+  currentLang = currentLang === 'en' ? 'ko' : 'en';
+  document.body.setAttribute('data-lang', currentLang);
+  const btn = document.getElementById('btn-lang-toggle');
+  if (btn) btn.innerHTML = currentLang === 'en' ? '🌐 EN / KO' : '🌐 KO / EN';
+  
+  // Re-render the whole UI
+  renderParticleMatrix();
+  renderReactionSlots();
+  if (document.getElementById('audit-report-container').innerHTML !== '') {
+    runReactionAudit(); // Re-audit to translate report
+  }
+}
+
+// Initialize lang
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-lang', currentLang);
+});
 
 // Right Panel Active Tab
 let rightPanelTab = 'collision'; // 'collision', 'builder', or 'neutrino'

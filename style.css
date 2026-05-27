@@ -47,6 +47,10 @@ body {
   line-height: 1.5;
 }
 
+/* Localization Toggles */
+body[data-lang="en"] .lang-ko { display: none !important; }
+body[data-lang="ko"] .lang-en { display: none !important; }
+
 /* Scrollbar Style */
 ::-webkit-scrollbar {
   width: 8px;
@@ -322,9 +326,11 @@ h1 {
 
 .card-meta {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
   width: 100%;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -337,6 +343,7 @@ h1 {
 
 .card-mass {
   color: #a5b4fc;
+  text-align: center;
 }
 
 /* Right-side Details & Simulator */

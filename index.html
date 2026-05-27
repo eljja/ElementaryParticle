@@ -18,14 +18,17 @@
       </svg>
       <h1>SUBATOMIC PHYSICS ENGINE</h1>
     </div>
-    <p class="header-subtitle">
-      Standard Model & Beyond the Standard Model Elementary Particles Portal
-      <a href="https://github.com/eljja/ElementaryParticle" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; color: #fff; background: rgba(255,255,255,0.15); padding: 0.2rem 0.6rem; border-radius: 6px; text-decoration: none; font-size: 0.75rem; margin-left: 1rem; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;">
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <p class="header-subtitle" style="margin: 0;">Standard Model & Beyond the Standard Model Elementary Particles Portal</p>
+      <a href="https://github.com/eljja/ElementaryParticle" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; color: #fff; background: rgba(255,255,255,0.15); padding: 0.2rem 0.6rem; border-radius: 6px; text-decoration: none; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s;">
         <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
         GitHub Repo
       </a>
-    </p>
-    <div class="badge">DATABASE V1.0.0 // PHYSICS ENGINE RUNNING</div>
+      <button id="btn-lang-toggle" onclick="toggleLanguage()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 0.2rem 0.6rem; border-radius: 6px; cursor: pointer; font-family: var(--font-mono); font-weight: bold; transition: all 0.2s;">
+        🌐 EN / KO
+      </button>
+      <div class="badge">DATABASE V1.0.0 // PHYSICS ENGINE RUNNING</div>
+    </div>
   </header>
 
   <!-- Main Workspace -->
@@ -34,20 +37,22 @@
     <!-- Left Column: Interactive Particle Directory -->
     <section class="dictionary-panel">
       <div class="panel-header">
-        <h2 class="panel-title">Elementary Particle Periodic Table (소립자 격자판)</h2>
+        <h2 class="panel-title">
+          <span class="lang-en">Elementary Particle Periodic Table</span><span class="lang-ko">소립자 주기율표 격자판</span>
+        </h2>
       </div>
 
       <!-- Filters & Toggles -->
       <div class="filter-tabs">
-        <button class="tab-btn active" data-tab="standard-model">Standard Model (표준 모형)</button>
-        <button class="tab-btn" data-tab="composite-hadron">Hadrons (복합 강입자)</button>
-        <button class="tab-btn" data-tab="bsm">BSM (가상 입자)</button>
-        <button class="tab-btn" data-tab="all">All Particles (전체 보기)</button>
+        <button class="tab-btn active" data-tab="standard-model"><span class="lang-en">Standard Model</span><span class="lang-ko">Standard Model (표준 모형)</span></button>
+        <button class="tab-btn" data-tab="composite-hadron"><span class="lang-en">Hadrons</span><span class="lang-ko">Hadrons (복합 강입자)</span></button>
+        <button class="tab-btn" data-tab="bsm"><span class="lang-en">BSM</span><span class="lang-ko">BSM (가상 입자)</span></button>
+        <button class="tab-btn" data-tab="all"><span class="lang-en">All Particles</span><span class="lang-ko">All Particles (전체 보기)</span></button>
       </div>
 
       <div class="toggle-bar">
         <label class="toggle-switch" id="antiparticle-label">
-          <span>Show Antiparticles (반입자 보기)</span>
+          <span><span class="lang-en">Show Antimatter</span><span class="lang-ko">Show Antiparticles (반입자 보기)</span></span>
           <input type="checkbox" id="antiparticle-toggle">
           <span class="slider"></span>
         </label>
@@ -147,15 +152,15 @@
               
               <!-- Actions -->
               <div class="sim-actions">
-                <button class="action-btn btn-clear" id="btn-clear-sim" title="Clear Slots">Clear</button>
+                <button class="action-btn btn-clear" id="btn-clear-sim" title="Clear Slots"><span class="lang-en">Clear</span><span class="lang-ko">초기화</span></button>
                 <button class="action-btn" id="btn-predict-sim" style="background: rgba(0, 240, 255, 0.15); color: #00f0ff; border-color: #00f0ff; font-weight: 700;">
-                  ✨ Auto Predict (자동 예측)
+                  ✨ <span class="lang-en">Auto Predict</span><span class="lang-ko">자동 예측</span>
                 </button>
                 <button class="action-btn" id="btn-run-sim">
                   <svg style="width: 18px; height: 18px; fill: none; stroke: currentColor;" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  Activate Collider (충돌기 가동)
+                  <span class="lang-en">Activate Collider</span><span class="lang-ko">충돌기 가동</span>
                 </button>
               </div>
             </div>
