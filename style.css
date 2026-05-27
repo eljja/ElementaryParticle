@@ -248,16 +248,16 @@ h1 {
 
 .particle-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
 }
 
 /* Particle Cards */
 .particle-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -298,19 +298,21 @@ h1 {
 }
 
 /* Particle Card Contents */
-.card-symbol {
-  font-family: var(--font-mono);
-  font-size: 1.6rem;
+.particle-symbol {
+  font-family: 'Times New Roman', serif;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
-  margin-bottom: 0.25rem;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  font-style: italic;
+  margin-bottom: 0.2rem;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
-.card-name {
-  font-size: 0.85rem;
+.particle-name {
+  font-size: 0.7rem;
   color: var(--color-text-muted);
+  font-weight: 600;
   text-align: center;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

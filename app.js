@@ -358,6 +358,7 @@ function setupEventListeners() {
   });
 
   // Action Buttons
+  document.getElementById('btn-predict-sim').addEventListener('click', predictReactionProducts);
   document.getElementById('btn-run-sim').addEventListener('click', runReactionAudit);
   document.getElementById('btn-clear-sim').addEventListener('click', clearSimulator);
 }
@@ -757,6 +758,61 @@ function verifyReactionJS(reactList, prodList) {
       mass_energy: { conserved: energy_ok, mass_in, mass_out, note: kinematics_note }
     }
   };
+}
+
+function predictReactionProducts() {
+  if (reactants.length === 0) {
+    alert("예측할 반응물(Reactant)을 하나 이상 슬롯에 넣어주세요.");
+    return;
+  }
+  
+  // 빠른 예측을 위해 매우 무거운 이종/가상 입자(BSM, GUT 등) 제외
+  const commonProducts = particlesData.filter(p => {
+    return p.mass <= 200000 && !p.name.includes("Squark") && !p.name.includes("Slepton") && !p.name.includes("GUT") && !p.name.includes("Axion") && !p.name.includes("Monopole");
+  });
+  
+  let found = false;
+  
+  // 1. 2-body 탐색
+  for (let i = 0; i < commonProducts.length; i++) {
+    for (let j = i; j < commonProducts.length; j++) {
+      let p1 = commonProducts[i].symbol;
+      let p2 = commonProducts[j].symbol;
+      if (verifyReactionJS(reactants, [p1, p2]).isValid) {
+        products = [p1, p2];
+        found = true; break;
+      }
+    }
+    if (found) break;
+  }
+  
+  // 2. 3-body 탐색 (2-body 실패 시)
+  if (!found) {
+    // 속도 최적화를 위해 비교적 가벼운 입자(렙톤, 쿼크, 파이온, 가벼운 게이지보손)들로만 3-body 탐색
+    const veryCommon = commonProducts.filter(p => p.mass < 100000); 
+    for (let i = 0; i < veryCommon.length; i++) {
+      for (let j = i; j < veryCommon.length; j++) {
+        for (let k = j; k < veryCommon.length; k++) {
+          let p1 = veryCommon[i].symbol;
+          let p2 = veryCommon[j].symbol;
+          let p3 = veryCommon[k].symbol;
+          if (verifyReactionJS(reactants, [p1, p2, p3]).isValid) {
+            products = [p1, p2, p3];
+            found = true; break;
+          }
+        }
+        if (found) break;
+      }
+      if (found) break;
+    }
+  }
+  
+  if (found) {
+    renderReactionSlots();
+    runReactionAudit();
+  } else {
+    alert("물리학적 보존 법칙을 만족하는 흔한 생성물 조합을 찾지 못했습니다. 입자가 안정하거나 아주 이례적인 반응이 필요합니다.");
+  }
 }
 
 function runReactionAudit() {
