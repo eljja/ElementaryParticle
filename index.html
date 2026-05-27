@@ -104,6 +104,24 @@
         <button class="right-tab-btn" id="btn-tab-rge" onclick="switchRightTab('rge')">
           📈 RGE & Unify
         </button>
+        <button class="right-tab-btn" id="btn-tab-qcd" onclick="switchRightTab('qcd')">
+          🌡️ QCD & QGP
+        </button>
+        <button class="right-tab-btn" id="btn-tab-feynman" onclick="switchRightTab('feynman')">
+          〰️ Feynman QFT
+        </button>
+        <button class="right-tab-btn" id="btn-tab-cosmology" onclick="switchRightTab('cosmology')">
+          🌌 Cosmology & DM
+        </button>
+        <button class="right-tab-btn" id="btn-tab-neutrino-osc" onclick="switchRightTab('neutrino-osc')">
+          🔮 Neutrino Osc.
+        </button>
+        <button class="right-tab-btn" id="btn-tab-sphaleron" onclick="switchRightTab('sphaleron')">
+          🌀 Sphaleron
+        </button>
+        <button class="right-tab-btn" id="btn-tab-axion" onclick="switchRightTab('axion')">
+          🧲 Axion & CP
+        </button>
       </div>
 
       <!-- Tab Content A: Collision & Decay Simulator -->
@@ -821,6 +839,414 @@
 
               <!-- RGE Physics Math Board -->
               <div id="rge-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content K: QCD Phase Diagram & QGP Lab -->
+      <div class="tab-content" id="tab-qcd">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">QCD Phase Diagram & QGP Deconfinement Lab</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              강력(Strong Force) 매개 환경에서 극한의 온도($T$)와 바리온 밀도($\mu_B$)를 조작하여 쿼크-글루온 플라즈마(QGP) 상전이와 색초전도(CFL) 현상을 탐구합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              <!-- Parameter Sliders -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                  <span>TEMPERATURE ($T$, 온도)</span>
+                  <span id="label-qcd-temperature" style="color: #ffaa00; font-family: var(--font-mono);">0 MeV</span>
+                </div>
+                <input type="range" id="slider-qcd-temperature" min="0" max="300" step="1" value="0" oninput="updateQCDParameters()" style="width: 100%; accent-color: #ffaa00;">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.2rem;">
+                  <span>BARYON CHEMICAL POTENTIAL ($\mu_B$, 바리온 화학 퍼텐셜)</span>
+                  <span id="label-qcd-mub" style="color: #a5b4fc; font-family: var(--font-mono);">0 MeV</span>
+                </div>
+                <input type="range" id="slider-qcd-mub" min="0" max="1000" step="5" value="0" oninput="updateQCDParameters()" style="width: 100%; accent-color: #a5b4fc;">
+              </div>
+
+              <!-- Badges for Order Parameter and Pressure -->
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <div id="qcd-chiral-badge" style="flex: 1; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: #fff;">
+                  CHIRAL CONDENSATE: 1.00
+                </div>
+                <div id="qcd-deconfinement-badge" style="flex: 1; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.45rem; border-radius: 6px; background: rgba(0, 240, 255, 0.08); border: 1px solid var(--color-lepton); color: var(--color-lepton);">
+                  P_QGP &lt; P_had (CONFINED)
+                </div>
+              </div>
+
+              <!-- Phase Diagram Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">QCD Phase Diagram (상태도 및 임계 경계선)</span>
+                <div class="visualizer-wrapper" style="height: 220px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-qcd-phase" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Microphysics Chamber Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Quark-Gluon Microstate Chamber (미시 상태 엔진)</span>
+                <div class="visualizer-wrapper" style="height: 250px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-qcd-micro" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                  <div class="canvas-overlay">[ QCD MICRO CHAMBER // ACTIVE ]</div>
+                </div>
+              </div>
+
+              <!-- Physics Math Details -->
+              <div id="qcd-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content L: Feynman QFT Lab -->
+      <div class="tab-content" id="tab-feynman">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">QFT Feynman Diagram & Scattering Lab</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              양자장론(QFT)의 파인만 규칙(Feynman Rules)을 통해 트리 레벨 산란 진폭($|\mathcal{M}|^2$)과 만델스탐 변수를 도출하고, 미분 단면적(Differential Cross Section)의 극좌표 분포를 산출합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              
+              <!-- Process Selector -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <span class="color-assigner-title">SCATTERING PROCESS (산란 반응 선택)</span>
+                <select id="select-feynman-process" onchange="updateFeynmanParameters()" style="width: 100%; padding: 0.5rem; background: rgba(5, 7, 20, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-mono); font-size: 0.85rem;">
+                  <option value="e- e+ -> mu- mu+">Annihilation: e⁻ e⁺ → μ⁻ μ⁺</option>
+                  <option value="e- e+ -> e- e+">Bhabha Scattering: e⁻ e⁺ → e⁻ e⁺</option>
+                  <option value="e- e- -> e- e-">Møller Scattering: e⁻ e⁻ → e⁻ e⁻</option>
+                </select>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>CENTER OF MASS ENERGY ($\sqrt{s}$)</span>
+                  <span id="label-feynman-energy" style="color: #00f0ff; font-family: var(--font-mono);">1000 GeV</span>
+                </div>
+                <input type="range" id="slider-feynman-energy" min="10" max="10000" step="10" value="1000" oninput="updateFeynmanParameters()" style="width: 100%; accent-color: #00f0ff;">
+              </div>
+
+              <!-- Cross Section Badge -->
+              <div style="width: 100%;">
+                <div id="feynman-sigma-badge" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.85rem; padding: 0.5rem; border-radius: 6px; background: rgba(0, 240, 255, 0.08); border: 1px solid #00f0ff; color: #00f0ff; letter-spacing: 1px;">
+                  TOTAL CROSS SECTION: ...
+                </div>
+              </div>
+
+              <!-- Feynman Diagram Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Feynman Diagram (Tree-Level Topology)</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-feynman-diagram" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Polar Plot Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Differential Cross Section $\frac{d\sigma}{d\Omega}$ (Polar Plot)</span>
+                <div class="visualizer-wrapper" style="height: 220px; width: 100%; margin-top: 0.25rem; position: relative;">
+                  <canvas id="canvas-feynman-scattering" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Physics Math Details -->
+              <div id="feynman-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content M: Cosmology & DM Lab -->
+      <div class="tab-content" id="tab-cosmology">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Cosmology & Dark Matter Freeze-out</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              초기 우주의 팽창 과정(빅뱅 이후)에서 암흑물질 입자가 열역학적 평형 상태를 벗어나 동결(Freeze-out)되며 현재 우주의 잔존 밀도(Relic Density)를 형성하는 과정을 추적합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              
+              <!-- Parameters -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <span class="color-assigner-title">WIMP PARAMETERS (암흑물질 물리량)</span>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>MASS ($m_\chi$)</span>
+                  <span id="label-cosmology-mass" style="color: #00f0ff; font-family: var(--font-mono);">100.0 GeV</span>
+                </div>
+                <input type="range" id="slider-cosmology-mass" min="10" max="1000" step="10" value="100" oninput="updateCosmologyParameters()" style="width: 100%; accent-color: #00f0ff;">
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>CROSS SECTION $\langle \sigma v \rangle$</span>
+                  <span id="label-cosmology-sigma" style="color: #ffaa00; font-family: var(--font-mono);">3.0e-26 cm³/s</span>
+                </div>
+                <input type="range" id="slider-cosmology-sigma" min="-28" max="-22" step="0.1" value="-25.5228" oninput="updateCosmologyParameters()" style="width: 100%; accent-color: #ffaa00;">
+              </div>
+
+              <!-- Relic Density Badge -->
+              <div style="width: 100%;">
+                <div id="cosmology-relic-badge" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.85rem; padding: 0.5rem; border-radius: 6px; background: rgba(168, 85, 247, 0.08); border: 1px solid #a855f7; color: #a855f7; letter-spacing: 1px;">
+                  RELIC DENSITY $\Omega_\chi h^2$: ...
+                </div>
+              </div>
+
+              <!-- Boltzmann Evolution Graph Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Comoving Number Density $Y = n/s$ vs $x = m/T$</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-cosmology-evolution" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Expanding Universe Micro Simulation Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Expanding Universe Micro Simulation</span>
+                <div class="visualizer-wrapper" style="height: 160px; width: 100%; margin-top: 0.25rem; position: relative; overflow: hidden;">
+                  <canvas id="canvas-cosmology-micro" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Physics Math Details -->
+              <div id="cosmology-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content N: Neutrino Oscillation Lab -->
+      <div class="tab-content" id="tab-neutrino-osc">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Neutrino Oscillation & MSW Effect</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              중성미자의 질량 고유상태와 맛 고유상태의 양자역학적 혼합에 의해 발생하는 진동 현상과, 물질 내부에서의 MSW(Mikheyev-Smirnov-Wolfenstein) 공명 효과를 시뮬레이션합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              
+              <!-- Flavor Selection -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <span class="color-assigner-title">OSCILLATION PARAMETERS</span>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>SOURCE FLAVOR</span>
+                  <span style="color: #00f0ff; font-family: var(--font-mono);">→ DETECTION</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                  <select id="select-nu-from" onchange="updateNeutrinoOscParameters()" style="flex:1; padding: 0.35rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--font-mono); font-size: 0.8rem;">
+                    <option value="nu_e">ν_e (Electron)</option>
+                    <option value="nu_mu" selected>ν_μ (Muon)</option>
+                    <option value="nu_tau">ν_τ (Tau)</option>
+                  </select>
+                  <select id="select-nu-to" onchange="updateNeutrinoOscParameters()" style="flex:1; padding: 0.35rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--font-mono); font-size: 0.8rem;">
+                    <option value="nu_e">ν_e (Electron)</option>
+                    <option value="nu_mu">ν_μ (Muon)</option>
+                    <option value="nu_tau" selected>ν_τ (Tau)</option>
+                  </select>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>ENERGY $E_\nu$</span>
+                  <span id="label-nu-energy" style="color: #00f0ff; font-family: var(--font-mono);">1.0 GeV</span>
+                </div>
+                <input type="range" id="slider-nu-energy" min="0.1" max="10" step="0.1" value="1.0" oninput="updateNeutrinoOscParameters()" style="width: 100%; accent-color: #00f0ff;">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>ELECTRON DENSITY $n_e$ (MSW)</span>
+                  <span id="label-nu-density" style="color: #a855f7; font-family: var(--font-mono);">1.0e+26 cm⁻³</span>
+                </div>
+                <input type="range" id="slider-nu-density" min="22" max="28" step="0.1" value="26" oninput="updateNeutrinoOscParameters()" style="width: 100%; accent-color: #a855f7;">
+              </div>
+
+              <!-- PMNS Matrix Badge -->
+              <div style="width: 100%;">
+                <div id="neutrino-pmns-badge" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.85rem; padding: 0.5rem; border-radius: 6px; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.3); color: #00f0ff; letter-spacing: 1px;">
+                  PMNS MATRIX LOADED
+                </div>
+              </div>
+
+              <!-- Oscillation Probability vs Distance Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">Oscillation Probability $P(\nu_\alpha \to \nu_\beta)$ vs Distance $L$</span>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-neutrino-osc" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- MSW Effect Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <span class="color-assigner-title">MSW Matter Effect: Effective Mixing Angle vs $A = 2EV/\Delta m^2$</span>
+                <div class="visualizer-wrapper" style="height: 160px; width: 100%; margin-top: 0.25rem; position: relative; overflow: hidden;">
+                  <canvas id="canvas-msw-effect" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Physics Math Details -->
+              <div id="neutrino-osc-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content S: Sphaleron & Baryogenesis Lab -->
+      <div class="tab-content" id="tab-sphaleron">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Electroweak Sphalerons & Baryogenesis</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              전자기약 작용의 진공 구조(Chern-Simons Number)와 고온 우주에서의 스팔레론 전이, 그리고 사하로프 3조건을 통한 물질-반물질 비대칭성 생성 과정을 시뮬레이션합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              
+              <!-- Parameters -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <span class="color-assigner-title">SAKHAROV CONDITIONS & COSMIC ENVIRONMENT</span>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>UNIVERSE TEMPERATURE $T$</span>
+                  <span id="label-sphal-temp" style="color: #ff3366; font-family: var(--font-mono);">250.0 GeV</span>
+                </div>
+                <input type="range" id="slider-sphal-temp" min="10" max="300" step="1" value="250" oninput="updateSphaleronParameters()" style="width: 100%; accent-color: #ff3366;">
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>CP VIOLATION PHASE $\delta_{CP}$</span>
+                  <span id="label-sphal-cp" style="color: #00f0ff; font-family: var(--font-mono);">1.57 rad</span>
+                </div>
+                <input type="range" id="slider-sphal-cp" min="0" max="6.28" step="0.01" value="1.57" oninput="updateSphaleronParameters()" style="width: 100%; accent-color: #00f0ff;">
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>OUT OF EQUILIBRIUM</span>
+                  <span id="label-sphal-outeq" style="color: #a855f7; font-family: var(--font-mono);">1.0 (Strong)</span>
+                </div>
+                <input type="range" id="slider-sphal-outeq" min="0" max="1" step="0.01" value="1.0" oninput="updateSphaleronParameters()" style="width: 100%; accent-color: #a855f7;">
+              </div>
+
+              <!-- Sphaleron Potential Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span class="color-assigner-title">EW Vacuum Potential vs Chern-Simons Number $N_{CS}$</span>
+                  <span id="badge-sphal-phase" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(255, 51, 102, 0.2); border: 1px solid #ff3366; color: #ff3366; font-family: var(--font-mono);">SYMMETRIC PHASE</span>
+                </div>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-sphaleron-potential" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Baryon Asymmetry Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span class="color-assigner-title">Baryon Asymmetry $\eta_B = n_B / n_\gamma$ Evolution</span>
+                  <span id="badge-baryon-asym" style="font-size: 0.75rem; color: #00f0ff; font-family: var(--font-mono); font-weight: bold;">η_B = 0.00e+00</span>
+                </div>
+                <div class="visualizer-wrapper" style="height: 140px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-baryon-asymmetry" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Physics Math Details -->
+              <div id="sphaleron-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content T: Axion & Strong CP Lab -->
+      <div class="tab-content" id="tab-axion">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Axion & Strong CP Problem (Haloscope Lab)</h2>
+          </div>
+          
+          <div class="simulator-panel">
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
+              강한 상호작용의 CP 문제를 해결하기 위한 Peccei-Quinn 대칭성과 그 결과로 예측되는 <strong>액시온(Axion)</strong>의 특성을 탐구하고, 프리마코프 효과(Primakoff Effect)를 이용한 할로스코프(Haloscope) 검출 실험을 시뮬레이션합니다.
+            </p>
+
+            <div class="builder-workspace" style="gap: 0.75rem;">
+              
+              <!-- Parameters -->
+              <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
+                <span class="color-assigner-title">AXION MODEL & HALOSCOPE PARAMETERS</span>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>PQ SYMMETRY BREAKING SCALE $f_a$</span>
+                  <span id="label-axion-fa" style="color: #ff3366; font-family: var(--font-mono);">1.00e+12 GeV</span>
+                </div>
+                <input type="range" id="slider-axion-fa" min="10" max="15" step="0.1" value="12" oninput="updateAxionParameters()" style="width: 100%; accent-color: #ff3366;">
+                <div style="font-size: 0.7rem; color: rgba(255,51,102,0.7); text-align: right; margin-top: -3px;">
+                  $m_a \simeq$ <span id="label-axion-mass">5.70 μeV</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>CAVITY MAGNETIC FIELD $B$</span>
+                  <span id="label-axion-B" style="color: #00f0ff; font-family: var(--font-mono);">8.0 Tesla</span>
+                </div>
+                <input type="range" id="slider-axion-B" min="0" max="20" step="0.5" value="8" oninput="updateAxionParameters()" style="width: 100%; accent-color: #00f0ff;">
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
+                  <span>CAVITY Q-FACTOR</span>
+                  <span id="label-axion-Q" style="color: #a855f7; font-family: var(--font-mono);">100000</span>
+                </div>
+                <input type="range" id="slider-axion-Q" min="4" max="6" step="0.1" value="5" oninput="updateAxionParameters()" style="width: 100%; accent-color: #a855f7;">
+              </div>
+
+              <!-- Theta Vacuum Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span class="color-assigner-title">QCD $\theta$-Vacuum Potential $V(\theta)$</span>
+                  <span id="badge-axion-edm" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(168, 85, 247, 0.2); border: 1px solid #a855f7; color: #a855f7; font-family: var(--font-mono);">nEDM < 1e-26 e·cm</span>
+                </div>
+                <div class="visualizer-wrapper" style="height: 140px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-axion-theta" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Primakoff Haloscope Canvas -->
+              <div class="color-assigner-panel" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span class="color-assigner-title">Haloscope Power Spectrum (Primakoff Effect)</span>
+                  <span id="badge-axion-power" style="font-size: 0.75rem; color: #00f0ff; font-family: var(--font-mono); font-weight: bold;">P_sig = 0.00e-24 W</span>
+                </div>
+                <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
+                  <canvas id="canvas-axion-haloscope" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                </div>
+              </div>
+
+              <!-- Physics Math Details -->
+              <div id="axion-physics-details" style="padding: 0.75rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.45; width: 100%;">
               </div>
             </div>
 

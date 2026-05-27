@@ -283,3 +283,278 @@ def test_ckm_cp_violation_vanishes():
     J2 = compute_jarlskog_invariant(V2)
     assert J2 == pytest.approx(0.0, abs=1e-15)
 
+
+def test_qcd_critical_line():
+    """Test the QCD critical temperature line calculation."""
+    from database.particles import compute_qcd_critical_temp
+    
+    # At mu_b = 0, Tc should be 155
+    assert compute_qcd_critical_temp(0.0) == pytest.approx(155.0, abs=1e-5)
+    
+    # At mu_b = 400 (approx CEP), Tc should be lower
+    tc_400 = compute_qcd_critical_temp(400.0)
+    assert tc_400 < 155.0
+    assert tc_400 == pytest.approx(155.0 * (1.0 - 0.013 * (400.0 / 155.0)**2), abs=1e-5)
+
+def test_chiral_transition():
+    """Test the chiral condensate ratio across the phase transition."""
+    from database.particles import compute_qcd_critical_temp, compute_chiral_condensate
+    
+    mu_b = 0.0
+    T_c = compute_qcd_critical_temp(mu_b)
+    
+    # T << T_c
+    ratio_low = compute_chiral_condensate(50.0, mu_b)
+    assert ratio_low > 0.99
+    
+    # T = T_c
+    ratio_mid = compute_chiral_condensate(T_c, mu_b)
+    assert ratio_mid == pytest.approx(0.5, abs=1e-5)
+    
+    # T >> T_c
+    ratio_high = compute_chiral_condensate(250.0, mu_b)
+    assert ratio_high < 0.01
+
+def test_mit_bag_deconfinement():
+    """Test the MIT bag model pressure comparison and deconfinement threshold."""
+    from database.particles import compute_qcd_pressures
+    
+    # Low temperature (below deconfinement threshold)
+    low_T_res = compute_qcd_pressures(100.0, 0.0)
+    assert low_T_res["P_QGP"] < low_T_res["P_had"]
+    assert low_T_res["deconfined"] is False
+    
+    # High temperature (above deconfinement threshold)
+    high_T_res = compute_qcd_pressures(250.0, 0.0)
+    assert high_T_res["P_QGP"] > high_T_res["P_had"]
+    assert high_T_res["deconfined"] is True
+
+
+def test_mandelstam_kinematics():
+    """Test Mandelstam variable conservation s + t + u = 0 (massless limit)."""
+    from database.particles import compute_mandelstam
+    import math
+    
+    # Check for various angles and energies
+    for s in [100.0, 10000.0, 1e6]:
+        for theta in [0.1, math.pi/4, math.pi/2, math.pi - 0.1]:
+            vars = compute_mandelstam(s, theta)
+            assert vars["s"] + vars["t"] + vars["u"] == pytest.approx(0.0, abs=1e-5)
+
+def test_qed_amplitude_sq():
+    """Test QED tree-level amplitude calculations."""
+    from database.particles import compute_qed_amplitude_sq, compute_mandelstam
+    import math
+    
+    s = 1000.0
+    theta = math.pi / 2
+    vars = compute_mandelstam(s, theta)
+    
+    # At theta = pi/2, t = -s/2, u = -s/2
+    # Annihilation: e- e+ -> mu- mu+
+    # M^2 = 2 e^4 (t^2 + u^2) / s^2 = 2 e^4 (s^2/4 + s^2/4) / s^2 = e^4
+    e_charge_sq = 4 * math.pi * (1/137.036)
+    amp_anni = compute_qed_amplitude_sq("e- e+ -> mu- mu+", vars["s"], vars["t"], vars["u"], e_charge_sq)
+    assert amp_anni == pytest.approx(e_charge_sq**2, rel=1e-4)
+
+def test_differential_cross_section():
+    """Test the unpolarized differential cross section."""
+    from database.particles import compute_differential_cross_section
+    import math
+    
+    s = 1000.0
+    theta = math.pi / 2
+    ds_dOmega = compute_differential_cross_section("e- e+ -> mu- mu+", s, theta)
+    
+    # ds/dOmega = M^2 / (64 pi^2 s)
+    e_charge_sq = 4 * math.pi * (1/137.036)
+    expected_M2 = e_charge_sq**2
+    expected_ds = expected_M2 / (64.0 * math.pi**2 * s)
+    
+    assert ds_dOmega == pytest.approx(expected_ds, rel=1e-4)
+
+
+def test_cosmology_hubble():
+    """Test Hubble expansion rate computation in early universe."""
+    from database.particles import compute_hubble_rate
+    
+    # At T=100 GeV, g*=106.75
+    # H = 1.66 * sqrt(106.75) * 10^4 / 1.22e19 = 1.66 * 10.33 * 10^4 / 1.22e19 ~ 1.4e-14 GeV
+    H = compute_hubble_rate(100.0, 106.75)
+    assert H == pytest.approx(1.405e-14, rel=1e-3)
+
+
+def test_cosmology_eq_density():
+    """Test equilibrium comoving density (Boltzmann suppression)."""
+    from database.particles import compute_eq_number_density
+    import math
+    
+    # x = m/T
+    # At x = 20, Y_eq = 0.145 * (2/106.75) * (20^1.5) * e^-20
+    Y_eq = compute_eq_number_density(100.0, 5.0) # x = 20
+    expected_Y = 0.145 * (2.0 / 106.75) * (20**1.5) * math.exp(-20)
+    assert Y_eq == pytest.approx(expected_Y, rel=1e-4)
+
+
+def test_wimp_miracle():
+    """Test the WIMP Miracle: Weak scale cross section gives correct relic density."""
+    from database.particles import compute_dark_matter_freeze_out
+    
+    # Typical WIMP: m = 100 GeV, sigma_v = 3e-26 cm^3/s
+    res = compute_dark_matter_freeze_out(100.0, 3e-26)
+    
+    # x_f should be around 20-25
+    assert 20.0 < res["x_f"] < 30.0
+    
+    # Relic density Omega h^2 should be close to 0.12
+    assert res["Omega_h2"] == pytest.approx(0.1, rel=0.5) # Allow 50% error for approximation
+
+
+def test_pmns_unitarity():
+    """Test that the real-part PMNS matrix is approximately unitary: U * U^T ≈ I."""
+    from database.particles import compute_pmns_matrix
+
+    result = compute_pmns_matrix()
+    U = result["PMNS_matrix_real"]
+
+    # Compute U * U^T (since we use real parts only, check orthonormality)
+    for i in range(3):
+        for j in range(3):
+            dot = sum(U[i][k] * U[j][k] for k in range(3))
+            if i == j:
+                # Diagonal elements should be close to 1
+                assert dot == pytest.approx(1.0, rel=0.1), \
+                    f"U*U^T diagonal element [{i}][{j}] = {dot}, expected ~1.0"
+            else:
+                # Off-diagonal elements should be close to 0
+                assert abs(dot) < 0.15, \
+                    f"U*U^T off-diagonal element [{i}][{j}] = {dot}, expected ~0.0"
+
+
+def test_neutrino_oscillation_probability():
+    """Test neutrino oscillation probability physics constraints."""
+    import math
+    from database.particles import compute_neutrino_oscillation_probability, compute_pmns_matrix
+
+    pmns = compute_pmns_matrix()
+
+    # 1. Unitarity bound: P(nu_e -> nu_e) + P(nu_e -> nu_mu) <= 1.0 for any L, E
+    E = 1.0    # GeV
+    for L in [0.0, 100.0, 500.0, 1000.0, 295.0]:
+        P_ee = compute_neutrino_oscillation_probability("nu_e", "nu_e", E, L)
+        P_emu = compute_neutrino_oscillation_probability("nu_e", "nu_mu", E, L)
+        assert P_ee + P_emu <= 1.0 + 1e-10, \
+            f"P(ee) + P(emu) = {P_ee + P_emu} > 1.0 at L={L} km"
+
+    # 2. At L=0, appearance probability must be zero
+    P_zero = compute_neutrino_oscillation_probability("nu_e", "nu_mu", 1.0, 0.0)
+    assert P_zero == pytest.approx(0.0, abs=1e-15), \
+        f"P(nu_e -> nu_mu) at L=0 should be 0, got {P_zero}"
+
+    # 3. At maximum oscillation for nu_mu -> nu_tau channel:
+    #    sin^2(1.267 * Delta_m31_sq * L / E) = 1  =>  1.267 * dm2 * L / E = pi/2
+    #    => L = pi / (2 * 1.267 * dm2) * E
+    theta_23 = pmns["theta_23_rad"]
+    Delta_m31_sq = pmns["Delta_m31_sq_eV2"]
+    E_test = 1.0  # GeV
+    L_max = math.pi / (2.0 * 1.267 * Delta_m31_sq) * E_test
+
+    P_max = compute_neutrino_oscillation_probability("nu_mu", "nu_tau", E_test, L_max)
+    expected_max = math.sin(2.0 * theta_23) ** 2
+
+    assert P_max == pytest.approx(expected_max, rel=1e-6), \
+        f"P(nu_mu -> nu_tau) at maximum oscillation = {P_max}, expected sin^2(2*theta_23) = {expected_max}"
+
+
+def test_msw_resonance():
+    """Test MSW matter effect: at resonance A = cos(2*theta_12), sin^2(2*theta_M) ≈ 1."""
+    import math
+    from database.particles import compute_msw_effective_potential, compute_pmns_matrix
+
+    pmns = compute_pmns_matrix()
+    theta_12 = pmns["theta_12_rad"]
+    Delta_m21_sq_eV2 = pmns["Delta_m21_sq_eV2"]
+    Delta_m21_sq_GeV2 = Delta_m21_sq_eV2 * 1e-18
+
+    cos_2theta_12 = math.cos(2.0 * theta_12)
+
+    # To achieve resonance: A = cos(2*theta_12)
+    # A = 2 * E * V_CC / Delta_m21_sq_GeV2
+    # V_CC = sqrt(2) * G_F * n_e_natural
+    # So we need: 2 * E * sqrt(2) * G_F * n_e * (hbar_c)^3 / Delta_m21_sq_GeV2 = cos(2*theta_12)
+    # Solve for n_e given a chosen E:
+
+    G_F = 1.1664e-5  # GeV^-2
+    hbar_c = 0.197326980e-13  # cm * GeV
+    hbar_c_cubed = hbar_c ** 3
+
+    E_test = 0.01  # 10 MeV neutrino in GeV
+
+    # n_e for resonance:
+    n_e_resonance = (cos_2theta_12 * Delta_m21_sq_GeV2) / (2.0 * E_test * math.sqrt(2.0) * G_F * hbar_c_cubed)
+
+    result = compute_msw_effective_potential(E_test, n_e_resonance)
+
+    # At resonance, sin^2(2*theta_M) should be approximately 1.0
+    assert result["sin2_2theta_matter"] == pytest.approx(1.0, rel=1e-3), \
+        f"sin^2(2*theta_M) at resonance = {result['sin2_2theta_matter']}, expected ~1.0"
+
+    # A parameter should equal cos(2*theta_12)
+    assert result["A_parameter"] == pytest.approx(cos_2theta_12, rel=1e-3), \
+        f"A = {result['A_parameter']}, expected cos(2*theta_12) = {cos_2theta_12}"
+
+
+def test_sphaleron_suppression():
+    """Test sphaleron suppression in the broken phase."""
+    from database.particles import compute_sphaleron_rate
+    
+    res_sym = compute_sphaleron_rate(200.0)
+    res_brk = compute_sphaleron_rate(100.0)
+    
+    assert res_sym["phase"] == "symmetric"
+    assert res_brk["phase"] == "broken"
+    
+    # Assert Gamma_sph at T=100 is vastly smaller than at T=200
+    assert res_brk["Gamma_sph"] < res_sym["Gamma_sph"] * 1e-10
+
+
+def test_sakharov_conditions():
+    """Test Sakharov conditions for baryogenesis."""
+    from database.particles import compute_baryon_asymmetry
+
+    # 1. No CP violation (cp_phase = 0)
+    res_no_cp = compute_baryon_asymmetry(200.0, 0.0, 1.0)
+    assert abs(res_no_cp["eta_B"]) < 1e-20, "eta_B should be 0 without CP violation"
+
+    # 2. Thermal equilibrium (out_of_eq = 0)
+    res_eq = compute_baryon_asymmetry(200.0, 1.0, 0.0)
+    assert abs(res_eq["eta_B"]) < 1e-20, "eta_B should be 0 in thermal equilibrium"
+
+    # 3. Successful baryogenesis
+    res_success = compute_baryon_asymmetry(200.0, 1.0, 1.0)
+    assert res_success["eta_B"] > 0, "eta_B should be positive for these parameters"
+    assert res_success["B_viol_factor"] > 0, "B_viol should be > 0 at T=200 > T_c"
+
+def test_strong_cp_bound():
+    """Test the neutron EDM bound and theta parameter constraint."""
+    from database.particles import compute_neutron_edm
+    # For theta = 1e-10, d_n ~ 1e-26 e*cm
+    dn = compute_neutron_edm(1e-10)
+    assert abs(dn - 1e-26) < 1e-28, f"nEDM calculation incorrect, got {dn}"
+    
+    # Normalization check
+    dn_periodic = compute_neutron_edm(3.141592653589793 * 2 + 1e-10)
+    assert abs(dn_periodic - 1e-26) < 1e-28, "nEDM should be periodic in theta"
+
+def test_axion_mass_relation():
+    """Test the axion mass-coupling relation."""
+    from database.particles import compute_axion_properties
+    
+    f_a = 1e12 # GeV
+    props = compute_axion_properties(f_a)
+    
+    # Expected m_a ~ 5.7 micro-eV = 5.7e-6 eV
+    assert abs(props["m_a_eV"] - 5.7e-6) < 1e-7, f"Axion mass calculation incorrect, got {props['m_a_eV']}"
+    
+    # Expected coupling roughly ~ 1e-15 GeV^-1
+    assert 1e-16 < props["g_ayy_GeV_inv"] < 1e-14, f"Coupling out of expected range: {props['g_ayy_GeV_inv']}"

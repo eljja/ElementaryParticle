@@ -62,6 +62,70 @@ let canvasRGEGraph = null;
 let ctxRGEGraph = null;
 let rgeLoopId = null;   // for micro-animation of coupling running waves
 
+// QCD Phase Diagram & QGP Lab State
+let qcdTemperature = 0; // MeV
+let qcdMuB = 0; // MeV
+let canvasQCDPhase = null;
+let ctxQCDPhase = null;
+let canvasQCDMicro = null;
+let ctxQCDMicro = null;
+let qcdLoopId = null;
+let qcdMicroParticles = []; // For rendering quarks and gluons
+
+// Feynman QFT Lab State
+let feynmanProcess = "e- e+ -> mu- mu+";
+let feynmanEnergy = 1000; // sqrt(s) in GeV
+let canvasFeynmanDiagram = null;
+let ctxFeynmanDiagram = null;
+let canvasFeynmanScattering = null;
+let ctxFeynmanScattering = null;
+let feynmanLoopId = null;
+
+// Cosmology Lab State
+let cosmoMass = 100.0;
+let cosmoSigmaVLog = -25.5228;
+let cosmoXf = 25.0;
+let cosmoOmega = 0.12;
+let canvasCosmoEvol = null;
+let ctxCosmoEvol = null;
+let canvasCosmoMicro = null;
+let ctxCosmoMicro = null;
+let cosmoLoopId = null;
+let cosmoMicroParticles = [];
+
+// Neutrino Oscillation Lab State
+let nuOscFrom = 'nu_mu';
+let nuOscTo = 'nu_tau';
+let nuOscEnergy = 1.0;
+let nuOscDensityLog = 26.0;
+let canvasNuOsc = null;
+let ctxNuOsc = null;
+let canvasMSW = null;
+let ctxMSW = null;
+let nuOscLoopId = null;
+
+// Sphaleron & Baryogenesis Lab State
+let sphalTemp = 250.0;
+let sphalCpPhase = 1.57;
+let sphalOutEq = 1.0;
+let canvasSphalPot = null;
+let ctxSphalPot = null;
+let canvasBaryon = null;
+let ctxBaryon = null;
+let sphalLoopId = null;
+let baryonHistory = [];
+
+// Axion & Strong CP Lab State
+let axionFaExp = 12.0; // 10^12 GeV
+let axionBField = 8.0; // Tesla
+let axionQFactorExp = 5.0; // 10^5
+let canvasAxionTheta = null;
+let ctxAxionTheta = null;
+let canvasAxionHaloscope = null;
+let ctxAxionHaloscope = null;
+let axionLoopId = null;
+let haloscopeTime = 0;
+
 // Simulator Slots (Collision Lab)
 let reactants = [];
 let products = [];
@@ -152,6 +216,78 @@ function resizeCanvas() {
     canvasRGEGraph.width = rect.width * window.devicePixelRatio;
     canvasRGEGraph.height = rect.height * window.devicePixelRatio;
     ctxRGEGraph.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasQCDPhase) {
+    const rect = canvasQCDPhase.getBoundingClientRect();
+    canvasQCDPhase.width = rect.width * window.devicePixelRatio;
+    canvasQCDPhase.height = rect.height * window.devicePixelRatio;
+    ctxQCDPhase.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasQCDMicro) {
+    const rect = canvasQCDMicro.getBoundingClientRect();
+    canvasQCDMicro.width = rect.width * window.devicePixelRatio;
+    canvasQCDMicro.height = rect.height * window.devicePixelRatio;
+    ctxQCDMicro.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasFeynmanDiagram) {
+    const rect = canvasFeynmanDiagram.getBoundingClientRect();
+    canvasFeynmanDiagram.width = rect.width * window.devicePixelRatio;
+    canvasFeynmanDiagram.height = rect.height * window.devicePixelRatio;
+    ctxFeynmanDiagram.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasFeynmanScattering) {
+    const rect = canvasFeynmanScattering.getBoundingClientRect();
+    canvasFeynmanScattering.width = rect.width * window.devicePixelRatio;
+    canvasFeynmanScattering.height = rect.height * window.devicePixelRatio;
+    ctxFeynmanScattering.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasCosmoEvol) {
+    const rect = canvasCosmoEvol.getBoundingClientRect();
+    canvasCosmoEvol.width = rect.width * window.devicePixelRatio;
+    canvasCosmoEvol.height = rect.height * window.devicePixelRatio;
+    ctxCosmoEvol.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasCosmoMicro) {
+    const rect = canvasCosmoMicro.getBoundingClientRect();
+    canvasCosmoMicro.width = rect.width * window.devicePixelRatio;
+    canvasCosmoMicro.height = rect.height * window.devicePixelRatio;
+    ctxCosmoMicro.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasNuOsc) {
+    const rect = canvasNuOsc.getBoundingClientRect();
+    canvasNuOsc.width = rect.width * window.devicePixelRatio;
+    canvasNuOsc.height = rect.height * window.devicePixelRatio;
+    ctxNuOsc.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasMSW) {
+    const rect = canvasMSW.getBoundingClientRect();
+    canvasMSW.width = rect.width * window.devicePixelRatio;
+    canvasMSW.height = rect.height * window.devicePixelRatio;
+    ctxMSW.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasSphalPot) {
+    const rect = canvasSphalPot.getBoundingClientRect();
+    canvasSphalPot.width = rect.width * window.devicePixelRatio;
+    canvasSphalPot.height = rect.height * window.devicePixelRatio;
+    ctxSphalPot.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasBaryon) {
+    const rect = canvasBaryon.getBoundingClientRect();
+    canvasBaryon.width = rect.width * window.devicePixelRatio;
+    canvasBaryon.height = rect.height * window.devicePixelRatio;
+    ctxBaryon.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasAxionTheta) {
+    const rect = canvasAxionTheta.getBoundingClientRect();
+    canvasAxionTheta.width = rect.width * window.devicePixelRatio;
+    canvasAxionTheta.height = rect.height * window.devicePixelRatio;
+    ctxAxionTheta.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  if (canvasAxionHaloscope) {
+    const rect = canvasAxionHaloscope.getBoundingClientRect();
+    canvasAxionHaloscope.width = rect.width * window.devicePixelRatio;
+    canvasAxionHaloscope.height = rect.height * window.devicePixelRatio;
+    ctxAxionHaloscope.scale(window.devicePixelRatio, window.devicePixelRatio);
   }
 }
 
@@ -1125,6 +1261,12 @@ function switchRightTab(tab) {
   const gutBtn = document.getElementById('btn-tab-gut');
   const ckmBtn = document.getElementById('btn-tab-ckm');
   const rgeBtn = document.getElementById('btn-tab-rge');
+  const qcdBtn = document.getElementById('btn-tab-qcd');
+  const feynmanBtn = document.getElementById('btn-tab-feynman');
+  const cosmologyBtn = document.getElementById('btn-tab-cosmology');
+  const nuOscBtn = document.getElementById('btn-tab-neutrino-osc');
+  const sphaleronBtn = document.getElementById('btn-tab-sphaleron');
+  const axionBtn = document.getElementById('btn-tab-axion');
   
   const collisionContent = document.getElementById('tab-collision');
   const builderContent = document.getElementById('tab-builder');
@@ -1137,14 +1279,20 @@ function switchRightTab(tab) {
   const gutContent = document.getElementById('tab-gut');
   const ckmContent = document.getElementById('tab-ckm');
   const rgeContent = document.getElementById('tab-rge');
+  const qcdContent = document.getElementById('tab-qcd');
+  const feynmanContent = document.getElementById('tab-feynman');
+  const cosmologyContent = document.getElementById('tab-cosmology');
+  const nuOscContent = document.getElementById('tab-neutrino-osc');
+  const sphaleronContent = document.getElementById('tab-sphaleron');
+  const axionContent = document.getElementById('tab-axion');
   
   // Reset tab button statuses
-  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn, gutBtn, ckmBtn, rgeBtn].forEach(b => {
+  [collisionBtn, builderBtn, neutrinoBtn, cascadeBtn, angularBtn, colliderLabBtn, higgsSsbBtn, susyBtn, gutBtn, ckmBtn, rgeBtn, qcdBtn, feynmanBtn, cosmologyBtn, nuOscBtn, sphaleronBtn, axionBtn].forEach(b => {
     if (b) b.classList.remove('active');
   });
   
   // Reset tab contents
-  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent, gutContent, ckmContent, rgeContent].forEach(c => {
+  [collisionContent, builderContent, neutrinoContent, cascadeContent, angularContent, colliderLabContent, higgsSsbContent, susyContent, gutContent, ckmContent, rgeContent, qcdContent, feynmanContent, cosmologyContent, nuOscContent, sphaleronContent, axionContent].forEach(c => {
     if (c) c.classList.remove('active');
   });
   
@@ -1188,6 +1336,42 @@ function switchRightTab(tab) {
   if (tab !== 'rge' && rgeLoopId) {
     cancelAnimationFrame(rgeLoopId);
     rgeLoopId = null;
+  }
+  
+  // Stop ongoing qcd loops
+  if (tab !== 'qcd' && qcdLoopId) {
+    cancelAnimationFrame(qcdLoopId);
+    qcdLoopId = null;
+  }
+  
+  // Stop ongoing feynman loops
+  if (tab !== 'feynman' && feynmanLoopId) {
+    cancelAnimationFrame(feynmanLoopId);
+    feynmanLoopId = null;
+  }
+  
+  // Stop ongoing cosmology loops
+  if (tab !== 'cosmology' && cosmoLoopId) {
+    cancelAnimationFrame(cosmoLoopId);
+    cosmoLoopId = null;
+  }
+  
+  // Stop ongoing neutrino oscillation loops
+  if (tab !== 'neutrino-osc' && nuOscLoopId) {
+    cancelAnimationFrame(nuOscLoopId);
+    nuOscLoopId = null;
+  }
+  
+  // Stop ongoing sphaleron loops
+  if (tab !== 'sphaleron' && sphalLoopId) {
+    cancelAnimationFrame(sphalLoopId);
+    sphalLoopId = null;
+  }
+  
+  // Stop ongoing axion loops
+  if (tab !== 'axion' && axionLoopId) {
+    cancelAnimationFrame(axionLoopId);
+    axionLoopId = null;
   }
   
   if (tab === 'collision') {
@@ -1245,6 +1429,30 @@ function switchRightTab(tab) {
     if (rgeBtn) rgeBtn.classList.add('active');
     if (rgeContent) rgeContent.classList.add('active');
     initRGELab();
+  } else if (tab === 'qcd') {
+    if (qcdBtn) qcdBtn.classList.add('active');
+    if (qcdContent) qcdContent.classList.add('active');
+    initQCDLab();
+  } else if (tab === 'feynman') {
+    if (feynmanBtn) feynmanBtn.classList.add('active');
+    if (feynmanContent) feynmanContent.classList.add('active');
+    initFeynmanLab();
+  } else if (tab === 'cosmology') {
+    if (cosmologyBtn) cosmologyBtn.classList.add('active');
+    if (cosmologyContent) cosmologyContent.classList.add('active');
+    initCosmologyLab();
+  } else if (tab === 'neutrino-osc') {
+    if (nuOscBtn) nuOscBtn.classList.add('active');
+    if (nuOscContent) nuOscContent.classList.add('active');
+    initNeutrinoOscLab();
+  } else if (tab === 'sphaleron') {
+    if (sphaleronBtn) sphaleronBtn.classList.add('active');
+    if (sphaleronContent) sphaleronContent.classList.add('active');
+    initSphaleronLab();
+  } else if (tab === 'axion') {
+    if (axionBtn) axionBtn.classList.add('active');
+    if (axionContent) axionContent.classList.add('active');
+    initAxionLab();
   }
 }
 
@@ -2759,8 +2967,6 @@ function updateHadronBuilderMultiplet(customI3 = null, customY = null, customSym
         <b>수식 해설</b>: 전하량 Q(${totalQ.toFixed(2)}e)는 강력 등방스핀 성분 I₃(${stats.I3.toFixed(1)})와 쿼크 초전하 Y(${stats.Y.toFixed(2)}, 바리온수 B + 기묘도 S)의 합산으로 양자역학계에 철저히 일치합니다.
       </div>
     `;
-  }
-}
   }
 }
 
@@ -5751,4 +5957,1955 @@ function renderRGEPhysicsMath() {
   container.innerHTML = html;
 }
 
+// ============================================================================
+// 12. QCD Phase Diagram & QGP Deconfinement Lab
+// ============================================================================
 
+function initQCDLab() {
+  canvasQCDPhase = document.getElementById('canvas-qcd-phase');
+  ctxQCDPhase = canvasQCDPhase.getContext('2d');
+  canvasQCDMicro = document.getElementById('canvas-qcd-micro');
+  ctxQCDMicro = canvasQCDMicro.getContext('2d');
+  
+  resizeCanvas();
+  
+  // Initialize parameters
+  document.getElementById('slider-qcd-temperature').value = 0;
+  document.getElementById('slider-qcd-mub').value = 0;
+  qcdTemperature = 0;
+  qcdMuB = 0;
+  
+  // Initialize micro particles for rendering
+  qcdMicroParticles = [];
+  for (let i = 0; i < 40; i++) {
+    qcdMicroParticles.push({
+      x: Math.random() * canvasQCDMicro.width,
+      y: Math.random() * canvasQCDMicro.height,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      color: ['#ff0055', '#00ffaa', '#3e4e94'][Math.floor(Math.random() * 3)], // RGB
+      type: 'quark',
+      pairedIndex: -1, // for hadron grouping or CFL pairing
+      phaseOff: Math.random() * Math.PI * 2
+    });
+  }
+  for (let i = 0; i < 15; i++) {
+    qcdMicroParticles.push({
+      x: Math.random() * canvasQCDMicro.width,
+      y: Math.random() * canvasQCDMicro.height,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      color: '#fff',
+      type: 'gluon',
+      phaseOff: Math.random() * Math.PI * 2
+    });
+  }
+  
+  updateQCDParameters();
+  renderQCDPhysicsMath();
+  
+  if (qcdLoopId) {
+    cancelAnimationFrame(qcdLoopId);
+  }
+  
+  let animFrame = 0;
+  function qcdLoop() {
+    drawQCDPhaseDiagram();
+    drawQCDMicroSimulation(animFrame);
+    animFrame++;
+    qcdLoopId = requestAnimationFrame(qcdLoop);
+  }
+  
+  qcdLoop();
+}
+
+function computeQCDCriticalTemp(muB) {
+  const T0 = 155.0;
+  const kappa = 0.013;
+  return T0 * (1.0 - kappa * Math.pow(muB / T0, 2));
+}
+
+function updateQCDParameters() {
+  qcdTemperature = parseFloat(document.getElementById('slider-qcd-temperature').value);
+  qcdMuB = parseFloat(document.getElementById('slider-qcd-mub').value);
+  
+  document.getElementById('label-qcd-temperature').innerText = `${qcdTemperature} MeV`;
+  document.getElementById('label-qcd-mub').innerText = `${qcdMuB} MeV`;
+  
+  const Tc = computeQCDCriticalTemp(qcdMuB);
+  
+  // Calculate Chiral Condensate
+  const deltaT = 10.0;
+  let chiralCondensate = 0.5 * (1.0 - Math.tanh((qcdTemperature - Tc) / deltaT));
+  if (chiralCondensate < 0.001) chiralCondensate = 0;
+  
+  const chiralBadge = document.getElementById('qcd-chiral-badge');
+  chiralBadge.innerText = `CHIRAL CONDENSATE: ${chiralCondensate.toFixed(2)}`;
+  if (chiralCondensate < 0.5) {
+    chiralBadge.style.color = '#ffaa00';
+    chiralBadge.style.borderColor = '#ffaa00';
+    chiralBadge.style.background = 'rgba(255, 170, 0, 0.08)';
+  } else {
+    chiralBadge.style.color = '#fff';
+    chiralBadge.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+    chiralBadge.style.background = 'rgba(255, 255, 255, 0.05)';
+  }
+  
+  // Calculate Pressures (MIT Bag Model)
+  const B = Math.pow(200.0, 4);
+  const g_pi = 3.0;
+  const g_QGP = 37.0;
+  const Phad = g_pi * (Math.pow(Math.PI, 2) * Math.pow(qcdTemperature, 4)) / 90.0;
+  const PQGP = g_QGP * (Math.pow(Math.PI, 2) * Math.pow(qcdTemperature, 4)) / 90.0 - B;
+  
+  const isDeconfined = PQGP > Phad;
+  
+  const confBadge = document.getElementById('qcd-deconfinement-badge');
+  if (qcdTemperature > 20 && qcdMuB > 800 && qcdTemperature < Tc) {
+    // CFL Phase approx
+    confBadge.innerText = 'COLOR SUPERCONDUCTIVITY (CFL)';
+    confBadge.style.color = '#a855f7';
+    confBadge.style.borderColor = '#a855f7';
+    confBadge.style.background = 'rgba(168, 85, 247, 0.15)';
+  } else if (isDeconfined) {
+    confBadge.innerText = 'P_QGP > P_had (DECONFINED QGP)';
+    confBadge.style.color = '#ff3366';
+    confBadge.style.borderColor = '#ff3366';
+    confBadge.style.background = 'rgba(255, 51, 102, 0.15)';
+  } else {
+    confBadge.innerText = 'P_QGP < P_had (CONFINED HADRON GAS)';
+    confBadge.style.color = '#00f0ff';
+    confBadge.style.borderColor = '#00f0ff';
+    confBadge.style.background = 'rgba(0, 240, 255, 0.08)';
+  }
+}
+
+function drawQCDPhaseDiagram() {
+  if (!ctxQCDPhase) return;
+  const w = canvasQCDPhase.width / window.devicePixelRatio;
+  const h = canvasQCDPhase.height / window.devicePixelRatio;
+  
+  ctxQCDPhase.clearRect(0, 0, w, h);
+  
+  // Draw Grid
+  ctxQCDPhase.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctxQCDPhase.lineWidth = 1;
+  for(let i=0; i<=10; i++) {
+    let x = (i/10) * w;
+    let y = (i/10) * h;
+    ctxQCDPhase.beginPath(); ctxQCDPhase.moveTo(x, 0); ctxQCDPhase.lineTo(x, h); ctxQCDPhase.stroke();
+    ctxQCDPhase.beginPath(); ctxQCDPhase.moveTo(0, y); ctxQCDPhase.lineTo(w, y); ctxQCDPhase.stroke();
+  }
+  
+  // Map values to canvas coordinates
+  // muB: 0 to 1200
+  // T: 0 to 300
+  const mapX = (muB) => (muB / 1200) * w;
+  const mapY = (T) => h - (T / 300) * h;
+  
+  // Draw Critical Line
+  ctxQCDPhase.beginPath();
+  ctxQCDPhase.lineWidth = 3;
+  for (let muB = 0; muB <= 1200; muB += 10) {
+    let T = computeQCDCriticalTemp(muB);
+    if (T < 0) T = 0;
+    const cx = mapX(muB);
+    const cy = mapY(T);
+    if (muB === 0) ctxQCDPhase.moveTo(cx, cy);
+    else ctxQCDPhase.lineTo(cx, cy);
+  }
+  
+  // Gradient for critical line (Crossover vs 1st Order)
+  let grad = ctxQCDPhase.createLinearGradient(0, 0, w, 0);
+  grad.addColorStop(0, '#ffaa00'); // Crossover (yellow/orange)
+  grad.addColorStop(0.35, '#ffaa00'); // CEP ~ 400 MeV
+  grad.addColorStop(0.4, '#ff3366'); // 1st Order (red)
+  grad.addColorStop(1, '#a855f7'); 
+  
+  ctxQCDPhase.strokeStyle = grad;
+  ctxQCDPhase.stroke();
+  
+  // Draw CEP marker
+  const cepMuB = 400;
+  const cepT = computeQCDCriticalTemp(cepMuB);
+  ctxQCDPhase.fillStyle = '#fff';
+  ctxQCDPhase.beginPath();
+  ctxQCDPhase.arc(mapX(cepMuB), mapY(cepT), 4, 0, Math.PI*2);
+  ctxQCDPhase.fill();
+  ctxQCDPhase.font = '10px var(--font-sans)';
+  ctxQCDPhase.fillText('CEP', mapX(cepMuB) - 10, mapY(cepT) - 10);
+  
+  // Mark labels
+  ctxQCDPhase.fillStyle = 'rgba(255,255,255,0.4)';
+  ctxQCDPhase.fillText('Hadron Gas', mapX(100), mapY(50));
+  ctxQCDPhase.fillText('Quark-Gluon Plasma', mapX(300), mapY(250));
+  ctxQCDPhase.fillText('Color Superconductor', mapX(900), mapY(30));
+  
+  // Draw current point
+  const curX = mapX(qcdMuB);
+  const curY = mapY(qcdTemperature);
+  
+  ctxQCDPhase.fillStyle = '#00f0ff';
+  ctxQCDPhase.shadowColor = '#00f0ff';
+  ctxQCDPhase.shadowBlur = 10;
+  ctxQCDPhase.beginPath();
+  ctxQCDPhase.arc(curX, curY, 6, 0, Math.PI*2);
+  ctxQCDPhase.fill();
+  ctxQCDPhase.shadowBlur = 0;
+  
+  ctxQCDPhase.strokeStyle = 'rgba(0, 240, 255, 0.5)';
+  ctxQCDPhase.lineWidth = 1;
+  ctxQCDPhase.setLineDash([4, 4]);
+  ctxQCDPhase.beginPath();
+  ctxQCDPhase.moveTo(curX, h);
+  ctxQCDPhase.lineTo(curX, curY);
+  ctxQCDPhase.lineTo(0, curY);
+  ctxQCDPhase.stroke();
+  ctxQCDPhase.setLineDash([]);
+}
+
+function drawQCDMicroSimulation(animFrame) {
+  if (!ctxQCDMicro) return;
+  const w = canvasQCDMicro.width / window.devicePixelRatio;
+  const h = canvasQCDMicro.height / window.devicePixelRatio;
+  
+  ctxQCDMicro.clearRect(0, 0, w, h);
+  
+  const Tc = computeQCDCriticalTemp(qcdMuB);
+  const isDeconfined = qcdTemperature > Tc;
+  const isCFL = qcdTemperature < Tc && qcdMuB > 800 && qcdTemperature > 20;
+  
+  // Velocity multiplier based on Temperature
+  const speed = 0.5 + (qcdTemperature / 100);
+  
+  // Group logic for confined state
+  if (!isDeconfined && !isCFL) {
+    // Form hadrons (groups of 3)
+    for (let i = 0; i < qcdMicroParticles.length; i++) {
+      let p = qcdMicroParticles[i];
+      if (p.type !== 'quark') continue;
+      
+      if (p.pairedIndex === -1 && Math.random() < 0.1) {
+        // Find 2 other free quarks
+        let group = [i];
+        for (let j = i+1; j < qcdMicroParticles.length && group.length < 3; j++) {
+          if (qcdMicroParticles[j].type === 'quark' && qcdMicroParticles[j].pairedIndex === -1) {
+            group.push(j);
+          }
+        }
+        if (group.length === 3) {
+          group.forEach(idx => qcdMicroParticles[idx].pairedIndex = group[0]); // leader is group[0]
+        }
+      }
+    }
+  } else if (isCFL) {
+    // Form Cooper pairs (groups of 2)
+    for (let i = 0; i < qcdMicroParticles.length; i++) {
+      let p = qcdMicroParticles[i];
+      if (p.type !== 'quark') continue;
+      
+      if (p.pairedIndex === -1 && Math.random() < 0.2) {
+        // Find 1 other free quark
+        for (let j = i+1; j < qcdMicroParticles.length; j++) {
+          if (qcdMicroParticles[j].type === 'quark' && qcdMicroParticles[j].pairedIndex === -1) {
+            p.pairedIndex = i;
+            qcdMicroParticles[j].pairedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+  } else {
+    // Deconfined, break all pairs
+    qcdMicroParticles.forEach(p => p.pairedIndex = -1);
+  }
+  
+  // Update Physics
+  qcdMicroParticles.forEach((p, i) => {
+    // Basic movement
+    if (p.type === 'quark') {
+      p.x += p.vx * speed;
+      p.y += p.vy * speed;
+    } else { // Gluon
+      if (isDeconfined) {
+        p.x += p.vx * speed * 1.5;
+        p.y += p.vy * speed * 1.5;
+      } else {
+        // Gluons get suppressed/absorbed in vacuum, just wiggle
+        p.x += Math.sin(animFrame*0.1 + p.phaseOff) * 2;
+        p.y += Math.cos(animFrame*0.1 + p.phaseOff) * 2;
+      }
+    }
+    
+    // Boundary bounce
+    if (p.x < 0 || p.x > w) p.vx *= -1;
+    if (p.y < 0 || p.y > h) p.vy *= -1;
+    p.x = Math.max(0, Math.min(w, p.x));
+    p.y = Math.max(0, Math.min(h, p.y));
+    
+    // Confinement Attraction (String Potential)
+    if (!isDeconfined && p.type === 'quark' && p.pairedIndex !== -1) {
+      const leader = qcdMicroParticles[p.pairedIndex];
+      if (leader && leader !== p) {
+        const dx = leader.x - p.x;
+        const dy = leader.y - p.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        // Spring-like strong force V(r) ~ k*r
+        if (dist > 15) {
+          p.vx += dx * 0.01;
+          p.vy += dy * 0.01;
+        } else if (dist < 5) {
+          p.vx -= dx * 0.05;
+          p.vy -= dy * 0.05;
+        }
+        
+        // Draw confinement flux tube
+        ctxQCDMicro.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctxQCDMicro.lineWidth = 2;
+        ctxQCDMicro.beginPath();
+        ctxQCDMicro.moveTo(p.x, p.y);
+        ctxQCDMicro.lineTo(leader.x, leader.y);
+        ctxQCDMicro.stroke();
+      }
+    }
+    
+    // CFL Attraction (Cooper Pairing)
+    if (isCFL && p.type === 'quark' && p.pairedIndex !== -1) {
+      const leader = qcdMicroParticles[p.pairedIndex];
+      if (leader && leader !== p) {
+        const dx = leader.x - p.x;
+        const dy = leader.y - p.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist > 10) {
+          p.vx += dx * 0.05;
+          p.vy += dy * 0.05;
+        }
+        // Draw cooper pair bond
+        ctxQCDMicro.strokeStyle = 'rgba(168, 85, 247, 0.6)';
+        ctxQCDMicro.lineWidth = 3;
+        ctxQCDMicro.setLineDash([2, 2]);
+        ctxQCDMicro.beginPath();
+        ctxQCDMicro.moveTo(p.x, p.y);
+        ctxQCDMicro.lineTo(leader.x, leader.y);
+        ctxQCDMicro.stroke();
+        ctxQCDMicro.setLineDash([]);
+      }
+    }
+    
+    // Apply some friction to stabilize
+    p.vx *= 0.98;
+    p.vy *= 0.98;
+    
+    // Random thermal kicks
+    p.vx += (Math.random() - 0.5) * speed * 0.2;
+    p.vy += (Math.random() - 0.5) * speed * 0.2;
+  });
+  
+  // Draw particles
+  qcdMicroParticles.forEach(p => {
+    ctxQCDMicro.beginPath();
+    if (p.type === 'quark') {
+      ctxQCDMicro.fillStyle = p.color;
+      ctxQCDMicro.shadowColor = p.color;
+      ctxQCDMicro.shadowBlur = 8;
+      ctxQCDMicro.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctxQCDMicro.fill();
+    } else if (isDeconfined) {
+      // Draw gluon (spiral/wavy representation)
+      ctxQCDMicro.fillStyle = '#fff';
+      ctxQCDMicro.shadowColor = '#fff';
+      ctxQCDMicro.shadowBlur = Math.abs(Math.sin(animFrame * 0.2 + p.phaseOff)) * 10;
+      ctxQCDMicro.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+      ctxQCDMicro.fill();
+    }
+    ctxQCDMicro.shadowBlur = 0;
+  });
+}
+
+function renderQCDPhysicsMath() {
+  const container = document.getElementById('qcd-physics-details');
+  if (!container) return;
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>🌡️ QCD Equation of State & Order Parameters</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      강력의 특성에 의해, 에너지가 높아지면 <b>점근적 자유성(Asymptotic Freedom)</b>으로 인해 쿼크들이 상호작용을 멈추고 풀려납니다. 반면 에너지가 낮아지면 <b>색가둠(Color Confinement)</b>에 의해 하드론 내부에 결박됩니다.
+      
+      <p style="margin-top: 0.5rem;"><b>1. MIT Bag Model Pressure (백 모형 압력 방정식)</b></p>
+      QGP와 강입자 기체의 상전이는 두 상태의 압력 평형점($P_{QGP} = P_{had}$)에서 발생합니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        P_{had} = g_{\\pi} \\frac{\\pi^2 T^4}{90}, \\quad P_{QGP} = g_{QGP} \\frac{\\pi^2 T^4}{90} - B
+      </div>
+      $T$가 특정 임계점 이상으로 상승하면 $P_{QGP} > P_{had}$ 가 되어 진공 백(Bag) 압력 $B$를 이겨내고 쿼크들이 해방됩니다.
+      
+      <p style="margin-top: 0.5rem;"><b>2. Chiral Condensate (카이랄 응축비)</b></p>
+      QGP 상전이와 함께, 입자에 동역학적 질량을 부여하던 진공 카이랄 대칭성(Chiral Symmetry)이 복원됩니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        \\frac{\\langle \\bar{q}q \\rangle_T}{\\langle \\bar{q}q \\rangle_0} \\approx \\frac{1}{2} \\left[ 1 - \\tanh\\left( \\frac{T - T_c(\\mu_B)}{\\Delta T} \\right) \\right]
+      </div>
+      이 값이 0으로 수렴하면 쿼크들은 더 이상 진공과 상호작용하지 않아 원래의 가벼운 맨질량(bare mass)만 남게 됩니다.
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+// ============================================================================
+// 13. QFT Feynman Diagram & Scattering Amplitude Lab
+// ============================================================================
+
+function initFeynmanLab() {
+  canvasFeynmanDiagram = document.getElementById('canvas-feynman-diagram');
+  ctxFeynmanDiagram = canvasFeynmanDiagram.getContext('2d');
+  canvasFeynmanScattering = document.getElementById('canvas-feynman-scattering');
+  ctxFeynmanScattering = canvasFeynmanScattering.getContext('2d');
+  
+  resizeCanvas();
+  
+  document.getElementById('select-feynman-process').value = "e- e+ -> mu- mu+";
+  document.getElementById('slider-feynman-energy').value = 1000;
+  
+  updateFeynmanParameters();
+  
+  if (feynmanLoopId) {
+    cancelAnimationFrame(feynmanLoopId);
+  }
+  
+  let animFrame = 0;
+  function feynmanLoop() {
+    drawFeynmanDiagram(animFrame);
+    drawScatteringPolarPlot(animFrame);
+    animFrame++;
+    feynmanLoopId = requestAnimationFrame(feynmanLoop);
+  }
+  
+  feynmanLoop();
+}
+
+function computeMandelstamJS(s_cm, theta) {
+  const t = - (s_cm / 2.0) * (1.0 - Math.cos(theta));
+  const u = - (s_cm / 2.0) * (1.0 + Math.cos(theta));
+  return {s: s_cm, t: t, u: u};
+}
+
+function computeQEDAmplitudeSqJS(process, s, t, u) {
+  const e_charge_sq = 4 * Math.PI * (1/137.036); // e^2
+  let M2 = 0;
+  
+  if (process === "e- e+ -> mu- mu+") {
+    if (s === 0) return 0;
+    M2 = 2.0 * Math.pow(e_charge_sq, 2) * (t*t + u*u) / (s*s);
+  } else if (process === "e- e+ -> e- e+") {
+    if (s === 0 || t === 0) return 0;
+    M2 = 2.0 * Math.pow(e_charge_sq, 2) * ( (s*s + u*u)/(t*t) + (t*t + u*u)/(s*s) + 2*u*u/(s*t) );
+  } else if (process === "e- e- -> e- e-") {
+    if (t === 0 || u === 0) return 0;
+    M2 = 2.0 * Math.pow(e_charge_sq, 2) * ( (s*s + u*u)/(t*t) + (s*s + t*t)/(u*u) + 2*s*s/(t*u) );
+  }
+  return M2;
+}
+
+function computeDifferentialCrossSectionJS(process, s, theta) {
+  if (s <= 0) return 0;
+  let th = theta;
+  if (th < 1e-4) th = 1e-4;
+  if (th > Math.PI - 1e-4) th = Math.PI - 1e-4;
+  
+  const m = computeMandelstamJS(s, th);
+  const M2 = computeQEDAmplitudeSqJS(process, m.s, m.t, m.u);
+  return M2 / (64.0 * Math.PI * Math.PI * s);
+}
+
+function updateFeynmanParameters() {
+  feynmanProcess = document.getElementById('select-feynman-process').value;
+  feynmanEnergy = parseFloat(document.getElementById('slider-feynman-energy').value);
+  
+  document.getElementById('label-feynman-energy').innerText = `${feynmanEnergy} GeV`;
+  
+  // Numerical integration for total cross section
+  const s = feynmanEnergy * feynmanEnergy;
+  let sigma_total = 0;
+  const steps = 100;
+  const d_theta = Math.PI / steps;
+  
+  for (let i = 1; i < steps; i++) {
+    const theta = i * d_theta;
+    const ds_dOmega = computeDifferentialCrossSectionJS(feynmanProcess, s, theta);
+    const dOmega = 2 * Math.PI * Math.sin(theta) * d_theta;
+    sigma_total += ds_dOmega * dOmega;
+  }
+  
+  // Convert from GeV^-2 to pb (1 GeV^-2 approx 0.3894 x 10^9 pb)
+  const pb_conv = 0.3894e9;
+  const sigma_pb = sigma_total * pb_conv;
+  
+  document.getElementById('feynman-sigma-badge').innerText = `TOTAL CROSS SECTION: ${sigma_pb.toExponential(3)} pb`;
+  
+  renderFeynmanPhysicsMath();
+}
+
+function drawFeynmanDiagram(animFrame) {
+  if (!ctxFeynmanDiagram) return;
+  const w = canvasFeynmanDiagram.width / window.devicePixelRatio;
+  const h = canvasFeynmanDiagram.height / window.devicePixelRatio;
+  ctxFeynmanDiagram.clearRect(0, 0, w, h);
+  
+  const cx = w / 2;
+  const cy = h / 2;
+  
+  ctxFeynmanDiagram.lineWidth = 2;
+  ctxFeynmanDiagram.font = '12px var(--font-mono)';
+  
+  // Draw diagram based on process
+  if (feynmanProcess === "e- e+ -> mu- mu+") {
+    // s-channel only
+    
+    // Virtual photon
+    ctxFeynmanDiagram.strokeStyle = '#fff';
+    ctxFeynmanDiagram.beginPath();
+    ctxFeynmanDiagram.moveTo(cx - 30, cy);
+    for (let x = cx - 30; x <= cx + 30; x += 5) {
+      ctxFeynmanDiagram.lineTo(x, cy + Math.sin(x * 0.5 - animFrame * 0.2) * 5);
+    }
+    ctxFeynmanDiagram.stroke();
+    
+    // Initial state (left) e- (top), e+ (bottom)
+    ctxFeynmanDiagram.strokeStyle = '#00f0ff';
+    drawArrowLine(ctxFeynmanDiagram, cx - 80, cy - 50, cx - 30, cy);
+    drawArrowLine(ctxFeynmanDiagram, cx - 30, cy, cx - 80, cy + 50); // e+ arrow reversed
+    ctxFeynmanDiagram.fillStyle = '#00f0ff';
+    ctxFeynmanDiagram.fillText('e⁻', cx - 95, cy - 50);
+    ctxFeynmanDiagram.fillText('e⁺', cx - 95, cy + 55);
+    
+    // Final state (right) mu- (top), mu+ (bottom)
+    ctxFeynmanDiagram.strokeStyle = '#ff3366';
+    drawArrowLine(ctxFeynmanDiagram, cx + 30, cy, cx + 80, cy - 50);
+    drawArrowLine(ctxFeynmanDiagram, cx + 80, cy + 50, cx + 30, cy); // mu+ arrow reversed
+    ctxFeynmanDiagram.fillStyle = '#ff3366';
+    ctxFeynmanDiagram.fillText('μ⁻', cx + 90, cy - 50);
+    ctxFeynmanDiagram.fillText('μ⁺', cx + 90, cy + 55);
+    
+    // Labels
+    ctxFeynmanDiagram.fillStyle = '#fff';
+    ctxFeynmanDiagram.fillText('γ (s-channel)', cx - 40, cy - 15);
+    
+  } else if (feynmanProcess === "e- e+ -> e- e+") {
+    // Show t-channel dominant for Bhabha
+    ctxFeynmanDiagram.strokeStyle = '#fff';
+    ctxFeynmanDiagram.beginPath();
+    ctxFeynmanDiagram.moveTo(cx, cy - 30);
+    for (let y = cy - 30; y <= cy + 30; y += 5) {
+      ctxFeynmanDiagram.lineTo(cx + Math.sin(y * 0.5 - animFrame * 0.2) * 5, y);
+    }
+    ctxFeynmanDiagram.stroke();
+    
+    // e- (top)
+    ctxFeynmanDiagram.strokeStyle = '#00f0ff';
+    drawArrowLine(ctxFeynmanDiagram, cx - 70, cy - 30, cx, cy - 30);
+    drawArrowLine(ctxFeynmanDiagram, cx, cy - 30, cx + 70, cy - 30);
+    
+    // e+ (bottom)
+    drawArrowLine(ctxFeynmanDiagram, cx, cy + 30, cx - 70, cy + 30);
+    drawArrowLine(ctxFeynmanDiagram, cx + 70, cy + 30, cx, cy + 30);
+    
+    ctxFeynmanDiagram.fillStyle = '#00f0ff';
+    ctxFeynmanDiagram.fillText('e⁻', cx - 85, cy - 25);
+    ctxFeynmanDiagram.fillText('e⁻', cx + 80, cy - 25);
+    ctxFeynmanDiagram.fillText('e⁺', cx - 85, cy + 35);
+    ctxFeynmanDiagram.fillText('e⁺', cx + 80, cy + 35);
+    
+    ctxFeynmanDiagram.fillStyle = '#fff';
+    ctxFeynmanDiagram.fillText('γ (t-channel)', cx + 10, cy + 5);
+    
+  } else if (feynmanProcess === "e- e- -> e- e-") {
+    // Show t-channel
+    ctxFeynmanDiagram.strokeStyle = '#fff';
+    ctxFeynmanDiagram.beginPath();
+    ctxFeynmanDiagram.moveTo(cx, cy - 30);
+    for (let y = cy - 30; y <= cy + 30; y += 5) {
+      ctxFeynmanDiagram.lineTo(cx + Math.sin(y * 0.5 - animFrame * 0.2) * 5, y);
+    }
+    ctxFeynmanDiagram.stroke();
+    
+    ctxFeynmanDiagram.strokeStyle = '#00f0ff';
+    drawArrowLine(ctxFeynmanDiagram, cx - 70, cy - 30, cx, cy - 30);
+    drawArrowLine(ctxFeynmanDiagram, cx, cy - 30, cx + 70, cy - 30);
+    
+    drawArrowLine(ctxFeynmanDiagram, cx - 70, cy + 30, cx, cy + 30);
+    drawArrowLine(ctxFeynmanDiagram, cx, cy + 30, cx + 70, cy + 30);
+    
+    ctxFeynmanDiagram.fillStyle = '#00f0ff';
+    ctxFeynmanDiagram.fillText('e⁻', cx - 85, cy - 25);
+    ctxFeynmanDiagram.fillText('e⁻', cx + 80, cy - 25);
+    ctxFeynmanDiagram.fillText('e⁻', cx - 85, cy + 35);
+    ctxFeynmanDiagram.fillText('e⁻', cx + 80, cy + 35);
+    
+    ctxFeynmanDiagram.fillStyle = '#fff';
+    ctxFeynmanDiagram.fillText('γ (t-channel)', cx + 10, cy + 5);
+  }
+}
+
+function drawArrowLine(ctx, x1, y1, x2, y2) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  
+  const midX = (x1 + x2) / 2;
+  const midY = (y1 + y2) / 2;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  
+  ctx.beginPath();
+  ctx.moveTo(midX, midY);
+  ctx.lineTo(midX - 8 * Math.cos(angle - Math.PI/6), midY - 8 * Math.sin(angle - Math.PI/6));
+  ctx.lineTo(midX - 8 * Math.cos(angle + Math.PI/6), midY - 8 * Math.sin(angle + Math.PI/6));
+  ctx.fill();
+}
+
+function drawScatteringPolarPlot(animFrame) {
+  if (!ctxFeynmanScattering) return;
+  const w = canvasFeynmanScattering.width / window.devicePixelRatio;
+  const h = canvasFeynmanScattering.height / window.devicePixelRatio;
+  ctxFeynmanScattering.clearRect(0, 0, w, h);
+  
+  const cx = w / 2;
+  const cy = h / 2;
+  
+  // Draw polar grid
+  ctxFeynmanScattering.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctxFeynmanScattering.beginPath(); ctxFeynmanScattering.arc(cx, cy, 30, 0, Math.PI*2); ctxFeynmanScattering.stroke();
+  ctxFeynmanScattering.beginPath(); ctxFeynmanScattering.arc(cx, cy, 60, 0, Math.PI*2); ctxFeynmanScattering.stroke();
+  ctxFeynmanScattering.beginPath(); ctxFeynmanScattering.arc(cx, cy, 90, 0, Math.PI*2); ctxFeynmanScattering.stroke();
+  
+  ctxFeynmanScattering.beginPath(); ctxFeynmanScattering.moveTo(cx - 100, cy); ctxFeynmanScattering.lineTo(cx + 100, cy); ctxFeynmanScattering.stroke();
+  ctxFeynmanScattering.beginPath(); ctxFeynmanScattering.moveTo(cx, cy - 100); ctxFeynmanScattering.lineTo(cx, cy + 100); ctxFeynmanScattering.stroke();
+  
+  const s = feynmanEnergy * feynmanEnergy;
+  const points = [];
+  let max_val = 0;
+  
+  // Calculate polar values
+  for (let theta = 0; theta < Math.PI * 2; theta += 0.05) {
+    let t_val = theta;
+    if (t_val > Math.PI) t_val = Math.PI*2 - t_val; // symmetry
+    let val = computeDifferentialCrossSectionJS(feynmanProcess, s, t_val);
+    if (val > max_val && t_val > 0.05 && t_val < Math.PI - 0.05) max_val = val; // ignore strict forward peaks for scaling
+    points.push({th: theta, r: val});
+  }
+  
+  if (max_val === 0) max_val = 1;
+  const scale = 90 / max_val;
+  
+  ctxFeynmanScattering.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    let r_scaled = p.r * scale;
+    if (r_scaled > 100) r_scaled = 100; // cap for forward peaks
+    const px = cx + r_scaled * Math.cos(p.th);
+    const py = cy - r_scaled * Math.sin(p.th); // y inverted on canvas
+    if (i === 0) ctxFeynmanScattering.moveTo(px, py);
+    else ctxFeynmanScattering.lineTo(px, py);
+  }
+  ctxFeynmanScattering.closePath();
+  
+  let grad = ctxFeynmanScattering.createRadialGradient(cx, cy, 0, cx, cy, 100);
+  grad.addColorStop(0, 'rgba(0, 240, 255, 0.8)');
+  grad.addColorStop(1, 'rgba(0, 240, 255, 0.1)');
+  
+  ctxFeynmanScattering.fillStyle = grad;
+  ctxFeynmanScattering.fill();
+  ctxFeynmanScattering.strokeStyle = '#00f0ff';
+  ctxFeynmanScattering.lineWidth = 2;
+  ctxFeynmanScattering.stroke();
+  
+  // Incoming beam indicator
+  ctxFeynmanScattering.strokeStyle = '#ffaa00';
+  ctxFeynmanScattering.setLineDash([4, 4]);
+  drawArrowLine(ctxFeynmanScattering, cx - 110, cy, cx - 20, cy);
+  ctxFeynmanScattering.setLineDash([]);
+  ctxFeynmanScattering.fillStyle = '#ffaa00';
+  ctxFeynmanScattering.font = '10px var(--font-sans)';
+  ctxFeynmanScattering.fillText('Beam Axis', cx - 110, cy - 10);
+  
+  // Animated scattered particles
+  const numParticles = 8;
+  ctxFeynmanScattering.fillStyle = '#fff';
+  for (let i = 0; i < numParticles; i++) {
+    const r_anim = (animFrame * 2 + i * 20) % 100;
+    const th_anim = (i * Math.PI * 2) / numParticles;
+    
+    // Probability weighting: particles should appear more where cross-section is high
+    let th_sym = th_anim;
+    if (th_sym > Math.PI) th_sym = Math.PI*2 - th_sym;
+    const prob = computeDifferentialCrossSectionJS(feynmanProcess, s, th_sym) * scale;
+    const cap_prob = Math.min(prob / 100.0, 1.0);
+    
+    ctxFeynmanScattering.globalAlpha = 0.2 + cap_prob * 0.8;
+    ctxFeynmanScattering.beginPath();
+    ctxFeynmanScattering.arc(cx + r_anim * Math.cos(th_anim), cy - r_anim * Math.sin(th_anim), 2, 0, Math.PI*2);
+    ctxFeynmanScattering.fill();
+  }
+  ctxFeynmanScattering.globalAlpha = 1.0;
+}
+
+function renderFeynmanPhysicsMath() {
+  const container = document.getElementById('feynman-physics-details');
+  if (!container) return;
+  
+  let formula = "";
+  if (feynmanProcess === "e- e+ -> mu- mu+") {
+    formula = `|\\mathcal{M}|^2 = 2e^4 \\frac{t^2 + u^2}{s^2}`;
+  } else if (feynmanProcess === "e- e+ -> e- e+") {
+    formula = `|\\mathcal{M}|^2 = 2e^4 \\left( \\frac{s^2+u^2}{t^2} + \\frac{t^2+u^2}{s^2} + \\frac{2u^2}{st} \\right)`;
+  } else {
+    formula = `|\\mathcal{M}|^2 = 2e^4 \\left( \\frac{s^2+u^2}{t^2} + \\frac{s^2+t^2}{u^2} + \\frac{2s^2}{tu} \\right)`;
+  }
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>📐 QED Scattering Cross Section & Mandelstam Variables</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      양자장론(QFT)에서 산란 진폭(Amplitude, $\\mathcal{M}$)은 **파인만 다이어그램(Feynman Diagram)** 의 각 정점(Vertex)과 전파인자(Propagator)에 대응되는 파인만 규칙(Feynman Rules)을 곱하여 얻어집니다.
+      
+      <p style="margin-top: 0.5rem;"><b>1. Mandelstam Variables (만델스탐 변수)</b></p>
+      로렌츠 불변량인 만델스탐 변수는 질량이 무시되는 고에너지 한계($\\sqrt{s} \\gg m$)에서 다음과 같습니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        s = 4E^2, \\quad t = -\\frac{s}{2}(1-\\cos\\theta), \\quad u = -\\frac{s}{2}(1+\\cos\\theta)
+      </div>
+      
+      <p style="margin-top: 0.5rem;"><b>2. Tree-level Amplitude & Cross Section</b></p>
+      선택된 반응에 대한 행렬식의 절댓값 제곱($|\\mathcal{M}|^2$)은 다음과 같습니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #ffaa00;">
+        ${formula}
+      </div>
+      이를 통해 위쪽 캔버스에 시각화된 미분 단면적(Differential Cross Section) 극좌표 분포는 다음 공식에 의해 결정됩니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        \\frac{d\\sigma}{d\\Omega} = \\frac{|\\mathcal{M}|^2}{64\\pi^2 s}
+      </div>
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+// ============================================================================
+// 14. Cosmology & Dark Matter Freeze-out Lab
+// ============================================================================
+
+function initCosmologyLab() {
+  canvasCosmoEvol = document.getElementById('canvas-cosmology-evolution');
+  ctxCosmoEvol = canvasCosmoEvol.getContext('2d');
+  canvasCosmoMicro = document.getElementById('canvas-cosmology-micro');
+  ctxCosmoMicro = canvasCosmoMicro.getContext('2d');
+  
+  resizeCanvas();
+  
+  updateCosmologyParameters();
+  
+  if (cosmoLoopId) {
+    cancelAnimationFrame(cosmoLoopId);
+  }
+  
+  // Initialize micro particles
+  cosmoMicroParticles = [];
+  for(let i=0; i<100; i++) {
+    cosmoMicroParticles.push({
+      x: Math.random(),
+      y: Math.random(),
+      vx: (Math.random() - 0.5) * 0.02,
+      vy: (Math.random() - 0.5) * 0.02,
+      active: true
+    });
+  }
+  
+  let animFrame = 0;
+  function cosmoLoop() {
+    drawCosmoEvolutionGraph(animFrame);
+    drawCosmoMicroSimulation(animFrame);
+    animFrame++;
+    cosmoLoopId = requestAnimationFrame(cosmoLoop);
+  }
+  
+  cosmoLoop();
+}
+
+function updateCosmologyParameters() {
+  cosmoMass = parseFloat(document.getElementById('slider-cosmology-mass').value);
+  cosmoSigmaVLog = parseFloat(document.getElementById('slider-cosmology-sigma').value);
+  
+  const sigmaV = Math.pow(10, cosmoSigmaVLog);
+  
+  document.getElementById('label-cosmology-mass').innerText = `${cosmoMass.toFixed(1)} GeV`;
+  document.getElementById('label-cosmology-sigma').innerText = `${sigmaV.toExponential(2)} cm³/s`;
+  
+  // Calculate freeze-out
+  // 1 cm^3/s = 8.5e16 GeV^-2
+  const g = 2.0;
+  const g_star = 106.75;
+  const M_Pl = 1.22e19;
+  const sigmaV_GeV = sigmaV * 8.5e16;
+  
+  let C = 0.038 * (g / Math.sqrt(g_star)) * cosmoMass * M_Pl * sigmaV_GeV;
+  let x_f = 1.0;
+  if (C > 1.0) {
+    let guess = Math.log(C);
+    x_f = Math.log(C) - 0.5 * Math.log(guess);
+    x_f = Math.log(C) - 0.5 * Math.log(x_f);
+  }
+  
+  let omega_h2 = (1.07e9 * x_f) / (Math.sqrt(g_star) * M_Pl * sigmaV_GeV);
+  if (C <= 1.0) {
+     omega_h2 = Infinity; // Overclose
+  }
+  
+  cosmoXf = x_f;
+  cosmoOmega = omega_h2;
+  
+  let badge = document.getElementById('cosmology-relic-badge');
+  if (omega_h2 > 100) {
+    badge.innerText = `RELIC DENSITY Ω_χ h²: UNIVERSE OVERCLOSED`;
+    badge.style.color = '#ff3366';
+    badge.style.borderColor = '#ff3366';
+    badge.style.background = 'rgba(255, 51, 102, 0.08)';
+  } else {
+    badge.innerText = `RELIC DENSITY Ω_χ h²: ${omega_h2.toFixed(4)}`;
+    if (omega_h2 >= 0.11 && omega_h2 <= 0.13) {
+       badge.style.color = '#00ffaa';
+       badge.style.borderColor = '#00ffaa';
+       badge.style.background = 'rgba(0, 255, 170, 0.08)';
+    } else {
+       badge.style.color = '#a855f7';
+       badge.style.borderColor = '#a855f7';
+       badge.style.background = 'rgba(168, 85, 247, 0.08)';
+    }
+  }
+  
+  renderCosmologyPhysicsMath();
+}
+
+function drawCosmoEvolutionGraph(animFrame) {
+  if (!ctxCosmoEvol) return;
+  const w = canvasCosmoEvol.width / window.devicePixelRatio;
+  const h = canvasCosmoEvol.height / window.devicePixelRatio;
+  ctxCosmoEvol.clearRect(0, 0, w, h);
+  
+  // Axes
+  ctxCosmoEvol.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxCosmoEvol.beginPath();
+  ctxCosmoEvol.moveTo(40, 10); ctxCosmoEvol.lineTo(40, h-20); ctxCosmoEvol.lineTo(w-10, h-20);
+  ctxCosmoEvol.stroke();
+  
+  ctxCosmoEvol.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxCosmoEvol.font = '10px var(--font-sans)';
+  ctxCosmoEvol.fillText('Y', 20, 20);
+  ctxCosmoEvol.fillText('x = m/T', w - 40, h - 5);
+  
+  // log x from 1 to 1000
+  // log y from 1e-15 to 1
+  const mapX = (x) => 40 + (Math.log10(x) / 3.0) * (w - 50);
+  const mapY = (y) => {
+    if (y < 1e-15) y = 1e-15;
+    if (y > 1) y = 1;
+    return (h - 20) - ((Math.log10(y) + 15) / 15.0) * (h - 30);
+  };
+  
+  // Draw Y_eq curve
+  ctxCosmoEvol.beginPath();
+  ctxCosmoEvol.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctxCosmoEvol.setLineDash([4, 4]);
+  for (let x = 1.0; x <= 1000; x *= 1.1) {
+    let Y_eq = 0.145 * (2.0 / 106.75) * Math.pow(x, 1.5) * Math.exp(-x);
+    if (x === 1.0) ctxCosmoEvol.moveTo(mapX(x), mapY(Y_eq));
+    else ctxCosmoEvol.lineTo(mapX(x), mapY(Y_eq));
+  }
+  ctxCosmoEvol.stroke();
+  ctxCosmoEvol.setLineDash([]);
+  
+  // Draw actual Y curve
+  ctxCosmoEvol.beginPath();
+  ctxCosmoEvol.strokeStyle = '#00f0ff';
+  ctxCosmoEvol.lineWidth = 2;
+  
+  let currentY = 0.145 * (2.0 / 106.75) * Math.pow(1.0, 1.5) * Math.exp(-1.0);
+  let freezeOutY = 0.145 * (2.0 / 106.75) * Math.pow(cosmoXf, 1.5) * Math.exp(-cosmoXf);
+  if (cosmoXf <= 1.0) freezeOutY = currentY;
+  
+  for (let x = 1.0; x <= 1000; x *= 1.05) {
+    let y_val = 0.145 * (2.0 / 106.75) * Math.pow(x, 1.5) * Math.exp(-x);
+    if (x >= cosmoXf) {
+      y_val = freezeOutY; // Freezes out
+    }
+    if (x === 1.0) ctxCosmoEvol.moveTo(mapX(x), mapY(y_val));
+    else ctxCosmoEvol.lineTo(mapX(x), mapY(y_val));
+  }
+  ctxCosmoEvol.stroke();
+  ctxCosmoEvol.lineWidth = 1;
+  
+  // Draw marker
+  const markerX = mapX(cosmoXf);
+  const markerY = mapY(freezeOutY);
+  ctxCosmoEvol.fillStyle = '#ffaa00';
+  ctxCosmoEvol.beginPath();
+  ctxCosmoEvol.arc(markerX, markerY, 4, 0, Math.PI*2);
+  ctxCosmoEvol.fill();
+  ctxCosmoEvol.fillText('Freeze-out', markerX + 8, markerY - 8);
+}
+
+function drawCosmoMicroSimulation(animFrame) {
+  if (!ctxCosmoMicro) return;
+  const w = canvasCosmoMicro.width / window.devicePixelRatio;
+  const h = canvasCosmoMicro.height / window.devicePixelRatio;
+  ctxCosmoMicro.clearRect(0, 0, w, h);
+  
+  // Simulate expansion of the universe. Scale factor a(t) increases over time.
+  // We represent this by expanding the coordinates of particles.
+  // Let animFrame go from 0 to 600, mapping roughly to x from 1 to 50
+  let progress = (animFrame % 600) / 600; 
+  let currentX = 1.0 + progress * 49.0;
+  
+  let scaleFactor = Math.sqrt(currentX); // Radiation era a ~ sqrt(t) ~ sqrt(x)
+  let maxScale = Math.sqrt(50.0);
+  let renderScale = scaleFactor / maxScale; // 0.1 to 1.0
+  
+  // Draw expanding grid
+  ctxCosmoMicro.strokeStyle = 'rgba(255,255,255,0.05)';
+  const gridSpacing = 20 * renderScale;
+  const cx = w/2; const cy = h/2;
+  for(let i=0; i<w/2; i+=gridSpacing) {
+    ctxCosmoMicro.beginPath(); ctxCosmoMicro.moveTo(cx+i, 0); ctxCosmoMicro.lineTo(cx+i, h); ctxCosmoMicro.stroke();
+    ctxCosmoMicro.beginPath(); ctxCosmoMicro.moveTo(cx-i, 0); ctxCosmoMicro.lineTo(cx-i, h); ctxCosmoMicro.stroke();
+  }
+  for(let j=0; j<h/2; j+=gridSpacing) {
+    ctxCosmoMicro.beginPath(); ctxCosmoMicro.moveTo(0, cy+j); ctxCosmoMicro.lineTo(w, cy+j); ctxCosmoMicro.stroke();
+    ctxCosmoMicro.beginPath(); ctxCosmoMicro.moveTo(0, cy-j); ctxCosmoMicro.lineTo(w, cy-j); ctxCosmoMicro.stroke();
+  }
+  
+  ctxCosmoMicro.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxCosmoMicro.font = '10px var(--font-mono)';
+  ctxCosmoMicro.fillText(`Time (x=m/T): ${currentX.toFixed(1)}`, 10, 20);
+  ctxCosmoMicro.fillText(`Scale Factor a: ${scaleFactor.toFixed(2)}`, 10, 35);
+  
+  // Interaction cross-section mapped to radius
+  const sigmaRadius = Math.max(2, (cosmoSigmaVLog + 28) * 3);
+  
+  // Update particles
+  let activeCount = 0;
+  for (let i = 0; i < cosmoMicroParticles.length; i++) {
+    let p = cosmoMicroParticles[i];
+    if (progress < 0.01) p.active = true; // reset
+    if (!p.active) continue;
+    activeCount++;
+    
+    // Thermal motion decreases as temperature drops (x increases)
+    let thermalV = 0.05 / Math.sqrt(currentX);
+    p.x += p.vx * thermalV;
+    p.y += p.vy * thermalV;
+    
+    // Hubble expansion drag (particles move away from center relative to comoving grid)
+    p.x = (p.x - 0.5) * 1.001 + 0.5;
+    p.y = (p.y - 0.5) * 1.001 + 0.5;
+    
+    // Bounce bounds (comoving box)
+    if(p.x < 0) { p.x = 0; p.vx *= -1; }
+    if(p.x > 1) { p.x = 1; p.vx *= -1; }
+    if(p.y < 0) { p.y = 0; p.vy *= -1; }
+    if(p.y > 1) { p.y = 1; p.vy *= -1; }
+  }
+  
+  // Annihilation logic
+  for (let i = 0; i < cosmoMicroParticles.length; i++) {
+    let p1 = cosmoMicroParticles[i];
+    if (!p1.active) continue;
+    for (let j = i+1; j < cosmoMicroParticles.length; j++) {
+      let p2 = cosmoMicroParticles[j];
+      if (!p2.active) continue;
+      
+      let dx = (p1.x - p2.x) * w;
+      let dy = (p1.y - p2.y) * h;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      
+      // If within annihilation radius, they destroy each other
+      if (dist < sigmaRadius / renderScale) { // effective radius shrinks as universe expands
+         p1.active = false;
+         p2.active = false;
+         // Draw flash
+         ctxCosmoMicro.fillStyle = '#ff3366';
+         ctxCosmoMicro.beginPath(); ctxCosmoMicro.arc(p1.x*w, p1.y*h, 10, 0, Math.PI*2); ctxCosmoMicro.fill();
+         break;
+      }
+    }
+  }
+  
+  // Draw active particles
+  for (let i = 0; i < cosmoMicroParticles.length; i++) {
+    let p = cosmoMicroParticles[i];
+    if (!p.active) continue;
+    ctxCosmoMicro.fillStyle = '#00f0ff';
+    ctxCosmoMicro.shadowColor = '#00f0ff';
+    ctxCosmoMicro.shadowBlur = 5;
+    ctxCosmoMicro.beginPath();
+    ctxCosmoMicro.arc(p.x * w, p.y * h, 3, 0, Math.PI*2);
+    ctxCosmoMicro.fill();
+    ctxCosmoMicro.shadowBlur = 0;
+  }
+  
+  ctxCosmoMicro.fillStyle = 'rgba(255,255,255,0.7)';
+  ctxCosmoMicro.fillText(`Comoving Density: ${activeCount} / 100`, 10, h - 10);
+  
+  if (currentX > cosmoXf && activeCount > 0) {
+    ctxCosmoMicro.fillStyle = '#ffaa00';
+    ctxCosmoMicro.fillText(`FROZEN OUT`, w - 80, 20);
+  }
+}
+
+function renderCosmologyPhysicsMath() {
+  const container = document.getElementById('cosmology-physics-details');
+  if (!container) return;
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>🌌 Friedmann & Boltzmann Equations</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      우주가 팽창하면서 암흑물질 입자가 열역학적 평형을 유지하다가, 쌍소멸(Annihilation) 반응률($\\Gamma$)이 허블 팽창률($H$)보다 작아지는 순간 밀도가 <b>동결(Freeze-out)</b>됩니다.
+      
+      <p style="margin-top: 0.5rem;"><b>1. Hubble Expansion (허블 팽창률)</b></p>
+      방사선 우세 우주에서 프리드만 방정식에 의한 허블 상수:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        H(T) \\simeq 1.66 \\sqrt{g_*} \\frac{T^2}{M_{Pl}}
+      </div>
+      
+      <p style="margin-top: 0.5rem;"><b>2. Boltzmann Equation (볼츠만 진화 방정식)</b></p>
+      공변 수 밀도(Comoving Number Density) $Y = n/s$ 의 진화:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        \\frac{dY}{dx} = -\\frac{s(x)}{H(x) x} \\langle \\sigma v \\rangle \\left( Y^2 - Y_{eq}^2 \\right)
+      </div>
+      $x = m/T$ 가 증가함에 따라 $Y$는 $Y_{eq}$를 따라 감소하다가, $Y \\simeq Y_{eq}$ 교차점인 $x_f$ 에서 동결됩니다.
+      
+      <p style="margin-top: 0.5rem;"><b>3. Relic Density (잔존 밀도)</b></p>
+      오늘날 우주의 암흑물질 잔존 밀도 $\\Omega_\\chi h^2$ 의 근사해:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #ffaa00;">
+        \\Omega_\\chi h^2 \\simeq \\frac{1.07 \\times 10^9 \\text{ GeV}^{-1}}{M_{Pl} \\sqrt{g_*} J(x_f)} \\approx \\frac{1.07 \\times 10^9 x_f}{M_{Pl} \\sqrt{g_*} \\langle \\sigma v \\rangle}
+      </div>
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+// ============================================================================
+// 15. Neutrino Oscillation & MSW Effect Lab
+// ============================================================================
+
+// PMNS mixing parameters (PDG 2024 best-fit, Normal Ordering)
+const PMNS_PARAMS = {
+  theta12: 33.44 * Math.PI / 180,
+  theta23: 49.2 * Math.PI / 180,
+  theta13: 8.57 * Math.PI / 180,
+  delta_cp: 197 * Math.PI / 180,
+  dm21_sq: 7.42e-5, // eV^2
+  dm31_sq: 2.515e-3  // eV^2
+};
+
+function getNuOscParams(flavorFrom, flavorTo) {
+  // Returns {theta, dm_sq} for the dominant 2-flavor channel
+  if ((flavorFrom === 'nu_e' && flavorTo === 'nu_mu') ||
+      (flavorFrom === 'nu_mu' && flavorTo === 'nu_e')) {
+    return { theta: PMNS_PARAMS.theta13, dm_sq: PMNS_PARAMS.dm31_sq };
+  } else if ((flavorFrom === 'nu_e' && flavorTo === 'nu_tau') ||
+             (flavorFrom === 'nu_tau' && flavorTo === 'nu_e')) {
+    return { theta: PMNS_PARAMS.theta13, dm_sq: PMNS_PARAMS.dm31_sq };
+  } else if ((flavorFrom === 'nu_mu' && flavorTo === 'nu_tau') ||
+             (flavorFrom === 'nu_tau' && flavorTo === 'nu_mu')) {
+    return { theta: PMNS_PARAMS.theta23, dm_sq: PMNS_PARAMS.dm31_sq };
+  }
+  return { theta: 0, dm_sq: 0 };
+}
+
+function computeNuOscProbJS(flavorFrom, flavorTo, E, L) {
+  // P(a->b) = sin^2(2*theta) * sin^2(1.267 * dm^2 * L / E)
+  // E in GeV, L in km, dm^2 in eV^2
+  if (flavorFrom === flavorTo) {
+    // Survival probability: sum over all disappearance channels
+    let p_disapp = 0;
+    const flavors = ['nu_e', 'nu_mu', 'nu_tau'];
+    for (const f of flavors) {
+      if (f !== flavorFrom) {
+        p_disapp += computeNuOscProbJS(flavorFrom, f, E, L);
+      }
+    }
+    return Math.max(0, 1.0 - p_disapp);
+  }
+  
+  const params = getNuOscParams(flavorFrom, flavorTo);
+  const sin2_2theta = Math.pow(Math.sin(2 * params.theta), 2);
+  const phase = 1.267 * params.dm_sq * L / E;
+  return sin2_2theta * Math.pow(Math.sin(phase), 2);
+}
+
+function initNeutrinoOscLab() {
+  canvasNuOsc = document.getElementById('canvas-neutrino-osc');
+  ctxNuOsc = canvasNuOsc.getContext('2d');
+  canvasMSW = document.getElementById('canvas-msw-effect');
+  ctxMSW = canvasMSW.getContext('2d');
+  
+  resizeCanvas();
+  updateNeutrinoOscParameters();
+  
+  if (nuOscLoopId) {
+    cancelAnimationFrame(nuOscLoopId);
+  }
+  
+  let animFrame = 0;
+  function nuOscLoop() {
+    drawNuOscProbGraph(animFrame);
+    drawMSWEffectPlot(animFrame);
+    animFrame++;
+    nuOscLoopId = requestAnimationFrame(nuOscLoop);
+  }
+  nuOscLoop();
+}
+
+function updateNeutrinoOscParameters() {
+  nuOscFrom = document.getElementById('select-nu-from').value;
+  nuOscTo = document.getElementById('select-nu-to').value;
+  nuOscEnergy = parseFloat(document.getElementById('slider-nu-energy').value);
+  nuOscDensityLog = parseFloat(document.getElementById('slider-nu-density').value);
+  
+  document.getElementById('label-nu-energy').innerText = `${nuOscEnergy.toFixed(1)} GeV`;
+  const ne = Math.pow(10, nuOscDensityLog);
+  document.getElementById('label-nu-density').innerText = `${ne.toExponential(1)} cm\u207b\u00b3`;
+  
+  // Update PMNS badge
+  const params = getNuOscParams(nuOscFrom, nuOscTo);
+  const sin2_2theta = Math.pow(Math.sin(2 * params.theta), 2);
+  const badge = document.getElementById('neutrino-pmns-badge');
+  
+  if (nuOscFrom === nuOscTo) {
+    badge.innerText = `SURVIVAL: P(\u03bd_\u03b1 \u2192 \u03bd_\u03b1) | sin\u00b2(2\u03b8) = ${sin2_2theta.toFixed(4)}`;
+    badge.style.color = '#ffaa00';
+    badge.style.borderColor = 'rgba(255, 170, 0, 0.3)';
+  } else {
+    badge.innerText = `TRANSITION: sin\u00b2(2\u03b8) = ${sin2_2theta.toFixed(4)} | \u0394m\u00b2 = ${(params.dm_sq * 1e3).toFixed(2)}\u00d710\u207b\u00b3 eV\u00b2`;
+    badge.style.color = '#00f0ff';
+    badge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+  }
+  
+  renderNeutrinoOscPhysicsMath();
+}
+
+function drawNuOscProbGraph(animFrame) {
+  if (!ctxNuOsc) return;
+  const w = canvasNuOsc.width / window.devicePixelRatio;
+  const h = canvasNuOsc.height / window.devicePixelRatio;
+  ctxNuOsc.clearRect(0, 0, w, h);
+  
+  const padL = 45, padR = 10, padT = 15, padB = 25;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  
+  // Axes
+  ctxNuOsc.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxNuOsc.beginPath();
+  ctxNuOsc.moveTo(padL, padT);
+  ctxNuOsc.lineTo(padL, h - padB);
+  ctxNuOsc.lineTo(w - padR, h - padB);
+  ctxNuOsc.stroke();
+  
+  ctxNuOsc.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxNuOsc.font = '10px var(--font-sans)';
+  ctxNuOsc.fillText('P', 10, padT + 5);
+  ctxNuOsc.fillText('L (km)', w - 40, h - 5);
+  
+  // Y-axis labels
+  ctxNuOsc.fillText('1.0', 22, padT + 5);
+  ctxNuOsc.fillText('0.5', 22, padT + plotH / 2 + 3);
+  ctxNuOsc.fillText('0', 28, h - padB - 2);
+  
+  // Compute oscillation length for auto-scaling
+  const params = getNuOscParams(nuOscFrom, nuOscTo);
+  let L_osc = (nuOscEnergy * Math.PI) / (1.267 * params.dm_sq); // half oscillation length
+  if (L_osc <= 0 || !isFinite(L_osc)) L_osc = 1000;
+  const L_max = L_osc * 4; // Show 2 full oscillations
+  
+  const mapX = (L) => padL + (L / L_max) * plotW;
+  const mapY = (P) => padT + plotH - P * plotH;
+  
+  // Draw grid lines
+  ctxNuOsc.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 0; i <= 4; i++) {
+    const lx = padL + (i / 4) * plotW;
+    ctxNuOsc.beginPath(); ctxNuOsc.moveTo(lx, padT); ctxNuOsc.lineTo(lx, h - padB); ctxNuOsc.stroke();
+  }
+  ctxNuOsc.setLineDash([2, 2]);
+  ctxNuOsc.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctxNuOsc.beginPath(); ctxNuOsc.moveTo(padL, mapY(0.5)); ctxNuOsc.lineTo(w - padR, mapY(0.5)); ctxNuOsc.stroke();
+  ctxNuOsc.beginPath(); ctxNuOsc.moveTo(padL, mapY(1.0)); ctxNuOsc.lineTo(w - padR, mapY(1.0)); ctxNuOsc.stroke();
+  ctxNuOsc.setLineDash([]);
+  
+  // Draw P(transition) curve
+  ctxNuOsc.beginPath();
+  ctxNuOsc.strokeStyle = '#00f0ff';
+  ctxNuOsc.lineWidth = 2;
+  const steps = 500;
+  for (let i = 0; i <= steps; i++) {
+    const L = (i / steps) * L_max;
+    const P = computeNuOscProbJS(nuOscFrom, nuOscTo, nuOscEnergy, L);
+    if (i === 0) ctxNuOsc.moveTo(mapX(L), mapY(P));
+    else ctxNuOsc.lineTo(mapX(L), mapY(P));
+  }
+  ctxNuOsc.stroke();
+  ctxNuOsc.lineWidth = 1;
+  
+  // Draw survival probability (complement)
+  if (nuOscFrom !== nuOscTo) {
+    ctxNuOsc.beginPath();
+    ctxNuOsc.strokeStyle = 'rgba(255, 170, 0, 0.4)';
+    ctxNuOsc.setLineDash([4, 4]);
+    for (let i = 0; i <= steps; i++) {
+      const L = (i / steps) * L_max;
+      const P_surv = computeNuOscProbJS(nuOscFrom, nuOscFrom, nuOscEnergy, L);
+      if (i === 0) ctxNuOsc.moveTo(mapX(L), mapY(P_surv));
+      else ctxNuOsc.lineTo(mapX(L), mapY(P_surv));
+    }
+    ctxNuOsc.stroke();
+    ctxNuOsc.setLineDash([]);
+  }
+  
+  // Animated traveling neutrino dot
+  const travDist = (animFrame * 3) % steps;
+  const travL = (travDist / steps) * L_max;
+  const travP = computeNuOscProbJS(nuOscFrom, nuOscTo, nuOscEnergy, travL);
+  
+  ctxNuOsc.fillStyle = '#00f0ff';
+  ctxNuOsc.shadowColor = '#00f0ff';
+  ctxNuOsc.shadowBlur = 8;
+  ctxNuOsc.beginPath();
+  ctxNuOsc.arc(mapX(travL), mapY(travP), 4, 0, Math.PI * 2);
+  ctxNuOsc.fill();
+  ctxNuOsc.shadowBlur = 0;
+  
+  // X-axis labels
+  ctxNuOsc.fillStyle = 'rgba(255,255,255,0.4)';
+  ctxNuOsc.font = '9px var(--font-mono)';
+  for (let i = 0; i <= 4; i++) {
+    const lVal = (i / 4) * L_max;
+    ctxNuOsc.fillText(lVal >= 1000 ? `${(lVal/1000).toFixed(0)}k` : lVal.toFixed(0), padL + (i / 4) * plotW - 8, h - 5);
+  }
+  
+  // Legend
+  ctxNuOsc.fillStyle = '#00f0ff';
+  ctxNuOsc.font = '9px var(--font-sans)';
+  ctxNuOsc.fillText(`P(${nuOscFrom.replace('nu_','\u03bd_')}\u2192${nuOscTo.replace('nu_','\u03bd_')})`, w - 100, padT + 15);
+  if (nuOscFrom !== nuOscTo) {
+    ctxNuOsc.fillStyle = 'rgba(255, 170, 0, 0.6)';
+    ctxNuOsc.fillText(`P(survival)`, w - 100, padT + 28);
+  }
+}
+
+function drawMSWEffectPlot(animFrame) {
+  if (!ctxMSW) return;
+  const w = canvasMSW.width / window.devicePixelRatio;
+  const h = canvasMSW.height / window.devicePixelRatio;
+  ctxMSW.clearRect(0, 0, w, h);
+  
+  const padL = 45, padR = 10, padT = 15, padB = 25;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  
+  // Axes
+  ctxMSW.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxMSW.beginPath();
+  ctxMSW.moveTo(padL, padT);
+  ctxMSW.lineTo(padL, h - padB);
+  ctxMSW.lineTo(w - padR, h - padB);
+  ctxMSW.stroke();
+  
+  ctxMSW.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxMSW.font = '10px var(--font-sans)';
+  ctxMSW.fillText('sin\u00b22\u03b8_M', 2, padT + 5);
+  ctxMSW.fillText('A parameter', w - 60, h - 5);
+  
+  // sin^2(2*theta_12) in vacuum
+  const theta12 = PMNS_PARAMS.theta12;
+  const sin2_2th = Math.pow(Math.sin(2 * theta12), 2);
+  const cos2th = Math.cos(2 * theta12);
+  
+  // Compute MSW effective mixing angle vs A
+  // sin^2(2*theta_M) = sin^2(2*theta) / sqrt((cos(2*theta) - A)^2 + sin^2(2*theta))
+  // Actually the formula is:
+  // sin^2(2*theta_M) = sin^2(2*theta) / [(cos(2*theta) - A)^2 + sin^2(2*theta)]
+  // This peaks at A = cos(2*theta) where sin^2(2*theta_M) = 1
+  
+  const A_max = 3.0;
+  const mapX_msw = (A) => padL + (A / A_max) * plotW;
+  const mapY_msw = (v) => padT + plotH - v * plotH;
+  
+  // Grid
+  ctxMSW.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 1; i <= 5; i++) {
+    const ax = padL + (i / 5) * plotW;
+    ctxMSW.beginPath(); ctxMSW.moveTo(ax, padT); ctxMSW.lineTo(ax, h - padB); ctxMSW.stroke();
+  }
+  ctxMSW.setLineDash([2, 2]);
+  ctxMSW.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctxMSW.beginPath(); ctxMSW.moveTo(padL, mapY_msw(0.5)); ctxMSW.lineTo(w - padR, mapY_msw(0.5)); ctxMSW.stroke();
+  ctxMSW.beginPath(); ctxMSW.moveTo(padL, mapY_msw(1.0)); ctxMSW.lineTo(w - padR, mapY_msw(1.0)); ctxMSW.stroke();
+  ctxMSW.setLineDash([]);
+  
+  // Draw MSW curve
+  ctxMSW.beginPath();
+  ctxMSW.strokeStyle = '#a855f7';
+  ctxMSW.lineWidth = 2;
+  
+  for (let i = 0; i <= 500; i++) {
+    const A = (i / 500) * A_max;
+    const denom = Math.pow(cos2th - A, 2) + sin2_2th;
+    const sin2_2thM = sin2_2th / denom;
+    const clamped = Math.min(sin2_2thM, 1.0);
+    if (i === 0) ctxMSW.moveTo(mapX_msw(A), mapY_msw(clamped));
+    else ctxMSW.lineTo(mapX_msw(A), mapY_msw(clamped));
+  }
+  ctxMSW.stroke();
+  ctxMSW.lineWidth = 1;
+  
+  // Draw vacuum value line
+  ctxMSW.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctxMSW.setLineDash([4, 4]);
+  ctxMSW.beginPath();
+  ctxMSW.moveTo(padL, mapY_msw(sin2_2th));
+  ctxMSW.lineTo(w - padR, mapY_msw(sin2_2th));
+  ctxMSW.stroke();
+  ctxMSW.setLineDash([]);
+  
+  ctxMSW.fillStyle = 'rgba(255,255,255,0.4)';
+  ctxMSW.font = '9px var(--font-sans)';
+  ctxMSW.fillText('vacuum', w - 50, mapY_msw(sin2_2th) - 4);
+  
+  // Mark resonance point A = cos(2*theta)
+  const A_res = cos2th;
+  ctxMSW.fillStyle = '#ff3366';
+  ctxMSW.beginPath();
+  ctxMSW.arc(mapX_msw(A_res), mapY_msw(1.0), 5, 0, Math.PI * 2);
+  ctxMSW.fill();
+  ctxMSW.fillStyle = '#ff3366';
+  ctxMSW.font = '10px var(--font-sans)';
+  ctxMSW.fillText('MSW Resonance', mapX_msw(A_res) + 8, mapY_msw(1.0) + 4);
+  
+  // Current user density marker
+  const ne = Math.pow(10, nuOscDensityLog);
+  const GF = 1.1664e-5; // GeV^-2
+  const hbarc3 = Math.pow(0.197e-13, 3); // cm^3 * GeV^3
+  const V_CC = Math.sqrt(2) * GF * ne * hbarc3;
+  const dm21_GeV2 = PMNS_PARAMS.dm21_sq * 1e-18;
+  let A_current = 0;
+  if (dm21_GeV2 > 0) {
+    A_current = 2 * nuOscEnergy * V_CC / dm21_GeV2;
+  }
+  
+  if (A_current <= A_max && A_current >= 0) {
+    const denom_cur = Math.pow(cos2th - A_current, 2) + sin2_2th;
+    const sin2_2thM_cur = Math.min(sin2_2th / denom_cur, 1.0);
+    
+    ctxMSW.fillStyle = '#00f0ff';
+    ctxMSW.shadowColor = '#00f0ff';
+    ctxMSW.shadowBlur = 8;
+    ctxMSW.beginPath();
+    ctxMSW.arc(mapX_msw(A_current), mapY_msw(sin2_2thM_cur), 4, 0, Math.PI * 2);
+    ctxMSW.fill();
+    ctxMSW.shadowBlur = 0;
+    
+    ctxMSW.font = '9px var(--font-mono)';
+    ctxMSW.fillText(`A=${A_current.toFixed(2)}`, mapX_msw(A_current) + 8, mapY_msw(sin2_2thM_cur) - 8);
+  }
+  
+  // X-axis labels
+  ctxMSW.fillStyle = 'rgba(255,255,255,0.4)';
+  ctxMSW.font = '9px var(--font-mono)';
+  for (let i = 0; i <= 3; i++) {
+    ctxMSW.fillText((i).toFixed(0), padL + (i / 3) * plotW - 3, h - 5);
+  }
+}
+
+function renderNeutrinoOscPhysicsMath() {
+  const container = document.getElementById('neutrino-osc-physics-details');
+  if (!container) return;
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>\ud83d\udd2e Neutrino Oscillation & MSW Effect</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      \uc911\uc131\ubbf8\uc790\uc758 <b>\ub9db \uace0\uc720\uc0c1\ud0dc(Flavor Eigenstate)</b>\uc640 <b>\uc9c8\ub7c9 \uace0\uc720\uc0c1\ud0dc(Mass Eigenstate)</b>\uac00 \uc11c\ub85c \ub2e4\ub974\uae30 \ub54c\ubb38\uc5d0, \ud55c \ub9db\uc73c\ub85c \uc0dd\uc131\ub41c \uc911\uc131\ubbf8\uc790\uac00 \uc2dc\uac04\uc774 \uc9c0\ub0a8\uc5d0 \ub530\ub77c \ub2e4\ub978 \ub9db\uc73c\ub85c \uc804\ud658(\uc9c4\ub3d9)\ub429\ub2c8\ub2e4.
+      
+      <p style="margin-top: 0.5rem;"><b>1. PMNS Mixing Matrix (PMNS \ud63c\ud569 \ud589\ub82c)</b></p>
+      CKM \ud589\ub82c\uc774 \ucffc\ud06c\uc758 \ud63c\ud569\uc744 \uae30\uc220\ud558\ub294 \uac83\ucc98\ub7fc, PMNS \ud589\ub82c\uc740 \uc911\uc131\ubbf8\uc790\uc758 \ud63c\ud569\uc744 \uae30\uc220\ud569\ub2c8\ub2e4:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem;">
+        |\\\\nu_\\\\alpha \\\\rangle = \\\\sum_{i=1}^{3} U_{\\\\alpha i}^* |\\\\nu_i \\\\rangle
+      </div>
+      
+      <p style="margin-top: 0.5rem;"><b>2. Vacuum Oscillation Probability (\uc9c4\uacf5 \uc9c4\ub3d9 \ud655\ub960)</b></p>
+      2\ub9db \uadfc\uc0ac\uc5d0\uc11c\uc758 \uc804\ud658 \ud655\ub960:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #00f0ff;">
+        P(\\\\nu_\\\\alpha \\\\to \\\\nu_\\\\beta) = \\\\sin^2(2\\\\theta) \\\\cdot \\\\sin^2\\\\left( \\\\frac{1.267 \\\\Delta m^2 [\\\\text{eV}^2] \\\\cdot L[\\\\text{km}]}{E[\\\\text{GeV}]} \\\\right)
+      </div>
+      
+      <p style="margin-top: 0.5rem;"><b>3. MSW Effect (Mikheyev-Smirnov-Wolfenstein \ubb3c\uc9c8 \ud6a8\uacfc)</b></p>
+      \ubb3c\uc9c8 \ub0b4\ubd80(\ud0dc\uc591, \uc9c0\uad6c \ub4f1)\ub97c \ud1b5\uacfc\ud560 \ub54c, \uc804\uc790 \uc911\uc131\ubbf8\uc790($\\\\nu_e$)\ub294 \uc804\uc790\uc640\uc758 CC \uc0c1\ud638\uc791\uc6a9\uc73c\ub85c \uc778\ud574 \uc720\ud6a8 \ud63c\ud569\uac01\uc774 \ubcc0\uacbd\ub429\ub2c8\ub2e4:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #a855f7;">
+        \\\\sin^2(2\\\\theta_M) = \\\\frac{\\\\sin^2(2\\\\theta)}{(\\\\cos 2\\\\theta - A)^2 + \\\\sin^2(2\\\\theta)}
+      </div>
+      $A = \\\\frac{2\\\\sqrt{2} G_F n_e E}{\\\\Delta m^2}$ \uc774\uba70, $A = \\\\cos(2\\\\theta)$ \uc77c \ub54c <b>MSW \uacf5\uba85(\uc9c4\ub3d9 \ucd5c\ub300\ud654)</b>\uc774 \ubc1c\uc0dd\ud569\ub2c8\ub2e4.
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+// ============================================================================
+// 16. Sphaleron & Baryogenesis Lab
+// ============================================================================
+
+function initSphaleronLab() {
+  canvasSphalPot = document.getElementById('canvas-sphaleron-potential');
+  ctxSphalPot = canvasSphalPot ? canvasSphalPot.getContext('2d') : null;
+  canvasBaryon = document.getElementById('canvas-baryon-asymmetry');
+  ctxBaryon = canvasBaryon ? canvasBaryon.getContext('2d') : null;
+  
+  baryonHistory = [];
+  
+  resizeCanvas();
+  updateSphaleronParameters();
+  
+  if (sphalLoopId) {
+    cancelAnimationFrame(sphalLoopId);
+  }
+  
+  let animFrame = 0;
+  function sphalLoop() {
+    drawSphaleronPotential(animFrame);
+    drawBaryonEvolution(animFrame);
+    animFrame++;
+    sphalLoopId = requestAnimationFrame(sphalLoop);
+  }
+  sphalLoop();
+}
+
+function computeSphaleronRateJS(T) {
+  const T_c = 160.0;
+  const alpha_W = 0.033;
+  const E_sph = 9000.0;
+  
+  if (T > T_c) {
+    return { T: T, phase: 'symmetric', rate: 25.0 * Math.pow(alpha_W, 5) * Math.pow(T, 4) };
+  } else {
+    let rate = 0;
+    if (E_sph / T < 500) {
+      rate = Math.pow(T, 4) * Math.exp(-E_sph / T);
+    }
+    return { T: T, phase: 'broken', rate: rate };
+  }
+}
+
+function updateSphaleronParameters() {
+  const elTemp = document.getElementById('slider-sphal-temp');
+  const elCp = document.getElementById('slider-sphal-cp');
+  const elOutEq = document.getElementById('slider-sphal-outeq');
+  
+  if (!elTemp || !elCp || !elOutEq) return;
+  
+  sphalTemp = parseFloat(elTemp.value);
+  sphalCpPhase = parseFloat(elCp.value);
+  sphalOutEq = parseFloat(elOutEq.value);
+  
+  document.getElementById('label-sphal-temp').innerText = `${sphalTemp.toFixed(1)} GeV`;
+  document.getElementById('label-sphal-cp').innerText = `${sphalCpPhase.toFixed(2)} rad`;
+  document.getElementById('label-sphal-outeq').innerText = `${sphalOutEq.toFixed(2)} (Strong)`;
+  
+  const sphalInfo = computeSphaleronRateJS(sphalTemp);
+  const badge = document.getElementById('badge-sphal-phase');
+  if (badge) {
+    if (sphalInfo.phase === 'symmetric') {
+      badge.innerText = 'SYMMETRIC PHASE (High T)';
+      badge.style.color = '#ff3366';
+      badge.style.borderColor = '#ff3366';
+      badge.style.background = 'rgba(255, 51, 102, 0.2)';
+    } else {
+      badge.innerText = 'BROKEN PHASE (Low T)';
+      badge.style.color = '#00f0ff';
+      badge.style.borderColor = '#00f0ff';
+      badge.style.background = 'rgba(0, 240, 255, 0.2)';
+    }
+  }
+  
+  renderSphaleronPhysicsMath();
+}
+
+function drawSphaleronPotential(animFrame) {
+  if (!ctxSphalPot) return;
+  const w = canvasSphalPot.width / window.devicePixelRatio;
+  const h = canvasSphalPot.height / window.devicePixelRatio;
+  ctxSphalPot.clearRect(0, 0, w, h);
+  
+  const padL = 40, padR = 20, padT = 20, padB = 25;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  
+  // Axes
+  ctxSphalPot.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxSphalPot.beginPath();
+  ctxSphalPot.moveTo(padL, padT);
+  ctxSphalPot.lineTo(padL, h - padB);
+  ctxSphalPot.lineTo(w - padR, h - padB);
+  ctxSphalPot.stroke();
+  
+  ctxSphalPot.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxSphalPot.font = '10px var(--font-sans)';
+  ctxSphalPot.fillText('V', 10, padT + 5);
+  ctxSphalPot.fillText('N_CS', w - 30, h - 5);
+  
+  const sphalInfo = computeSphaleronRateJS(sphalTemp);
+  const isSymmetric = sphalInfo.phase === 'symmetric';
+  
+  // Potential parameters
+  // V(n) = V0 * (1 - cos(2*pi*n)) in broken phase, flat in symmetric phase
+  const V0 = isSymmetric ? 0 : 9000.0;
+  
+  const mapX = (n) => padL + (n + 1.5) / 3.0 * plotW;
+  const mapY = (v) => padT + plotH - (v / 10000.0) * plotH;
+  
+  // Grid
+  ctxSphalPot.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctxSphalPot.setLineDash([2, 2]);
+  for (let i = -1; i <= 1; i++) {
+    ctxSphalPot.beginPath(); ctxSphalPot.moveTo(mapX(i), padT); ctxSphalPot.lineTo(mapX(i), h - padB); ctxSphalPot.stroke();
+    ctxSphalPot.fillStyle = 'rgba(255,255,255,0.4)';
+    ctxSphalPot.fillText(i.toString(), mapX(i) - 3, h - 5);
+  }
+  ctxSphalPot.beginPath(); ctxSphalPot.moveTo(padL, mapY(9000)); ctxSphalPot.lineTo(w - padR, mapY(9000)); ctxSphalPot.stroke();
+  ctxSphalPot.setLineDash([]);
+  
+  // Draw Potential Curve
+  ctxSphalPot.beginPath();
+  ctxSphalPot.strokeStyle = isSymmetric ? '#ff3366' : '#00f0ff';
+  ctxSphalPot.lineWidth = 2;
+  const steps = 100;
+  for (let i = 0; i <= steps; i++) {
+    const n = -1.5 + (i / steps) * 3.0;
+    const v = isSymmetric ? 0 : (V0 / 2) * (1 - Math.cos(2 * Math.PI * n));
+    if (i === 0) ctxSphalPot.moveTo(mapX(n), mapY(v));
+    else ctxSphalPot.lineTo(mapX(n), mapY(v));
+  }
+  ctxSphalPot.stroke();
+  
+  // Thermal excitation / tunneling animation
+  // Represents field configurations jumping over the barrier
+  const tRate = Math.min(sphalInfo.rate / Math.pow(sphalTemp, 4), 1.0); // Normalized jump frequency
+  const rateFactor = isSymmetric ? 0.2 : tRate;
+  
+  if (Math.random() < rateFactor * 0.5) {
+    const fromN = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+    const toN = fromN + (Math.random() > 0.5 ? 1 : -1);
+    
+    // Draw an arc showing a jump
+    ctxSphalPot.beginPath();
+    ctxSphalPot.strokeStyle = 'rgba(255, 170, 0, 0.8)';
+    ctxSphalPot.lineWidth = 2;
+    const cX = (mapX(fromN) + mapX(toN)) / 2;
+    const radius = Math.abs(mapX(toN) - mapX(fromN)) / 2;
+    ctxSphalPot.arc(cX, mapY(0), radius, Math.PI, 0, false);
+    ctxSphalPot.stroke();
+  }
+  
+  // Current Temperature line
+  ctxSphalPot.strokeStyle = 'rgba(255, 51, 102, 0.5)';
+  ctxSphalPot.setLineDash([4, 4]);
+  ctxSphalPot.beginPath();
+  const thermalY = mapY(Math.min(sphalTemp * 40, 10000)); // Just a visual proxy for thermal energy
+  ctxSphalPot.moveTo(padL, thermalY);
+  ctxSphalPot.lineTo(w - padR, thermalY);
+  ctxSphalPot.stroke();
+  ctxSphalPot.setLineDash([]);
+  ctxSphalPot.fillStyle = 'rgba(255, 51, 102, 0.8)';
+  ctxSphalPot.fillText('Thermal Energy (T)', w - 90, thermalY - 5);
+}
+
+function drawBaryonEvolution(animFrame) {
+  if (!ctxBaryon) return;
+  const w = canvasBaryon.width / window.devicePixelRatio;
+  const h = canvasBaryon.height / window.devicePixelRatio;
+  ctxBaryon.clearRect(0, 0, w, h);
+  
+  const padL = 40, padR = 10, padT = 15, padB = 20;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  
+  // Axes
+  ctxBaryon.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxBaryon.beginPath();
+  ctxBaryon.moveTo(padL, padT);
+  ctxBaryon.lineTo(padL, h - padB);
+  ctxBaryon.lineTo(w - padR, h - padB);
+  ctxBaryon.stroke();
+  
+  // Calculate current eta_B
+  const sphalInfo = computeSphaleronRateJS(sphalTemp);
+  const B_viol = sphalInfo.rate / Math.pow(sphalTemp, 4);
+  const eta_B = 1e-8 * B_viol * Math.sin(sphalCpPhase) * sphalOutEq;
+  
+  const badge = document.getElementById('badge-baryon-asym');
+  if (badge) {
+    badge.innerText = `\u03b7_B = ${eta_B.toExponential(2)}`;
+    if (Math.abs(eta_B) > 1e-12) {
+      badge.style.color = '#00f0ff';
+    } else {
+      badge.style.color = 'var(--color-text-muted)';
+    }
+  }
+  
+  baryonHistory.push(eta_B);
+  if (baryonHistory.length > plotW) {
+    baryonHistory.shift();
+  }
+  
+  ctxBaryon.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxBaryon.font = '10px var(--font-sans)';
+  ctxBaryon.fillText('\u03b7_B', 15, padT + 5);
+  ctxBaryon.fillText('Time (t)', w - 40, h - 5);
+  
+  const maxAbsEta = 1e-9; // Expected max order
+  const mapX = (i) => padL + i;
+  const mapY = (v) => {
+    let scaled = v / maxAbsEta;
+    if (scaled > 1) scaled = 1;
+    if (scaled < -1) scaled = -1;
+    return padT + plotH / 2 - scaled * (plotH / 2);
+  };
+  
+  // Draw zero line
+  ctxBaryon.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxBaryon.setLineDash([2, 2]);
+  ctxBaryon.beginPath();
+  ctxBaryon.moveTo(padL, mapY(0));
+  ctxBaryon.lineTo(w - padR, mapY(0));
+  ctxBaryon.stroke();
+  ctxBaryon.setLineDash([]);
+  
+  // Draw history
+  if (baryonHistory.length > 1) {
+    ctxBaryon.beginPath();
+    ctxBaryon.strokeStyle = '#a855f7';
+    ctxBaryon.lineWidth = 2;
+    for (let i = 0; i < baryonHistory.length; i++) {
+      if (i === 0) ctxBaryon.moveTo(mapX(i), mapY(baryonHistory[i]));
+      else ctxBaryon.lineTo(mapX(i), mapY(baryonHistory[i]));
+    }
+    ctxBaryon.stroke();
+  }
+  
+  ctxBaryon.fillStyle = 'rgba(255,255,255,0.4)';
+  ctxBaryon.fillText('0', 25, mapY(0) + 3);
+  ctxBaryon.fillText('+1e-9', 8, mapY(maxAbsEta) + 3);
+  ctxBaryon.fillText('-1e-9', 8, mapY(-maxAbsEta) + 3);
+}
+
+function renderSphaleronPhysicsMath() {
+  const container = document.getElementById('sphaleron-physics-details');
+  if (!container) return;
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>\ud83c\udf00 Sphaleron & Sakharov Conditions</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      <b>\uc2a4\ud314\ub808\ub860(Sphaleron)</b>\uc740 \uc804\uc790\uae30\uc57d \uc791\uc6a9\uc758 \ube44\uc12d\ub3d9\uc801 \ud6a8\uacfc\ub85c, \ubc14\ub9ac\uc628 \uc218(B)\uc640 \ub819\ud1a4 \uc218(L)\ub97c \ub3d9\uc2dc\uc5d0 \uc704\ubc18\ud569\ub2c8\ub2e4: $\\\\Delta B = \\\\Delta L = -3\\\\Delta N_{CS}$.
+      
+      <p style="margin-top: 0.5rem;"><b>1. Sphaleron Rate (\uc2a4\ud314\ub808\ub860 \uc804\uc774\uc728)</b></p>
+      \uace0\uc628 \ub300\uce6d\uc0c1($T > T_c$)\uc5d0\uc11c\ub294 \uc5f4\uc801\uc73c\ub85c \uc7a5\ubcbd\uc744 \ub118\uc5b4 \ud65c\ubc1c\ud558\uac8c \uc77c\uc5b4\ub0a9\ub2c8\ub2e4:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #ff3366;">
+        \\\\Gamma_{\\\\text{sph}} \\\\sim \\\\kappa (\\\\alpha_W T)^4
+      </div>
+      \uc800\uc628 \uae68\uc9d0\uc0c1($T < T_c$)\uc5d0\uc11c\ub294 \uc5f4\uc801\uc73c\ub85c \uc5b5\uc81c(Suppression)\ub429\ub2c8\ub2e4:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #00f0ff;">
+        \\\\Gamma_{\\\\text{sph}} \\\\sim T^4 \\\\exp(-E_{\\\\text{sph}}/T)
+      </div>
+      
+      <p style="margin-top: 0.5rem;"><b>2. Sakharov Conditions (\uc0ac\ud558\ub85c\ud504 3\uc870\uac74)</b></p>
+      \uc6b0\uc8fc\uc5d0 \ubc14\ub9ac\uc628 \ube44\ub300\uce6d\uc131($\\\\eta_B$)\uc774 \uc0dd\uc131\ub418\uae30 \uc704\ud574 \ud544\uc694\ud55c 3\uac00\uc9c0 \uc870\uac74:
+      <ul style="margin-left: 1rem; margin-top: 0.25rem;">
+        <li><b>Baryon Number Violation</b> (\uc2a4\ud314\ub808\ub860\uc73c\ub85c \ucda9\uc871)</li>
+        <li><b>C and CP Violation</b> ($\\delta_{CP} \\\\neq 0, \\\\pi$ \uc77c \ub54c \ucda9\uc871)</li>
+        <li><b>Interactions out of Thermal Equilibrium</b> (\uc6b0\uc8fc \ud33d\ucc3d/\uc0c1\uc804\uc774 \ub4f1\uc73c\ub85c \ucda9\uc871)</li>
+      </ul>
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #a855f7;">
+        \\\\eta_B \\\\propto \\\\left(\\\\frac{\\\\Gamma_{\\\\text{sph}}}{T^4}\\\\right) \\\\cdot \\\\sin(\\\\delta_{CP}) \\\\cdot (\\\\text{Out of Eq})
+      </div>
+    </div>
+  `;
+  container.innerHTML = html;
+}
+
+// ============================================================================
+// 17. Axion & Strong CP Problem Lab
+// ============================================================================
+
+function initAxionLab() {
+  canvasAxionTheta = document.getElementById('canvas-axion-theta');
+  ctxAxionTheta = canvasAxionTheta ? canvasAxionTheta.getContext('2d') : null;
+  canvasAxionHaloscope = document.getElementById('canvas-axion-haloscope');
+  ctxAxionHaloscope = canvasAxionHaloscope ? canvasAxionHaloscope.getContext('2d') : null;
+  
+  resizeCanvas();
+  updateAxionParameters();
+  
+  if (axionLoopId) {
+    cancelAnimationFrame(axionLoopId);
+  }
+  
+  let animFrame = 0;
+  function axionLoop() {
+    drawAxionThetaVacuum(animFrame);
+    drawAxionHaloscope(animFrame);
+    animFrame++;
+    haloscopeTime += 1;
+    axionLoopId = requestAnimationFrame(axionLoop);
+  }
+  axionLoop();
+}
+
+function computeAxionPropertiesJS(f_a_GeV) {
+  const m_a_eV = 5.7e6 / f_a_GeV;
+  const alpha = 1.0 / 137.0;
+  const C_gamma = -1.92;
+  const g_ayy = (alpha / (2 * Math.PI * f_a_GeV)) * Math.abs(C_gamma);
+  return { m_a_eV, g_ayy };
+}
+
+function updateAxionParameters() {
+  const elFa = document.getElementById('slider-axion-fa');
+  const elB = document.getElementById('slider-axion-B');
+  const elQ = document.getElementById('slider-axion-Q');
+  
+  if (!elFa || !elB || !elQ) return;
+  
+  axionFaExp = parseFloat(elFa.value);
+  axionBField = parseFloat(elB.value);
+  axionQFactorExp = parseFloat(elQ.value);
+  
+  const f_a = Math.pow(10, axionFaExp);
+  const Q = Math.pow(10, axionQFactorExp);
+  
+  document.getElementById('label-axion-fa').innerText = `1.0e+${axionFaExp.toFixed(1)} GeV`;
+  document.getElementById('label-axion-B').innerText = `${axionBField.toFixed(1)} Tesla`;
+  document.getElementById('label-axion-Q').innerText = `1.0e+${axionQFactorExp.toFixed(1)}`;
+  
+  const props = computeAxionPropertiesJS(f_a);
+  let massStr = "";
+  if (props.m_a_eV < 1e-3) {
+    massStr = `${(props.m_a_eV * 1e6).toFixed(2)} μeV`;
+  } else {
+    massStr = `${(props.m_a_eV * 1e3).toFixed(2)} meV`;
+  }
+  
+  document.getElementById('label-axion-mass').innerText = massStr;
+  
+  // Power P_sig ~ B^2 * V * Q * g_ayy^2
+  // We use relative normalizations here
+  const powerW = 1.3e-32 * Math.pow(axionBField, 2) * 0.1 * Q * Math.pow(props.g_ayy * 1e15, 2) * 0.45 * 0.69;
+  
+  const badgeP = document.getElementById('badge-axion-power');
+  if (badgeP) {
+    badgeP.innerText = `P_sig = ${powerW.toExponential(2)} W`;
+  }
+  
+  renderAxionPhysicsMath(props.m_a_eV, props.g_ayy);
+}
+
+function drawAxionThetaVacuum(animFrame) {
+  if (!ctxAxionTheta) return;
+  const w = canvasAxionTheta.width / window.devicePixelRatio;
+  const h = canvasAxionTheta.height / window.devicePixelRatio;
+  ctxAxionTheta.clearRect(0, 0, w, h);
+  
+  const padL = 40, padR = 20, padT = 20, padB = 25;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  
+  // Axes
+  ctxAxionTheta.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxAxionTheta.beginPath();
+  ctxAxionTheta.moveTo(padL, padT);
+  ctxAxionTheta.lineTo(padL, h - padB);
+  ctxAxionTheta.lineTo(w - padR, h - padB);
+  ctxAxionTheta.stroke();
+  
+  ctxAxionTheta.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxAxionTheta.font = '10px var(--font-sans)';
+  ctxAxionTheta.fillText('V(θ)', 10, padT + 5);
+  ctxAxionTheta.fillText('θ (CP Phase)', w - 60, h - 5);
+  
+  const mapX = (t) => padL + (t + Math.PI) / (2 * Math.PI) * plotW;
+  const mapY = (v) => padT + plotH - v * plotH;
+  
+  // Draw V(θ) = 1 - cos(θ)
+  ctxAxionTheta.beginPath();
+  ctxAxionTheta.strokeStyle = '#a855f7';
+  ctxAxionTheta.lineWidth = 2;
+  const steps = 100;
+  for (let i = 0; i <= steps; i++) {
+    const t = -Math.PI + (i / steps) * 2 * Math.PI;
+    const v = (1 - Math.cos(t)) / 2;
+    if (i === 0) ctxAxionTheta.moveTo(mapX(t), mapY(v));
+    else ctxAxionTheta.lineTo(mapX(t), mapY(v));
+  }
+  ctxAxionTheta.stroke();
+  
+  // Draw axion field oscillation (relaxation to 0)
+  // Dynamic theta value based on f_a (higher f_a = slower relaxation in early universe, but here we just animate)
+  const osc_freq = 0.05 * Math.pow(10, (15 - axionFaExp) / 2); 
+  
+  // Simulate an oscillating ball in the potential
+  const current_theta = Math.PI * 0.8 * Math.cos(animFrame * osc_freq);
+  const current_v = (1 - Math.cos(current_theta)) / 2;
+  
+  ctxAxionTheta.beginPath();
+  ctxAxionTheta.fillStyle = '#00f0ff';
+  ctxAxionTheta.arc(mapX(current_theta), mapY(current_v), 6, 0, 2*Math.PI);
+  ctxAxionTheta.fill();
+  ctxAxionTheta.shadowBlur = 10;
+  ctxAxionTheta.shadowColor = '#00f0ff';
+  ctxAxionTheta.fill();
+  ctxAxionTheta.shadowBlur = 0;
+  
+  ctxAxionTheta.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctxAxionTheta.fillText(`Axion Field (θ = ${current_theta.toFixed(2)})`, mapX(current_theta) - 40, mapY(current_v) - 15);
+}
+
+function drawAxionHaloscope(animFrame) {
+  if (!ctxAxionHaloscope) return;
+  const w = canvasAxionHaloscope.width / window.devicePixelRatio;
+  const h = canvasAxionHaloscope.height / window.devicePixelRatio;
+  ctxAxionHaloscope.clearRect(0, 0, w, h);
+  
+  const padL = 40, padR = 10, padT = 15, padB = 20;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  
+  // Cavity tuning frequency sweep (sweeping across the spectrum)
+  const sweepPos = (haloscopeTime % 300) / 300; // 0 to 1
+  
+  const f_a = Math.pow(10, axionFaExp);
+  const targetMassFreq = 0.5; // Let's fix the axion signal at the center of the screen
+  
+  // Draw noise floor
+  ctxAxionHaloscope.beginPath();
+  ctxAxionHaloscope.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctxAxionHaloscope.lineWidth = 1;
+  const noiseY = padT + plotH * 0.8;
+  for (let i = 0; i <= plotW; i += 2) {
+    const x = padL + i;
+    const y = noiseY + (Math.random() - 0.5) * 10;
+    if (i === 0) ctxAxionHaloscope.moveTo(x, y);
+    else ctxAxionHaloscope.lineTo(x, y);
+  }
+  ctxAxionHaloscope.stroke();
+  
+  // Calculate resonant signal peak
+  // Q factor sharpens the peak
+  const Q = Math.pow(10, axionQFactorExp);
+  const width = 0.05 * (1e5 / Q); 
+  const signalStrength = (axionBField / 8.0) * (axionBField / 8.0) * (1e12 / f_a) * 0.5; 
+  
+  // Draw cavity response curve at sweep position
+  ctxAxionHaloscope.beginPath();
+  ctxAxionHaloscope.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+  ctxAxionHaloscope.fillStyle = 'rgba(168, 85, 247, 0.1)';
+  const sweepCenter = padL + sweepPos * plotW;
+  ctxAxionHaloscope.moveTo(padL, h - padB);
+  for (let i = 0; i <= plotW; i += 5) {
+    const x = padL + i;
+    const dist = Math.abs((i / plotW) - sweepPos);
+    const response = Math.exp(-dist * dist / (2 * width * width));
+    const y = (h - padB) - response * plotH * 0.9;
+    ctxAxionHaloscope.lineTo(x, y);
+  }
+  ctxAxionHaloscope.lineTo(padL + plotW, h - padB);
+  ctxAxionHaloscope.fill();
+  ctxAxionHaloscope.stroke();
+  
+  // Check if cavity is tuned to the axion mass!
+  const isResonant = Math.abs(sweepPos - targetMassFreq) < width;
+  
+  if (isResonant) {
+    const sigX = padL + targetMassFreq * plotW;
+    const sigY = (h - padB) - signalStrength * plotH * 0.8;
+    
+    // Draw the bright Primakoff signal peak
+    ctxAxionHaloscope.beginPath();
+    ctxAxionHaloscope.strokeStyle = '#00f0ff';
+    ctxAxionHaloscope.lineWidth = 3;
+    ctxAxionHaloscope.moveTo(sigX - 10, h - padB);
+    ctxAxionHaloscope.lineTo(sigX, sigY);
+    ctxAxionHaloscope.lineTo(sigX + 10, h - padB);
+    ctxAxionHaloscope.stroke();
+    
+    ctxAxionHaloscope.fillStyle = '#00f0ff';
+    ctxAxionHaloscope.font = '12px var(--font-mono)';
+    ctxAxionHaloscope.fillText('AXION DETECTED!', sigX - 45, sigY - 10);
+    
+    // Flash the badge
+    const badgeP = document.getElementById('badge-axion-power');
+    if (badgeP && animFrame % 5 === 0) {
+      badgeP.style.background = 'rgba(0, 240, 255, 0.3)';
+      badgeP.style.borderColor = '#00f0ff';
+    } else if (badgeP) {
+      badgeP.style.background = 'transparent';
+      badgeP.style.borderColor = 'transparent';
+    }
+  }
+  
+  // Axes
+  ctxAxionHaloscope.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctxAxionHaloscope.lineWidth = 1;
+  ctxAxionHaloscope.beginPath();
+  ctxAxionHaloscope.moveTo(padL, padT);
+  ctxAxionHaloscope.lineTo(padL, h - padB);
+  ctxAxionHaloscope.lineTo(w - padR, h - padB);
+  ctxAxionHaloscope.stroke();
+  
+  ctxAxionHaloscope.fillStyle = 'rgba(255,255,255,0.5)';
+  ctxAxionHaloscope.font = '10px var(--font-sans)';
+  ctxAxionHaloscope.fillText('Power (W)', 10, padT + 5);
+  ctxAxionHaloscope.fillText('Frequency (Cavity Tuning)', w - 130, h - 5);
+}
+
+function renderAxionPhysicsMath(ma, gayy) {
+  const container = document.getElementById('axion-physics-details');
+  if (!container) return;
+  
+  const html = `
+    <div class="physics-formula-title">
+      <span>🧲 Axion & Primakoff Effect</span>
+    </div>
+    <div style="margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.5;">
+      <b>Peccei-Quinn 대칭성</b>이 깨지면서 나타나는 골드스톤 보손인 액시온은 강한 상호작용의 CP 문제를 해결하며, 유력한 암흑물질 후보입니다.
+      
+      <p style="margin-top: 0.5rem;"><b>1. Axion Mass ($m_a$)</b></p>
+      액시온의 질량은 대칭성 붕괴 척도 $f_a$에 반비례합니다:
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #ff3366;">
+        m_a \\simeq 5.7 \\,\\mu\\text{eV} \\left(\\frac{10^{12} \\text{ GeV}}{f_a}\\right) = ${(ma*1e6).toFixed(2)} \\,\\mu\\text{eV}
+      </div>
+      
+      <p style="margin-top: 0.5rem;"><b>2. Primakoff Effect & Haloscope</b></p>
+      액시온은 강한 자기장 $\\vec{B}$ 하에서 광자($\\gamma$)로 변환될 수 있습니다(역 프리마코프 효과). 할로스코프(Cavity) 내부에서 공명(Resonance)을 통해 신호를 증폭합니다.
+      <div class="physics-formula-math" style="margin: 0.25rem 0; font-size: 0.8rem; color: #00f0ff;">
+        \\mathcal{L}_{a\\gamma\\gamma} = -\\frac{1}{4} g_{a\\gamma\\gamma} a F_{\\mu\\nu} \\tilde{F}^{\\mu\\nu} = g_{a\\gamma\\gamma} a \\vec{E} \\cdot \\vec{B}
+      </div>
+      <ul style="margin-left: 1rem; margin-top: 0.25rem; font-size: 0.75rem;">
+        <li>결합 상수 $g_{a\\gamma\\gamma}$ $\\simeq ${gayy.toExponential(2)} GeV$^{-1}$</li>
+        <li>변환 전력 $P_{\\text{sig}} \\propto g_{a\\gamma\\gamma}^2 B^2 V Q \\rho_a / m_a$</li>
+      </ul>
+    </div>
+  `;
+  container.innerHTML = html;
+}

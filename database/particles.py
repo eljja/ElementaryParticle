@@ -449,3 +449,566 @@ def verify_ckm_unitarity(V: List[List[complex]], tolerance: float = 1e-10) -> bo
                 return False
     return True
 
+
+def compute_qcd_critical_temp(mu_b: float) -> float:
+    """
+    Computes the QCD critical temperature T_c as a function of baryon chemical potential mu_B.
+    T_c(mu_B) = T_0 * [1 - kappa * (mu_B / T_0)^2]
+    where T_0 = 155 MeV, kappa = 0.013.
+    """
+    T_0 = 155.0
+    kappa = 0.013
+    return T_0 * (1.0 - kappa * (mu_b / T_0)**2)
+
+
+def compute_chiral_condensate(T: float, mu_b: float) -> float:
+    """
+    Computes the ratio of chiral condensate <q_bar q> / <q_bar q>_0.
+    Using a continuous crossover model:
+    Ratio = 0.5 * [1 - tanh((T - T_c) / Delta_T)]
+    where Delta_T is the transition width (approx 10 MeV).
+    """
+    import math
+    T_c = compute_qcd_critical_temp(mu_b)
+    delta_T = 10.0
+    return 0.5 * (1.0 - math.tanh((T - T_c) / delta_T))
+
+
+def compute_qcd_pressures(T: float, mu_b: float, bag_constant: float = 200.0) -> Dict[str, Any]:
+    """
+    Computes the pressures of the Hadron Gas and QGP phases using the MIT Bag Model.
+    P_had = g_pi * (pi^2 * T^4) / 90
+    P_QGP = g_QGP * (pi^2 * T^4) / 90 - B
+    B is the bag constant in MeV^4. (bag_constant is B^(1/4) in MeV).
+    Returns the pressures and whether deconfinement is achieved (P_QGP > P_had).
+    """
+    import math
+    # B in MeV^4
+    B = bag_constant ** 4
+    
+    # g_pi = 3 for pions
+    g_pi = 3.0
+    P_had = g_pi * (math.pi**2 * T**4) / 90.0
+    
+    # g_QGP approx 37 for n_f=2 QGP
+    g_QGP = 37.0
+    P_QGP = g_QGP * (math.pi**2 * T**4) / 90.0 - B
+    
+    deconfined = P_QGP > P_had
+    return {
+        "P_had": P_had,
+        "P_QGP": P_QGP,
+        "deconfined": deconfined
+    }
+
+
+def compute_mandelstam(s_cm: float, theta: float) -> Dict[str, float]:
+    """
+    Computes Mandelstam variables (s, t, u) in the Center of Mass (CM) frame
+    under the high-energy (massless) limit where p = E = sqrt(s)/2.
+    s_cm: Center of mass energy squared (s)
+    theta: Scattering angle in radians.
+    
+    Returns s, t, u.
+    Note: s + t + u = 0 in massless limit.
+    """
+    import math
+    s = float(s_cm)
+    t = - (s / 2.0) * (1.0 - math.cos(theta))
+    u = - (s / 2.0) * (1.0 + math.cos(theta))
+    return {"s": s, "t": t, "u": u}
+
+
+def compute_qed_amplitude_sq(process: str, s: float, t: float, u: float, e_charge_sq: float = 4 * 3.141592 * (1/137.036)) -> float:
+    """
+    Computes the Tree-level QED amplitude squared |M|^2 for basic processes
+    in the high-energy limit (massless fermions).
+    e_charge_sq is e^2 = 4 * pi * alpha_em.
+    """
+    if process == "e- e+ -> mu- mu+":
+        # Annihilation
+        # |M|^2 = 2 e^4 * (t^2 + u^2) / s^2
+        if s == 0: return 0.0
+        return 2.0 * (e_charge_sq**2) * (t**2 + u**2) / (s**2)
+        
+    elif process == "e- e+ -> e- e+":
+        # Bhabha Scattering
+        # |M|^2 = 2 e^4 * [ (s^2 + u^2)/t^2 + (t^2 + u^2)/s^2 + 2u^2/(s*t) ]
+        if s == 0 or t == 0: return float('inf') # Forward scattering divergence
+        term1 = (s**2 + u**2) / (t**2)
+        term2 = (t**2 + u**2) / (s**2)
+        term3 = 2.0 * (u**2) / (s * t)
+        return 2.0 * (e_charge_sq**2) * (term1 + term2 + term3)
+        
+    elif process == "e- e- -> e- e-":
+        # Møller Scattering
+        # |M|^2 = 2 e^4 * [ (s^2 + u^2)/t^2 + (s^2 + t^2)/u^2 + 2s^2/(t*u) ]
+        if t == 0 or u == 0: return float('inf')
+        term1 = (s**2 + u**2) / (t**2)
+        term2 = (s**2 + t**2) / (u**2)
+        term3 = 2.0 * (s**2) / (t * u)
+        return 2.0 * (e_charge_sq**2) * (term1 + term2 + term3)
+        
+    else:
+        raise ValueError(f"Unknown process: {process}")
+
+
+def compute_differential_cross_section(process: str, s: float, theta: float) -> float:
+    """
+    Computes the unpolarized differential cross-section d_sigma / d_Omega
+    in the center of mass frame.
+    d_sigma / d_Omega = |M|^2 / (64 * pi^2 * s)
+    Note: Output is in natural units (GeV^-2). To get pb, multiply by 0.3894e9.
+    """
+    import math
+    if s <= 0: return 0.0
+    
+    # Avoid exact 0 or PI to prevent division by zero in t or u for Bhabha/Moller
+    if theta < 1e-5: theta = 1e-5
+    if theta > math.pi - 1e-5: theta = math.pi - 1e-5
+    
+    mandelstam = compute_mandelstam(s, theta)
+    M2 = compute_qed_amplitude_sq(process, mandelstam["s"], mandelstam["t"], mandelstam["u"])
+    
+    # Differential cross section formula
+    ds_dOmega = M2 / (64.0 * (math.pi**2) * s)
+    return ds_dOmega
+
+
+def compute_hubble_rate(T: float, g_star: float = 106.75) -> float:
+    """
+    Computes the Hubble expansion rate H(T) in the radiation dominated era.
+    H(T) = 1.66 * sqrt(g_star) * T^2 / M_Pl
+    Inputs: T in GeV, g_star (effective degrees of freedom)
+    Returns: H in GeV
+    """
+    import math
+    M_Pl = 1.22e19 # Planck mass in GeV
+    return 1.66 * math.sqrt(g_star) * (T**2) / M_Pl
+
+
+def compute_eq_number_density(m: float, T: float, g: float = 2.0, g_star_s: float = 106.75) -> float:
+    """
+    Computes the equilibrium comoving number density Y_eq = n_eq / s
+    for a non-relativistic particle (m >> T).
+    Y_eq(x) = 0.145 * (g / g_star_s) * x^(3/2) * e^(-x)  where x = m/T
+    Inputs: m, T in GeV
+    Returns: Y_eq (dimensionless)
+    """
+    import math
+    if T <= 0: return 0.0
+    x = m / T
+    if x > 100: return 0.0 # Prevent underflow
+    
+    return 0.145 * (g / g_star_s) * (x**1.5) * math.exp(-x)
+
+
+def compute_dark_matter_freeze_out(m: float, sigma_v_cm3s: float, g: float = 2.0, g_star: float = 106.75) -> Dict[str, float]:
+    """
+    Computes the freeze-out temperature x_f = m/T_f and the present-day relic density Omega_h2.
+    m: DM mass in GeV
+    sigma_v_cm3s: Annihilation cross-section <sigma v> in cm^3/s
+    
+    Conversion: 1 cm^3/s = 8.5 x 10^16 GeV^-2
+    """
+    import math
+    
+    M_Pl = 1.22e19
+    # Convert cross section to GeV^-2
+    sigma_v = sigma_v_cm3s * 8.5e16
+    
+    if sigma_v <= 0:
+        return {"x_f": float('inf'), "T_f": 0.0, "Omega_h2": float('inf')}
+    
+    # Iterative solution for x_f
+    # x_f = ln(c(c+2) * sqrt(45/8) / (2pi^3) * g / sqrt(g_star) * m * M_Pl * sigma_v) - 0.5*ln(x_f)
+    # Let c(c+2) = 1 for simplicity (matching typical approximation)
+    C = 0.038 * (g / math.sqrt(g_star)) * m * M_Pl * sigma_v
+    
+    if C <= 1:
+        # Cross-section too small, freezes out immediately or invalid
+        x_f = 1.0
+    else:
+        x_f_guess = math.log(C)
+        x_f = math.log(C) - 0.5 * math.log(x_f_guess)
+        x_f = math.log(C) - 0.5 * math.log(x_f) # Iterate again for precision
+        
+    T_f = m / x_f
+    
+    # Relic density Omega_chi h^2
+    # Omega h^2 approx 1.07e9 * x_f / (sqrt(g_star) * M_Pl * sigma_v)
+    Omega_h2 = (1.07e9 * x_f) / (math.sqrt(g_star) * M_Pl * sigma_v)
+    
+    return {
+        "x_f": x_f,
+        "T_f": T_f,
+        "Omega_h2": Omega_h2
+    }
+
+
+def compute_pmns_matrix() -> Dict[str, Any]:
+    """
+    Returns the PMNS (Pontecorvo-Maki-Nakagawa-Sakata) neutrino mixing matrix parameters
+    using current best-fit values from PDG 2024 (Normal Ordering).
+
+    The standard parametrization is:
+    U = [[c12*c13, s12*c13, s13*e^(-i*delta)],
+         [-s12*c23 - c12*s23*s13*e^(i*delta), c12*c23 - s12*s23*s13*e^(i*delta), s23*c13],
+         [s12*s23 - c12*c23*s13*e^(i*delta), -c12*s23 - s12*c23*s13*e^(i*delta), c23*c13]]
+
+    For the returned matrix, we compute the real parts using cos(delta_cp) for the
+    complex phase terms.
+    """
+    import math
+
+    # PDG 2024 best-fit values (Normal Ordering)
+    theta_12_deg = 33.44   # solar angle
+    theta_23_deg = 49.2    # atmospheric angle
+    theta_13_deg = 8.57    # reactor angle
+    delta_cp_deg = 197.0   # CP violation phase
+
+    Delta_m21_sq = 7.42e-5   # eV^2 (solar mass splitting)
+    Delta_m31_sq = 2.515e-3  # eV^2 (atmospheric mass splitting)
+
+    # Convert to radians
+    theta_12 = math.radians(theta_12_deg)
+    theta_23 = math.radians(theta_23_deg)
+    theta_13 = math.radians(theta_13_deg)
+    delta_cp = math.radians(delta_cp_deg)
+
+    c12 = math.cos(theta_12)
+    s12 = math.sin(theta_12)
+    c23 = math.cos(theta_23)
+    s23 = math.sin(theta_23)
+    c13 = math.cos(theta_13)
+    s13 = math.sin(theta_13)
+    cd = math.cos(delta_cp)
+
+    # 3x3 PMNS matrix (real part only, using cos(delta_cp) for complex phase terms)
+    U = [
+        [c12 * c13,
+         s12 * c13,
+         s13 * cd],                                         # s13 * e^{-i delta} -> real part: s13*cos(delta)
+        [-s12 * c23 - c12 * s23 * s13 * cd,
+         c12 * c23 - s12 * s23 * s13 * cd,
+         s23 * c13],
+        [s12 * s23 - c12 * c23 * s13 * cd,
+         -c12 * s23 - s12 * c23 * s13 * cd,
+         c23 * c13]
+    ]
+
+    return {
+        "theta_12_deg": theta_12_deg,
+        "theta_23_deg": theta_23_deg,
+        "theta_13_deg": theta_13_deg,
+        "delta_cp_deg": delta_cp_deg,
+        "theta_12_rad": theta_12,
+        "theta_23_rad": theta_23,
+        "theta_13_rad": theta_13,
+        "delta_cp_rad": delta_cp,
+        "Delta_m21_sq_eV2": Delta_m21_sq,
+        "Delta_m31_sq_eV2": Delta_m31_sq,
+        "PMNS_matrix_real": U
+    }
+
+
+def compute_neutrino_oscillation_probability(flavor_from: str, flavor_to: str, E: float, L: float) -> float:
+    """
+    Computes the 2-flavor vacuum neutrino oscillation probability P(nu_a -> nu_b).
+
+    Formula:
+        P(a -> b) = sin^2(2*theta) * sin^2(1.267 * Delta_m^2 * L / E)
+
+    where E is in GeV, L is in km, and Delta_m^2 is in eV^2.
+
+    Flavor channel mapping (effective 2-flavor approximation):
+        nu_e  -> nu_mu  : theta_13, Delta_m31_sq
+        nu_e  -> nu_tau : theta_13, Delta_m31_sq
+        nu_mu -> nu_tau : theta_23, Delta_m31_sq
+
+    For survival probability (same flavor): P = 1 - P(disappearance)
+    """
+    import math
+
+    pmns = compute_pmns_matrix()
+    theta_13 = pmns["theta_13_rad"]
+    theta_23 = pmns["theta_23_rad"]
+    theta_12 = pmns["theta_12_rad"]
+    Delta_m31_sq = pmns["Delta_m31_sq_eV2"]
+    Delta_m21_sq = pmns["Delta_m21_sq_eV2"]
+
+    flavor_from = flavor_from.lower().replace("nu_", "").replace("v_", "")
+    flavor_to = flavor_to.lower().replace("nu_", "").replace("v_", "")
+
+    if E <= 0:
+        raise ValueError("Neutrino energy E must be positive (in GeV).")
+
+    # Determine the effective mixing angle and mass-squared splitting
+    if flavor_from == flavor_to:
+        # Survival probability: need to determine the dominant disappearance channel
+        if flavor_from == "e":
+            theta = theta_13
+            dm2 = Delta_m31_sq
+        elif flavor_from == "mu":
+            theta = theta_23
+            dm2 = Delta_m31_sq
+        elif flavor_from == "tau":
+            theta = theta_23
+            dm2 = Delta_m31_sq
+        else:
+            raise ValueError(f"Unknown neutrino flavor: {flavor_from}")
+
+        osc_arg = 1.267 * dm2 * L / E
+        P_disappearance = (math.sin(2.0 * theta) ** 2) * (math.sin(osc_arg) ** 2)
+        return 1.0 - P_disappearance
+
+    else:
+        # Appearance probability
+        pair = tuple(sorted([flavor_from, flavor_to]))
+        if pair == ("e", "mu"):
+            theta = theta_13
+            dm2 = Delta_m31_sq
+        elif pair == ("e", "tau"):
+            theta = theta_13
+            dm2 = Delta_m31_sq
+        elif pair == ("mu", "tau"):
+            theta = theta_23
+            dm2 = Delta_m31_sq
+        else:
+            raise ValueError(f"Unknown neutrino flavor pair: {flavor_from} -> {flavor_to}")
+
+        osc_arg = 1.267 * dm2 * L / E
+        return (math.sin(2.0 * theta) ** 2) * (math.sin(osc_arg) ** 2)
+
+
+def compute_msw_effective_potential(E: float, n_e: float) -> Dict[str, Any]:
+    """
+    Computes the MSW (Mikheyev-Smirnov-Wolfenstein) matter effect for neutrino
+    propagation through matter.
+
+    Parameters:
+        E    : Neutrino energy in GeV
+        n_e  : Electron number density in cm^-3
+
+    The charged-current potential is:
+        V_CC = sqrt(2) * G_F * n_e
+
+    The matter parameter A is computed as:
+        A = 2 * E * V_CC / Delta_m21_sq
+
+    where both numerator and denominator are in consistent units (GeV^2).
+
+    The effective mixing angle in matter:
+        sin^2(2*theta_M) = sin^2(2*theta_12) / [(cos(2*theta_12) - A)^2 + sin^2(2*theta_12)]
+
+    MSW resonance occurs when A = cos(2*theta_12), yielding maximal mixing
+    sin^2(2*theta_M) = 1.
+    """
+    import math
+
+    G_F = 1.1664e-5  # GeV^-2 (Fermi constant)
+
+    # Convert n_e from cm^-3 to GeV^3 using (hbar*c)^3
+    # hbar*c = 0.197326980e-13 cm*GeV => (hbar*c)^3 in cm^3*GeV^3
+    hbar_c = 0.197326980e-13  # cm * GeV
+    hbar_c_cubed = hbar_c ** 3  # cm^3 * GeV^3
+
+    # n_e in natural units (GeV^3)
+    n_e_natural = n_e * hbar_c_cubed  # cm^-3 * cm^3*GeV^3 = GeV^3
+
+    # Charged-current potential V_CC in GeV
+    V_CC = math.sqrt(2.0) * G_F * n_e_natural
+
+    # Get PMNS parameters
+    pmns = compute_pmns_matrix()
+    theta_12 = pmns["theta_12_rad"]
+    Delta_m21_sq_eV2 = pmns["Delta_m21_sq_eV2"]
+
+    # Convert Delta_m21_sq from eV^2 to GeV^2 (1 eV = 1e-9 GeV => 1 eV^2 = 1e-18 GeV^2)
+    Delta_m21_sq_GeV2 = Delta_m21_sq_eV2 * 1e-18
+
+    # Dimensionless matter parameter A
+    A = 2.0 * E * V_CC / Delta_m21_sq_GeV2
+
+    # Vacuum mixing
+    sin2_2theta_12 = math.sin(2.0 * theta_12) ** 2
+    cos_2theta_12 = math.cos(2.0 * theta_12)
+
+    # Effective mixing angle in matter
+    denominator = (cos_2theta_12 - A) ** 2 + sin2_2theta_12
+    if denominator < 1e-30:
+        sin2_2theta_M = 1.0  # Exact resonance
+    else:
+        sin2_2theta_M = sin2_2theta_12 / denominator
+
+    # Resonance condition: A = cos(2*theta_12)
+    A_resonance = cos_2theta_12
+    at_resonance = abs(A - A_resonance) < 0.01 * abs(A_resonance) if abs(A_resonance) > 1e-10 else abs(A - A_resonance) < 1e-10
+
+    return {
+        "V_CC_GeV": V_CC,
+        "A_parameter": A,
+        "sin2_2theta_vacuum": sin2_2theta_12,
+        "cos_2theta_vacuum": cos_2theta_12,
+        "sin2_2theta_matter": sin2_2theta_M,
+        "A_resonance": A_resonance,
+        "at_resonance": at_resonance,
+        "resonance_info": f"MSW resonance when A = cos(2*theta_12) = {A_resonance:.4f}. "
+                          f"Current A = {A:.4f}. "
+                          f"{'AT RESONANCE: maximal mixing!' if at_resonance else 'Not at resonance.'}"
+    }
+
+
+def compute_sphaleron_rate(T: float) -> Dict[str, Any]:
+    """
+    Compute the sphaleron transition rate Gamma_sph at temperature T (in GeV).
+    """
+    import math
+    T_c = 160.0
+    alpha_W = 0.033
+    E_sph = 9000.0
+
+    if T > T_c:
+        # Symmetric Phase
+        Gamma_sph = 25.0 * (alpha_W**5) * (T**4)
+        phase = "symmetric"
+    else:
+        # Broken Phase
+        phase = "broken"
+        if T <= 0.0:
+            Gamma_sph = 0.0
+        else:
+            exponent = E_sph / T
+            if exponent > 500.0:
+                Gamma_sph = 0.0
+            else:
+                Gamma_sph = (T**4) * math.exp(-exponent)
+
+    return {"T": T, "phase": phase, "Gamma_sph": Gamma_sph}
+
+
+def compute_baryon_asymmetry(T: float, cp_phase: float, out_of_eq: float) -> Dict[str, Any]:
+    """
+    Compute a simplified Baryon Asymmetry (eta_B = n_B / n_gamma) based on the Sakharov conditions.
+    """
+    import math
+    
+    sph_result = compute_sphaleron_rate(T)
+    Gamma_sph = sph_result["Gamma_sph"]
+    
+    if T <= 0.0:
+        B_viol = 0.0
+    else:
+        B_viol = Gamma_sph / (T**4)
+        
+    cp_factor = math.sin(cp_phase)
+    
+    eta_B = 1e-8 * B_viol * cp_factor * out_of_eq
+    
+    return {
+        "eta_B": eta_B,
+        "B_viol_factor": B_viol,
+        "cp_factor": cp_factor,
+        "out_of_eq_factor": out_of_eq
+    }
+
+def compute_sphaleron_rate(T: float) -> Dict[str, Any]:
+    """
+    Compute the sphaleron transition rate Gamma_sph at temperature T (in GeV).
+    """
+    import math
+    T_c = 160.0
+    alpha_W = 0.033
+    E_sph = 9000.0
+
+    if T > T_c:
+        # Symmetric Phase
+        Gamma_sph = 25.0 * (alpha_W**5) * (T**4)
+        phase = "symmetric"
+    else:
+        if E_sph / T > 500:
+            Gamma_sph = 0.0
+        else:
+            Gamma_sph = (T**4) * math.exp(-E_sph / T)
+        phase = "broken"
+
+    return {"T": T, "phase": phase, "Gamma_sph": Gamma_sph}
+
+
+def compute_baryon_asymmetry(T: float, cp_phase: float, out_of_eq: float) -> Dict[str, Any]:
+    """
+    Compute simplified Baryon Asymmetry (eta_B = n_B / n_gamma) based on the Sakharov conditions.
+    """
+    import math
+    sphaleron_info = compute_sphaleron_rate(T)
+    Gamma_sph = sphaleron_info["Gamma_sph"]
+    
+    B_viol = Gamma_sph / (T**4) if T > 0 else 0.0
+    cp_factor = math.sin(cp_phase)
+    
+    # eta_B is proportional to B-violation * CP-violation * Out-of-equilibrium
+    eta_B = 1e-8 * B_viol * cp_factor * out_of_eq
+    
+    return {
+        "eta_B": eta_B,
+        "B_viol_factor": B_viol,
+        "cp_factor": cp_factor,
+        "out_of_eq_factor": out_of_eq
+    }
+
+# ============================================================================
+# 13. Axion & Strong CP Problem (Phase 13)
+# ============================================================================
+
+def compute_neutron_edm(theta: float) -> float:
+    """
+    Compute the neutron Electric Dipole Moment (nEDM) in e*cm given the QCD theta angle.
+    Experimentally, |d_n| < 1e-26 e*cm, implying theta < 1e-10.
+    Theoretical relation: d_n ~ 1e-16 * theta e*cm.
+    """
+    import math
+    # Normalize theta to [-pi, pi]
+    theta = (theta + math.pi) % (2 * math.pi) - math.pi
+    d_n = 1e-16 * theta
+    return d_n
+
+def compute_axion_properties(f_a_GeV: float) -> Dict[str, float]:
+    """
+    Compute QCD axion properties based on the Peccei-Quinn symmetry breaking scale f_a.
+    f_a_GeV: PQ scale in GeV.
+    Returns:
+        - m_a_eV: Axion mass in eV (m_a * f_a ~ m_pi * f_pi)
+        - g_ayy_GeV_inv: Axion-photon coupling in GeV^-1
+    """
+    # Relation: m_a = 5.7 mu_eV * (10^12 GeV / f_a) = 5.7e-6 eV * 1e12 / f_a = 5.7e6 / f_a
+    m_a_eV = 5.7e6 / f_a_GeV
+    
+    # Coupling g_ayy ~ alpha / (2 * pi * f_a) * (E/N - 1.92)
+    # Using KSVZ model (E/N = 0)
+    alpha = 1.0 / 137.0
+    import math
+    # C_gamma = -1.92 (KSVZ)
+    C_gamma = -1.92
+    g_ayy = (alpha / (2 * math.pi * f_a_GeV)) * C_gamma
+    
+    return {
+        "m_a_eV": m_a_eV,
+        "g_ayy_GeV_inv": abs(g_ayy)
+    }
+
+def compute_primakoff_conversion(g_ayy: float, B_Tesla: float, V_m3: float, Q_factor: float, C_010: float = 0.69) -> float:
+    """
+    Compute axion-to-photon conversion power in a haloscope cavity (Sikivie's experiment).
+    Using a simplified scaling law for the signal power P_sig in Watts.
+    P_sig ~ g_ayy^2 * B^2 * V * Q * C * (rho_a / m_a)
+    Here we return a relative power factor scaled for visualization.
+    """
+    # 1 Tesla = 195 eV^2 roughly, but we just use macroscopic units for a scaling factor.
+    # P_sig is extremely small (~1e-22 W). We'll output a normalized signal strength.
+    rho_a = 0.45 # GeV/cm^3 (local dark matter density)
+    
+    # Simplified normalization to return a value roughly between 1e-24 and 1e-20 W
+    # B^2 * V * Q * g_ayy^2 * rho_a
+    power_W = 1.3e-32 * (B_Tesla**2) * V_m3 * Q_factor * (g_ayy * 1e15)**2 * rho_a * C_010
+    
+    return power_W
