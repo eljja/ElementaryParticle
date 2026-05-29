@@ -786,7 +786,7 @@ function verifyReactionJS(reactList, prodList) {
 
 function findValidCombinations(reactList, maxCount = 5) {
   const commonProducts = particlesData.filter(p => {
-    return p.mass <= 200000 && !p.name.includes("Squark") && !p.name.includes("Slepton") && !p.name.includes("GUT") && !p.name.includes("Axion") && !p.name.includes("Monopole");
+    return p.mass_mev <= 200000 && !p.name.includes("Squark") && !p.name.includes("Slepton") && !p.name.includes("GUT") && !p.name.includes("Axion") && !p.name.includes("Monopole");
   });
   
   let results = [];
@@ -805,7 +805,7 @@ function findValidCombinations(reactList, maxCount = 5) {
   
   // 2. 3-body 탐색
   if (results.length < maxCount) {
-    const veryCommon = commonProducts.filter(p => p.mass < 100000); 
+    const veryCommon = commonProducts.filter(p => p.mass_mev < 100000); 
     for (let i = 0; i < veryCommon.length; i++) {
       for (let j = i; j < veryCommon.length; j++) {
         for (let k = j; k < veryCommon.length; k++) {
