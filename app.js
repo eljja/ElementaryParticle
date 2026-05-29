@@ -410,14 +410,14 @@ function renderParticleMatrix() {
 
   const groupOrder = ['quark', 'lepton', 'baryon', 'meson', 'gauge_boson', 'scalar_boson', 'supersymmetric_particle', 'topological_defect'];
   const groupTitles = {
-    quark: 'Fundamental Quarks (기본 쿼크)',
-    lepton: 'Fundamental Leptons (기본 렙톤)',
-    baryon: 'Baryons (3쿼크 복합 강입자)',
-    meson: 'Mesons (쿼크-반쿼크 중간자)',
-    gauge_boson: 'Gauge Bosons (게이지 보손)',
-    scalar_boson: 'Scalar Bosons (스칼라 보손)',
-    supersymmetric_particle: 'Supersymmetric Sparticles (초대칭 입자)',
-    topological_defect: 'Topological Defects (위상 기하학적 결함)'
+    quark: currentLang === 'ko' ? 'Fundamental Quarks (기본 쿼크)' : 'Fundamental Quarks',
+    lepton: currentLang === 'ko' ? 'Fundamental Leptons (기본 렙톤)' : 'Fundamental Leptons',
+    baryon: currentLang === 'ko' ? 'Baryons (3쿼크 복합 강입자)' : 'Baryons',
+    meson: currentLang === 'ko' ? 'Mesons (쿼크-반쿼크 중간자)' : 'Mesons',
+    gauge_boson: currentLang === 'ko' ? 'Gauge Bosons (게이지 보손)' : 'Gauge Bosons',
+    scalar_boson: currentLang === 'ko' ? 'Scalar Bosons (스칼라 보손)' : 'Scalar Bosons',
+    supersymmetric_particle: currentLang === 'ko' ? 'Supersymmetric Sparticles (초대칭 입자)' : 'Supersymmetric Sparticles',
+    topological_defect: currentLang === 'ko' ? 'Topological Defects (위상 기하학적 결함)' : 'Topological Defects'
   };
 
   groupOrder.forEach(type => {
