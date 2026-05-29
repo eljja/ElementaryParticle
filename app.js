@@ -311,6 +311,35 @@ function resizeCanvas() {
   }
 }
 
+function resolveColor(c) {
+  if (c && typeof c === 'string' && c.startsWith('var(')) {
+    if (c.includes('--color-quark')) return '#ff3366';
+    if (c.includes('--color-lepton')) return '#00f0ff';
+    if (c.includes('--color-gauge')) return '#ffaa00';
+    if (c.includes('--color-scalar')) return '#a855f7';
+    if (c.includes('--color-bsm')) return '#3b82f6';
+  }
+  return c || '#ffffff';
+}
+
+function hexToRgba(hex, alpha) {
+  let resolved = resolveColor(hex);
+  if (resolved.startsWith('rgba')) {
+    return resolved.replace(/[\d\.]+\)$/, alpha + ')');
+  }
+  resolved = resolved.replace('#', '');
+  if (resolved.length === 3) {
+    resolved = resolved[0] + resolved[0] + resolved[1] + resolved[1] + resolved[2] + resolved[2];
+  }
+  let r = parseInt(resolved.substring(0, 2), 16);
+  let g = parseInt(resolved.substring(2, 4), 16);
+  let b = parseInt(resolved.substring(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) {
+    return `rgba(255, 255, 255, ${alpha})`;
+  }
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function drawEmptyCanvas() {
   if (!ctx) return;
   const w = canvas.width / window.devicePixelRatio;
@@ -1133,7 +1162,7 @@ function animateReactionTracks(isAllowed) {
         const curY = track.startY + (track.endY - track.startY) * track.progress + wave;
         
         track.path.push({x: curX, y: curY});
-        if (track.path.length > 30) track.path.shift();
+        if (track.path.length > 300) track.path.shift();
       }
     });
 
@@ -1219,7 +1248,7 @@ function animateReactionTracks(isAllowed) {
           }
           
           track.path.push({x: curX, y: curY});
-          if (track.path.length > 40) track.path.shift();
+          if (track.path.length > 300) track.path.shift();
         }
       });
       
@@ -1250,35 +1279,37 @@ function animateReactionTracks(isAllowed) {
           const curX = vertexX + Math.cos(track.angle) * r;
           const curY = vertexY + Math.sin(track.angle) * r;
           track.path.push({x: curX, y: curY});
-          if (track.path.length > 15) track.path.shift();
+          if (track.path.length > 150) track.path.shift();
         }
       });
     }
 
     tracks.forEach(track => {
       if (track.path.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(track.path[0].x, track.path[0].y);
-        for(let i = 1; i < track.path.length; i++) {
+        const len = track.path.length;
+        for (let i = 1; i < len; i++) {
+          ctx.beginPath();
+          ctx.moveTo(track.path[i-1].x, track.path[i-1].y);
           ctx.lineTo(track.path[i].x, track.path[i].y);
-        }
-        
-        ctx.strokeStyle = track.color;
-        
-        if (track.type === 'jet_track') {
-          ctx.lineWidth = 0.5;
-          ctx.strokeStyle = 'rgba(156, 163, 175, 0.4)';
-          ctx.setLineDash([2, 4]);
-        } else {
-          ctx.lineWidth = track.mass === 0 ? 1 : Math.min(4, 1.5 + Math.log10(track.mass + 1) * 0.5);
-          if (track.charge === 0 && track.type !== 'gauge_boson') {
-            ctx.setLineDash([4, 4]);
+          
+          const ratio = i / len;
+          ctx.strokeStyle = hexToRgba(track.color, ratio * 0.85 + 0.15);
+          
+          if (track.type === 'jet_track') {
+            ctx.lineWidth = 0.5 * ratio;
+            ctx.strokeStyle = `rgba(156, 163, 175, ${0.4 * ratio})`;
+            ctx.setLineDash([2, 4]);
           } else {
-            ctx.setLineDash([]);
+            const baseWidth = track.mass === 0 ? 1.2 : Math.min(4, 1.5 + Math.log10(track.mass + 1) * 0.5);
+            ctx.lineWidth = baseWidth * (0.3 + 0.7 * ratio);
+            if (track.charge === 0 && track.type !== 'gauge_boson') {
+              ctx.setLineDash([4, 4]);
+            } else {
+              ctx.setLineDash([]);
+            }
           }
+          ctx.stroke();
         }
-        
-        ctx.stroke();
         
         if (track.type !== 'jet_track' && track.symbol && track.path.length > 0 && (track.phase === 'reactant' || showProducts)) {
           const head = track.path[track.path.length - 1];
