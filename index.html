@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Subatomic Particle Database & Simulation Physics Engine</title>
-  <meta name="description" content="표준 모형 및 BSM 기본입자들의 물리 프로필 사전과 붕괴/충돌 물리 보존 법칙 시뮬레이터 웹 애플리케이션">
+  <meta name="description" content="Subatomic particle physics profiling and collision/decay conservation law simulation.">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -129,25 +129,25 @@
       <div class="tab-content active" id="tab-collision">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Subatomic Collision & Decay Lab (반응 시뮬레이터)</h2>
+            <h2 class="panel-title">Subatomic Collision & Decay Lab <span class="lang-ko">(반응 시뮬레이터)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              입자를 격자판에서 클릭하면 활성화된 슬롯에 추가됩니다. 입자를 클릭하여 붕괴(Decay) 또는 산란(Collision) 반응을 설정해 보세요.
+              <span class="lang-en">Click on a particle in the grid to add it to the active slot. Click on particles to set up Decay or Collision reactions.</span><span class="lang-ko">입자를 격자판에서 클릭하면 활성화된 슬롯에 추가됩니다. 입자를 클릭하여 붕괴(Decay) 또는 산란(Collision) 반응을 설정해 보세요.</span>
             </p>
 
             <!-- Interactive Slots -->
             <div class="sim-workspace">
               <div class="slot-container">
                 <!-- Reactant Slot -->
-                <div class="slot active-slot" id="slot-reactants" data-placeholder="Reactants (반응물)"></div>
+                <div class="slot active-slot" id="slot-reactants" data-placeholder="Reactants"></div>
                 
                 <!-- Directional Arrow -->
                 <div class="slot-arrow">&rarr;</div>
                 
                 <!-- Product Slot -->
-                <div class="slot" id="slot-products" data-placeholder="Products (생성물)"></div>
+                <div class="slot" id="slot-products" data-placeholder="Products"></div>
               </div>
               
               <!-- Actions -->
@@ -184,12 +184,12 @@
       <div class="tab-content" id="tab-builder">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Hadron Builder & Synthesis Lab (강입자 조립)</h2>
+            <h2 class="panel-title">Hadron Builder & Synthesis Lab <span class="lang-ko">(강입자 조립)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              기본 쿼크들을 조립하고 색전하(Red, Green, Blue)를 할당하여 자연계의 안정한 강입자 또는 새로운 이종 강입자(Exotic Hadron)를 직접 조립·합성해 보세요.
+              <span class="lang-en">Assemble fundamental quarks and assign color charges (Red, Green, Blue) to synthesize stable hadrons or exotic hadrons.</span><span class="lang-ko">기본 쿼크들을 조립하고 색전하(Red, Green, Blue)를 할당하여 자연계의 안정한 강입자 또는 새로운 이종 강입자(Exotic Hadron)를 직접 조립·합성해 보세요.</span>
             </p>
 
             <div class="builder-workspace">
@@ -231,7 +231,7 @@
               <div class="sim-actions" style="margin-top: 0.5rem;">
                 <button class="action-btn btn-clear" onclick="clearHadronBuilder()" style="max-width: 80px;">Reset</button>
                 <button class="action-btn" onclick="synthesizeHadron()" id="btn-synthesize-hadron" style="background: linear-gradient(135deg, #00ffaa 0%, #00f0ff 100%); color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(0, 255, 170, 0.25);">
-                  ⚡ SYNTHESIZE HADRON (강입자 합성)
+                  ⚡ SYNTHESIZE HADRON <span class="lang-ko">(강입자 합성)</span>
                 </button>
               </div>
             </div>
@@ -243,7 +243,7 @@
 
             <!-- SU(3) Flavor Multiplet Space & Gell-Mann–Nishijima Lab -->
             <div class="color-assigner-panel" style="width: 100%; margin-top: 1rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
-              <span class="color-assigner-title">SU(3) Flavor Multiplet Space (맛깔 8중항/10중항 대칭성 공간)</span>
+              <span class="color-assigner-title">SU(3) Flavor Multiplet Space <span class="lang-ko">(맛깔 8중항/10중항 대칭성 공간)</span></span>
               <div class="visualizer-wrapper" style="height: 220px; width: 100%; margin-top: 0.5rem;">
                 <canvas id="canvas-su3-multiplet"></canvas>
               </div>
@@ -260,18 +260,18 @@
       <div class="tab-content" id="tab-neutrino">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Neutrino Oscillation Lab (중성미자 진동 연구소)</h2>
+            <h2 class="panel-title">Neutrino Oscillation Lab <span class="lang-ko">(중성미자 진동 연구소)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              중성미자는 질량 고유 상태와 맛깔 고유 상태가 어긋나 비행 거리(L)와 에너지(E)에 따라 다른 맛깔로 스스로 변신(진동)합니다.
+              <span class="lang-en">Neutrinos oscillate between different flavors as they propagate due to the mixing of mass and flavor eigenstates, depending on distance (L) and energy (E).</span><span class="lang-ko">중성미자는 질량 고유 상태와 맛깔 고유 상태가 어긋나 비행 거리(L)와 에너지(E)에 따라 다른 맛깔로 스스로 변신(진동)합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 1rem;">
               <!-- Starting Neutrino Flavor Selector -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Select Initial Neutrino Type (출발 중성미자)</span>
+                <span class="color-assigner-title">Select Initial Neutrino Type <span class="lang-ko">(출발 중성미자)</span></span>
                 <div class="color-buttons-container" style="margin-top: 0.25rem;">
                   <button class="color-pick-btn active-lepton" id="btn-nu-e" onclick="selectInitialNeutrino('nu_e')" style="background: rgba(0, 240, 255, 0.15); border-color: var(--color-lepton); color: #fff;">Electron ν_e</button>
                   <button class="color-pick-btn" id="btn-nu-mu" onclick="selectInitialNeutrino('nu_mu')" style="border-color: rgba(255, 255, 255, 0.05);">Muon ν_μ</button>
@@ -282,7 +282,7 @@
               <!-- Energy Slider -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>NEUTRINO ENERGY (중성미자 에너지, E)</span>
+                  <span>NEUTRINO ENERGY <span class="lang-ko">(중성미자 에너지, E)</span></span>
                   <span id="label-nu-energy" style="color: var(--color-lepton); font-family: var(--font-mono);">1.00 GeV</span>
                 </div>
                 <input type="range" id="slider-nu-energy" min="0.1" max="10" step="0.1" value="1.0" oninput="updateNeutrinoOscillation()" style="width: 100%; margin-top: 0.5rem; accent-color: #00f0ff;">
@@ -291,7 +291,7 @@
               <!-- Distance Slider -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>PROPAGATION DISTANCE (비행 거리, L)</span>
+                  <span>PROPAGATION DISTANCE <span class="lang-ko">(비행 거리, L)</span></span>
                   <span id="label-nu-distance" style="color: var(--color-scalar); font-family: var(--font-mono);">150 km</span>
                 </div>
                 <input type="range" id="slider-nu-distance" min="10" max="2500" step="10" value="150" oninput="updateNeutrinoOscillation()" style="width: 100%; margin-top: 0.5rem; accent-color: var(--color-scalar);">
@@ -310,18 +310,18 @@
       <div class="tab-content" id="tab-cascade">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Monte Carlo Decay Cascade Lab (붕괴 연쇄 연구소)</h2>
+            <h2 class="panel-title">Monte Carlo Decay Cascade Lab <span class="lang-ko">(붕괴 연쇄 연구소)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              불안정한 입자를 선택하여 안정 입자(전자, 중성미자, 양성자, 광자 등)가 될 때까지의 다단계 붕괴 연쇄(Decay Chain)를 몬테카를로 기법으로 모사하고 계통도를 확인해 보세요.
+              <span class="lang-en">Select an unstable particle to simulate its multi-step decay cascade down to stable particles (electrons, neutrinos, protons, photons) using Monte Carlo methods.</span><span class="lang-ko">불안정한 입자를 선택하여 안정 입자(전자, 중성미자, 양성자, 광자 등)가 될 때까지의 다단계 붕괴 연쇄(Decay Chain)를 몬테카를로 기법으로 모사하고 계통도를 확인해 보세요.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 1rem;">
               <!-- Select Particle to Decay -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Select Parent Particle (붕괴 대상 입자 선택)</span>
+                <span class="color-assigner-title">Select Parent Particle <span class="lang-ko">(붕괴 대상 입자 선택)</span></span>
                 <select id="select-decay-parent" class="physics-select" style="width: 100%; margin-top: 0.5rem; background: rgba(9, 12, 30, 0.9); border: 1px solid var(--border-color); color: #fff; padding: 0.5rem; border-radius: 8px; font-family: var(--font-sans);">
                   <!-- Populated by app.js -->
                 </select>
@@ -330,7 +330,7 @@
               <!-- Simulator Actions -->
               <div class="sim-actions" style="width: 100%;">
                 <button class="action-btn" id="btn-run-cascade" onclick="runDecayCascade()" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: #fff; font-weight: 700; width: 100%; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);">
-                  🔮 SIMULATE DECAY CASCADE (몬테카를로 붕괴 시작)
+                  🔮 SIMULATE DECAY CASCADE <span class="lang-ko">(몬테카를로 붕괴 시작)</span>
                 </button>
               </div>
             </div>
@@ -344,7 +344,7 @@
             <!-- Interative Decay Tree Graph -->
             <div id="decay-tree-output" style="margin-top: 1rem; max-height: 350px; overflow-y: auto; padding: 0.5rem;">
               <div style="text-align: center; color: var(--color-text-muted); font-size: 0.85rem; padding: 1.5rem;">
-                붕괴 시작 버튼을 누르면 이종 붕괴 분기 경로와 몬테카를로 붕괴 트리가 이곳에 생성됩니다.
+                <span class="lang-en">Click the simulate button to generate the branching decay paths and Monte Carlo decay tree here.</span><span class="lang-ko">붕괴 시작 버튼을 누르면 이종 붕괴 분기 경로와 몬테카를로 붕괴 트리가 이곳에 생성됩니다.</span>
               </div>
             </div>
           </div>
@@ -355,18 +355,18 @@
       <div class="tab-content" id="tab-angular">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Electroweak Polarization & Angular Lab (편광 및 각분포)</h2>
+            <h2 class="panel-title">Electroweak Polarization & Angular Lab <span class="lang-ko">(편광 및 각분포)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              스핀-1 벡터 보손($W^\pm$, $Z^0$) 또는 스핀-0 힉스 보손($H^0$)의 2체 붕괴 시 방출 입자들의 양자역학적 편광 상태별 각도 분포를 실시간으로 플로팅하고 분석합니다.
+              <span class="lang-en">Plot and analyze the quantum mechanical angular distributions of emitted particles from the 2-body decay of spin-1 vector bosons ($W^\pm$, $Z^0$) or spin-0 Higgs bosons ($H^0$) based on polarization states.</span><span class="lang-ko">스핀-1 벡터 보손($W^\pm$, $Z^0$) 또는 스핀-0 힉스 보손($H^0$)의 2체 붕괴 시 방출 입자들의 양자역학적 편광 상태별 각도 분포를 실시간으로 플로팅하고 분석합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Boson Select -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Select Decaying Boson (보손 선택)</span>
+                <span class="color-assigner-title">Select Decaying Boson <span class="lang-ko">(보손 선택)</span></span>
                 <div class="color-buttons-container" style="margin-top: 0.25rem;">
                   <button class="color-pick-btn active-lepton" id="btn-ang-z" onclick="selectAngularBoson('Z0')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Z⁰ Boson</button>
                   <button class="color-pick-btn" id="btn-ang-w" onclick="selectAngularBoson('W+')" style="border-color: rgba(255, 255, 255, 0.05);">W⁺ Boson</button>
@@ -376,20 +376,20 @@
 
               <!-- Polarization State -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Polarization Spin State (스핀 편광 모드)</span>
+                <span class="color-assigner-title">Polarization Spin State <span class="lang-ko">(스핀 편광 모드)</span></span>
                 <div class="color-buttons-container" style="margin-top: 0.25rem;">
-                  <button class="color-pick-btn active-lepton" id="btn-pol-unpol" onclick="selectPolarization('unpolarized')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Unpolarized (무편광)</button>
-                  <button class="color-pick-btn" id="btn-pol-trans" onclick="selectPolarization('transverse')">Transverse (횡편광)</button>
-                  <button class="color-pick-btn" id="btn-pol-long" onclick="selectPolarization('longitudinal')">Longitudinal (종편광)</button>
+                  <button class="color-pick-btn active-lepton" id="btn-pol-unpol" onclick="selectPolarization('unpolarized')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Unpolarized <span class="lang-ko">(무편광)</span></button>
+                  <button class="color-pick-btn" id="btn-pol-trans" onclick="selectPolarization('transverse')">Transverse <span class="lang-ko">(횡편광)</span></button>
+                  <button class="color-pick-btn" id="btn-pol-long" onclick="selectPolarization('longitudinal')">Longitudinal <span class="lang-ko">(종편광)</span></button>
                 </div>
                 <p id="label-pol-desc" style="font-size: 0.75rem; color: #a5b4fc; margin-top: 0.35rem; font-style: italic;">
-                  무편광: 고전적인 등방적 또는 균일 평균 분포 상태를 나타냅니다.
+                  <span class="lang-en">Unpolarized: Represents a classical isotropic or uniformly averaged distribution state.</span><span class="lang-ko">무편광: 고전적인 등방적 또는 균일 평균 분포 상태를 나타냅니다.</span>
                 </p>
               </div>
 
               <!-- 2D Line Chart Canvas for Angular PDF -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Angular Probability Density (방출각 θ 분포 PDF)</span>
+                <span class="color-assigner-title">Angular Probability Density <span class="lang-ko">(방출각 θ 분포 PDF)</span></span>
                 <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
                   <canvas id="canvas-angular-plot" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
                 </div>
@@ -397,7 +397,7 @@
 
               <!-- 3D projection representation -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Bubble Chamber 3D Angular Beam (스핀 대칭 분사 궤적)</span>
+                <span class="color-assigner-title">Bubble Chamber 3D Angular Beam <span class="lang-ko">(스핀 대칭 분사 궤적)</span></span>
                 <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
                   <canvas id="canvas-polarization-3d" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
                 </div>
@@ -416,18 +416,18 @@
       <div class="tab-content" id="tab-collider-lab">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Collider Resonance & Breit-Wigner Lab (가속기 공명 생성)</h2>
+            <h2 class="panel-title">Collider Resonance & Breit-Wigner Lab <span class="lang-ko">(가속기 공명 생성)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              충돌 중심 에너지($\sqrt{s}$)를 조작하여 Z 보손 또는 힉스 보손의 정지 질량에 접근시킵니다. 공명점($\sqrt{s} \approx M$)에 도달할 때의 양자 단면적 피크와 검출기 공명 이벤트를 실시간으로 입증합니다.
+              <span class="lang-en">Adjust the center-of-mass energy ($\sqrt{s}$) to approach the rest mass of the Z or Higgs boson. Observe the quantum cross-section peak and detector resonance events at the resonance point ($\sqrt{s} \approx M$).</span><span class="lang-ko">충돌 중심 에너지($\sqrt{s}$)를 조작하여 Z 보손 또는 힉스 보손의 정지 질량에 접근시킵니다. 공명점($\sqrt{s} \approx M$)에 도달할 때의 양자 단면적 피크와 검출기 공명 이벤트를 실시간으로 입증합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Select Resonance Target -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Select Resonance Target (공명 대상 입자)</span>
+                <span class="color-assigner-title">Select Resonance Target <span class="lang-ko">(공명 대상 입자)</span></span>
                 <div class="color-buttons-container" style="margin-top: 0.25rem;">
                   <button class="color-pick-btn active-lepton" id="btn-col-z" onclick="selectColliderTarget('Z0')" style="background: rgba(168, 85, 247, 0.15); border-color: var(--color-boson); color: #fff;">Z⁰ Boson (91.2 GeV)</button>
                   <button class="color-pick-btn" id="btn-col-h" onclick="selectColliderTarget('H0')" style="border-color: rgba(255, 255, 255, 0.05);">H⁰ Higgs (125.3 GeV)</button>
@@ -437,7 +437,7 @@
               <!-- Collider Energy Control Slider -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>COLLIDER ENERGY (충돌 중심 에너지, √s)</span>
+                  <span>COLLIDER ENERGY <span class="lang-ko">(충돌 중심 에너지, √s)</span></span>
                   <span id="label-collider-energy" style="color: var(--color-lepton); font-family: var(--font-mono);">80.0 GeV</span>
                 </div>
                 <input type="range" id="slider-collider-energy" min="70" max="110" step="0.1" value="80.0" oninput="updateColliderLab()" style="width: 100%; margin-top: 0.5rem; accent-color: #00f0ff;">
@@ -445,12 +445,12 @@
 
               <!-- Resonance Status Header Alert -->
               <div id="collider-resonance-status-alert" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--color-text-muted);">
-                OFF RESONANCE (비공명 상태)
+                OFF RESONANCE <span class="lang-ko">(비공명 상태)</span>
               </div>
 
               <!-- 2D Line Chart Canvas for Breit-Wigner Cross Section -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Breit-Wigner Cross Section Profile (반응 단면적 σ 곡선)</span>
+                <span class="color-assigner-title">Breit-Wigner Cross Section Profile <span class="lang-ko">(반응 단면적 σ 곡선)</span></span>
                 <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
                   <canvas id="canvas-cross-section"></canvas>
                 </div>
@@ -458,7 +458,7 @@
 
               <!-- Collider Event Chamber (2D Visualizer) -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Collider Detector Chamber (검출기 이벤트 시각화)</span>
+                <span class="color-assigner-title">Collider Detector Chamber <span class="lang-ko">(검출기 이벤트 시각화)</span></span>
                 <div class="visualizer-wrapper" style="height: 180px; width: 100%; margin-top: 0.25rem;">
                   <canvas id="canvas-collider-event"></canvas>
                   <div class="canvas-overlay">[ DETECTOR EVENT CHAMBER // ACTIVE ]</div>
@@ -478,26 +478,26 @@
       <div class="tab-content" id="tab-higgs-ssb">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Higgs SSB & Mexican Hat Lab (힉스 자발적 대칭성 깨짐)</h2>
+            <h2 class="panel-title">Higgs SSB & Mexican Hat Lab <span class="lang-ko">(힉스 자발적 대칭성 깨짐)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              복소 힉스 필드 공간의 3차원 포텐셜 곡면 $V(\Phi) = -\mu^2|\Phi|^2 + \lambda|\Phi|^4$ 상에서 자발적 대칭성 깨짐(SSB)을 시각화합니다. 
-              대칭성 붕괴(SSB) 시 힉스 구체가 원점에서 골짜기로 낙하하며 게이지 보손에 질량을 부여하는 메커니즘을 입증합니다.
+              <span class="lang-en">Visualize Spontaneous Symmetry Breaking (SSB) on the 3D potential surface $V(\Phi) = -\mu^2|\Phi|^2 + \lambda|\Phi|^4$ in the complex Higgs field space.</span><span class="lang-ko">복소 힉스 필드 공간의 3차원 포텐셜 곡면 $V(\Phi) = -\mu^2|\Phi|^2 + \lambda|\Phi|^4$ 상에서 자발적 대칭성 깨짐(SSB)을 시각화합니다.</span> 
+              <span class="lang-en">Demonstrate the mechanism of mass generation for gauge bosons as the Higgs sphere falls from the origin to the potential valley during SSB.</span><span class="lang-ko">대칭성 붕괴(SSB) 시 힉스 구체가 원점에서 골짜기로 낙하하며 게이지 보손에 질량을 부여하는 메커니즘을 입증합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Potential Parameter Control Sliders -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>POTENTIAL PARAMETER &mu;&sup2; (포텐셜 곡률)</span>
+                  <span>POTENTIAL PARAMETER &mu;&sup2; <span class="lang-ko">(포텐셜 곡률)</span></span>
                   <span id="label-higgs-mu2" style="color: var(--color-scalar); font-family: var(--font-mono);">2.0</span>
                 </div>
                 <input type="range" id="slider-higgs-mu2" min="0.0" max="5.0" step="0.1" value="2.0" oninput="updateHiggsPotential()" style="width: 100%; accent-color: #a855f7;">
 
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.25rem;">
-                  <span>QUARTIC COUPLING &lambda; (자체 상호작용 강도)</span>
+                  <span>QUARTIC COUPLING &lambda; <span class="lang-ko">(자체 상호작용 강도)</span></span>
                   <span id="label-higgs-lambda" style="color: var(--color-scalar); font-family: var(--font-mono);">0.5</span>
                 </div>
                 <input type="range" id="slider-higgs-lambda" min="0.1" max="2.0" step="0.05" value="0.5" oninput="updateHiggsPotential()" style="width: 100%; accent-color: #a855f7;">
@@ -506,21 +506,21 @@
               <!-- Higgs Symmetry Control Buttons -->
               <div style="display: flex; gap: 0.5rem; width: 100%;">
                 <button class="color-pick-btn" id="btn-trigger-ssb" onclick="triggerSSB()" style="flex: 1; border-color: var(--color-boson); background: rgba(168, 85, 247, 0.15); color: #fff;">
-                  ⚡ Trigger SSB (대칭성 깨짐 가동)
+                  ⚡ Trigger SSB <span class="lang-ko">(대칭성 깨짐 가동)</span>
                 </button>
                 <button class="color-pick-btn" id="btn-restore-symmetry" onclick="restoreSymmetry()" style="flex: 1; border-color: rgba(255, 255, 255, 0.1); color: #ccc;">
-                  🔄 Restore Symmetry (대칭성 복원)
+                  🔄 Restore Symmetry <span class="lang-ko">(대칭성 복원)</span>
                 </button>
               </div>
 
               <!-- SSB State Alert -->
               <div id="higgs-ssb-status-alert" style="width: 100%; text-align: center; font-weight: 900; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.45rem; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--color-text-muted);">
-                SYMMETRIC STATE (대칭 상태, &Phi; = 0)
+                SYMMETRIC STATE <span class="lang-ko">(대칭 상태, &Phi; = 0)</span>
               </div>
 
               <!-- 3D wireframe potential plot + 3D particle path -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Complex Higgs Field Space V(&Phi;) (3D 멕시칸 모자 및 힉스 볼)</span>
+                <span class="color-assigner-title">Complex Higgs Field Space V(&Phi;) <span class="lang-ko">(3D 멕시칸 모자 및 힉스 볼)</span></span>
                 <div class="visualizer-wrapper" style="height: 320px; width: 100%; margin-top: 0.25rem; position: relative;">
                   <canvas id="canvas-higgs-ssb"></canvas>
                   <div class="canvas-overlay">[ HIGGS SSB CHAMBER // 3D PROJECTION ]</div>
@@ -540,25 +540,25 @@
       <div class="tab-content" id="tab-susy">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">BSM Supersymmetry & LSP Dark Matter Lab (초대칭성 및 암흑물질 검출)</h2>
+            <h2 class="panel-title">BSM Supersymmetry & LSP Dark Matter Lab <span class="lang-ko">(초대칭성 및 암흑물질 검출)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              표준모형을 넘어서는 초대칭성(SUSY) 이론 및 가장 가벼운 초대칭 입자(LSP, 뉴트랄리노 $\tilde{\chi}_1^0$)의 존재를 가속기 결손 횡 momentum(MET, $\not\vec{E}_T$) 불균형 기하학을 통해 입증합니다.
+              <span class="lang-en">Demonstrate Supersymmetry (SUSY) beyond the Standard Model and the existence of the Lightest Supersymmetric Particle (LSP, neutralino $\tilde{\chi}_1^0$) through missing transverse energy (MET, $\not\vec{E}_T$) imbalance geometry.</span><span class="lang-ko">표준모형을 넘어서는 초대칭성(SUSY) 이론 및 가장 가벼운 초대칭 입자(LSP, 뉴트랄리노 $\tilde{\chi}_1^0$)의 존재를 가속기 결손 횡 momentum(MET, $\not\vec{E}_T$) 불균형 기하학을 통해 입증합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Mass sliders and R-parity violation controls -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>GLUINO MASS ($m_{\tilde{g}}$, 초대칭 글루온 파트너)</span>
+                  <span>GLUINO MASS <span class="lang-ko">($m_{\tilde{g}}$, 초대칭 글루온 파트너)</span></span>
                   <span id="label-susy-gluino" style="color: var(--color-danger); font-family: var(--font-mono);">2.0 TeV</span>
                 </div>
                 <input type="range" id="slider-susy-gluino" min="1.0" max="3.0" step="0.1" value="2.0" oninput="updateSUSYParameters()" style="width: 100%; accent-color: var(--color-danger);">
 
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.25rem;">
-                  <span>NEUTRALINO (LSP) MASS ($m_{\tilde{\chi}_1^0}$, 암흑물질 후보)</span>
+                  <span>NEUTRALINO (LSP) MASS <span class="lang-ko">($m_{\tilde{\chi}_1^0}$, 암흑물질 후보)</span></span>
                   <span id="label-susy-lsp" style="color: var(--color-scalar); font-family: var(--font-mono);">200 GeV</span>
                 </div>
                 <input type="range" id="slider-susy-lsp" min="100" max="800" step="10" value="200" oninput="updateSUSYParameters()" style="width: 100%; accent-color: var(--color-scalar);">
@@ -567,7 +567,7 @@
               <!-- R-Parity Violation Toggle Switch & Trigger Button -->
               <div style="display: flex; gap: 0.5rem; width: 100%; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
                 <div style="display: flex; flex-direction: column; gap: 0.15rem;">
-                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">R-Parity Conservation (R-패리티 대칭성)</span>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">R-Parity Conservation <span class="lang-ko">(R-패리티 대칭성)</span></span>
                   <span id="label-susy-rparity-desc" style="font-size: 0.7rem; color: var(--color-text-muted);">CONSERVED: LSP is perfectly stable (Dark Matter MET active)</span>
                 </div>
                 <button class="color-pick-btn" id="btn-toggle-rparity" onclick="toggleRParityConservation()" style="min-width: 130px; border-color: var(--color-boson); color: var(--color-boson); background: rgba(168, 85, 247, 0.05); font-size: 0.75rem;">
@@ -578,7 +578,7 @@
               <!-- Collider Trigger Button -->
               <div style="width: 100%;">
                 <button class="color-pick-btn" id="btn-trigger-susy-collision" onclick="triggerSUSYCollision()" style="width: 100%; border-color: var(--color-lepton); background: rgba(0, 240, 255, 0.12); color: #fff; font-weight: 900; font-size: 0.85rem;">
-                  💥 TRIGGER SUSY PAIR PRODUCTION (초대칭 충돌 가동)
+                  💥 TRIGGER SUSY PAIR PRODUCTION <span class="lang-ko">(초대칭 충돌 가동)</span>
                 </button>
               </div>
 
@@ -589,7 +589,7 @@
 
               <!-- SUSY Event Detector Chamber (2D Visualizer) -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Missing Transverse Energy Chamber (횡운동량 MET 검출기)</span>
+                <span class="color-assigner-title">Missing Transverse Energy Chamber <span class="lang-ko">(횡운동량 MET 검출기)</span></span>
                 <div class="visualizer-wrapper" style="height: 300px; width: 100%; margin-top: 0.25rem; position: relative;">
                   <canvas id="canvas-susy-detector"></canvas>
                   <div class="canvas-overlay">[ BSM SUSY DETECTION CHAMBER // ACTIVE ]</div>
@@ -609,25 +609,25 @@
       <div class="tab-content" id="tab-gut">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">GUT & Proton Decay Lab (대통일 이론 및 양성자 붕괴)</h2>
+            <h2 class="panel-title">GUT & Proton Decay Lab <span class="lang-ko">(대통일 이론 및 양성자 붕괴)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              강력, 약력, 전자기력을 통합하려는 대통일 이론(GUT)과 그 대표적 예견인 <b>양성자 붕괴(Proton Decay)</b> 및 수중 **슈퍼 카미오칸데 체렌코프 고리(Cherenkov Rings)** 광학 신호를 물리적으로 검증합니다.
+              <span class="lang-en">Physically verify Grand Unified Theories (GUT) that unify strong, weak, and electromagnetic forces, and their key prediction of <b>Proton Decay</b> along with underwater **Super-Kamiokande Cherenkov Rings** optical signals.</span><span class="lang-ko">강력, 약력, 전자기력을 통합하려는 대통일 이론(GUT)과 그 대표적 예견인 <b>양성자 붕괴(Proton Decay)</b> 및 수중 **슈퍼 카미오칸데 체렌코프 고리(Cherenkov Rings)** 광학 신호를 물리적으로 검증합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Parameter sliders for GUT Scale and Coupling -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>GUT MASS SCALE ($M_X$, 대통일 게이지 보손 질량)</span>
+                  <span>GUT MASS SCALE <span class="lang-ko">($M_X$, 대통일 게이지 보손 질량)</span></span>
                   <span id="label-gut-mx" style="color: var(--color-boson); font-family: var(--font-mono);">1.0e15 GeV</span>
                 </div>
                 <input type="range" id="slider-gut-mx" min="15.0" max="16.5" step="0.1" value="15.0" oninput="updateGUTParameters()" style="width: 100%; accent-color: var(--color-boson);">
 
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.25rem;">
-                  <span>GUT COUPLING STRENGTH (&alpha;<sub>GUT</sub>, 통합 대칭 결합 상수)</span>
+                  <span>GUT COUPLING STRENGTH <span class="lang-ko">(&alpha;<sub>GUT</sub>, 통합 대칭 결합 상수)</span></span>
                   <span id="label-gut-alpha" style="color: var(--color-boson); font-family: var(--font-mono);">0.041 (1/24)</span>
                 </div>
                 <input type="range" id="slider-gut-alpha" min="0.02" max="0.08" step="0.001" value="0.041" oninput="updateGUTParameters()" style="width: 100%; accent-color: var(--color-boson);">
@@ -636,7 +636,7 @@
               <!-- GUT Interaction Switch -->
               <div style="display: flex; gap: 0.5rem; width: 100%; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
                 <div style="display: flex; flex-direction: column; gap: 0.15rem;">
-                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">GUT Electroweak-Strong Interaction (대통일 모드)</span>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">GUT Electroweak-Strong Interaction <span class="lang-ko">(대통일 모드)</span></span>
                   <span id="label-gut-mode-desc" style="font-size: 0.7rem; color: var(--color-text-muted);">Standard Model: Lepton/Baryon violating decays strictly blocked</span>
                 </div>
                 <button class="color-pick-btn" id="btn-toggle-gutmode" onclick="toggleGUTMode()" style="min-width: 130px; border-color: var(--color-boson); color: var(--color-boson); background: rgba(168, 85, 247, 0.05); font-size: 0.75rem;">
@@ -647,7 +647,7 @@
               <!-- Proton Decay Trigger Button -->
               <div style="width: 100%;">
                 <button class="color-pick-btn" id="btn-trigger-proton-decay" onclick="triggerProtonDecay()" style="width: 100%; border-color: var(--color-danger); background: rgba(255, 51, 102, 0.12); color: #fff; font-weight: 900; font-size: 0.85rem;">
-                  💥 TRIGGER COSMIC PROTON DECAY (양성자 붕괴 가동)
+                  💥 TRIGGER COSMIC PROTON DECAY <span class="lang-ko">(양성자 붕괴 가동)</span>
                 </button>
               </div>
 
@@ -658,7 +658,7 @@
 
               <!-- Super-K Cherenkov Detector Water Tank Chamber (2D Visualizer) -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Super-K Cherenkov Projection Chamber (체렌코프 링 수광 검출기)</span>
+                <span class="color-assigner-title">Super-K Cherenkov Projection Chamber <span class="lang-ko">(체렌코프 링 수광 검출기)</span></span>
                 <div class="visualizer-wrapper" style="height: 320px; width: 100%; margin-top: 0.25rem; position: relative;">
                   <canvas id="canvas-gut-detector"></canvas>
                   <div class="canvas-overlay">[ SUPER-K WATER CHERENKOV DETECTOR // ACTIVE ]</div>
@@ -678,12 +678,12 @@
       <div class="tab-content" id="tab-ckm">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Quark Flavor Mixing & CP Violation Lab (CKM 행렬 및 CP 위반)</h2>
+            <h2 class="panel-title">Quark Flavor Mixing & CP Violation Lab <span class="lang-ko">(CKM 행렬 및 CP 위반)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              약한 상호작용 하에서 쿼크들의 맛깔 혼합(Flavor Mixing)을 기술하는 카비보-고바야시-마스카와(CKM) 유니터리 복소 행렬과 CP 위반을 가시화합니다. 3개의 혼합각과 1개의 CP 위상(&delta;<sub>CP</sub>)을 조절하며 유니터리 삼각형의 퇴화 조건 및 야를스코그 불변량(J)의 실시간 소멸을 확인해 보세요.
+              <span class="lang-en">Visualize the CKM unitary complex matrix and CP violation describing quark flavor mixing under weak interactions. Adjust the 3 mixing angles and 1 CP phase (&delta;<sub>CP</sub>) to observe the degeneracy of the unitarity triangle and real-time vanishing of the Jarlskog invariant (J).</span><span class="lang-ko">약한 상호작용 하에서 쿼크들의 맛깔 혼합(Flavor Mixing)을 기술하는 카비보-고바야시-마스카와(CKM) 유니터리 복소 행렬과 CP 위반을 가시화합니다. 3개의 혼합각과 1개의 CP 위상(&delta;<sub>CP</sub>)을 조절하며 유니터리 삼각형의 퇴화 조건 및 야를스코그 불변량(J)의 실시간 소멸을 확인해 보세요.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
@@ -726,7 +726,7 @@
 
               <!-- 3x3 Complex CKM Matrix Board -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">3&times;3 Complex CKM Matrix Amplitude & Phase (맛깔 혼합 복소 행렬 원소)</span>
+                <span class="color-assigner-title">3&times;3 Complex CKM Matrix Amplitude & Phase <span class="lang-ko">(맛깔 혼합 복소 행렬 원소)</span></span>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; width: 100%; margin-top: 0.25rem; font-family: var(--font-mono); font-size: 0.72rem; text-align: center;">
                   <div class="color-assign-btn" style="padding: 0.4rem 0.2rem; cursor: default; display: flex; flex-direction: column;">
                     <strong style="color: #fff;">|V<sub>ud</sub>|</strong>
@@ -780,7 +780,7 @@
 
               <!-- Unitarity Triangle Vector Visualizer -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Unitarity Triangle Visualizer (유니터리 삼각형 가시화)</span>
+                <span class="color-assigner-title">Unitarity Triangle Visualizer <span class="lang-ko">(유니터리 삼각형 가시화)</span></span>
                 <div class="visualizer-wrapper" style="height: 260px; width: 100%; margin-top: 0.25rem; position: relative;">
                   <canvas id="canvas-ckm-triangle"></canvas>
                   <div class="canvas-overlay">[ UNITARITY TRIANGLE CANVAS // V<sub>ud</sub>V<sub>ub</sub><sup>*</sup> + V<sub>cd</sub>V<sub>cb</sub><sup>*</sup> + V<sub>td</sub>V<sub>tb</sub><sup>*</sup> = 0 ]</div>
@@ -800,19 +800,19 @@
       <div class="tab-content" id="tab-rge">
         <div class="glass-panel">
           <div class="panel-header">
-            <h2 class="panel-title">RGE Running Coupling & Gauge Unification Lab (재규격화군 달림 결합상수 통합)</h2>
+            <h2 class="panel-title">RGE Running Coupling & Gauge Unification Lab <span class="lang-ko">(재규격화군 달림 결합상수 통합)</span></h2>
           </div>
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              에너지 스케일 Q (GeV) 축에 따른 전자기-약-강 세 가지 기본 게이지 결합 상수 (&alpha;<sub>1</sub><sup>-1</sup>, &alpha;<sub>2</sub><sup>-1</sup>, &alpha;<sub>3</sub><sup>-1</sup>)의 1-루프 재규격화 군 진화(RGE)를 실시간 계산하고, 초대칭(MSSM) 조건 하에서 대통일 이론(GUT) 통합을 실증합니다.
+              <span class="lang-en">Calculate the 1-loop Renormalization Group Equation (RGE) evolution of the three fundamental gauge couplings (&alpha;<sub>1</sub><sup>-1</sup>, &alpha;<sub>2</sub><sup>-1</sup>, &alpha;<sub>3</sub><sup>-1</sup>) across the energy scale Q (GeV), and verify GUT unification under Supersymmetry (MSSM) conditions.</span><span class="lang-ko">에너지 스케일 Q (GeV) 축에 따른 전자기-약-강 세 가지 기본 게이지 결합 상수 (&alpha;<sub>1</sub><sup>-1</sup>, &alpha;<sub>2</sub><sup>-1</sup>, &alpha;<sub>3</sub><sup>-1</sup>)의 1-루프 재규격화 군 진화(RGE)를 실시간 계산하고, 초대칭(MSSM) 조건 하에서 대통일 이론(GUT) 통합을 실증합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Model Toggle -->
               <div style="display: flex; gap: 0.5rem; width: 100%; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
                 <div style="display: flex; flex-direction: column; gap: 0.15rem;">
-                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Beta Function Active Model (진화 베타함수 계수 설정)</span>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Beta Function Active Model <span class="lang-ko">(진화 베타함수 계수 설정)</span></span>
                   <span id="label-rge-model-desc" style="font-size: 0.7rem; color: var(--color-text-muted);">Standard Model (SM): Couplings do not meet at single point</span>
                 </div>
                 <button class="color-pick-btn" id="btn-toggle-rgemodel" onclick="toggleRGEModel()" style="min-width: 140px; border-color: var(--color-boson); color: var(--color-boson); background: rgba(168, 85, 247, 0.05); font-size: 0.75rem;">
@@ -834,7 +834,7 @@
 
               <!-- RGE Running Coupling Graph Visualizer -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Gauge Coupling Running Curve &alpha;<sub>i</sub><sup>-1</sup>(Q) (결합상수 달림 곡선 그래프)</span>
+                <span class="color-assigner-title">Gauge Coupling Running Curve &alpha;<sub>i</sub><sup>-1</sup>(Q) <span class="lang-ko">(결합상수 달림 곡선 그래프)</span></span>
                 <div class="visualizer-wrapper" style="height: 280px; width: 100%; margin-top: 0.25rem; position: relative;">
                   <canvas id="canvas-rge-graph"></canvas>
                   <div class="canvas-overlay">[ GAUGE COUPLING RUNNING AND UNIFICATION VISUALIZER ]</div>
@@ -859,20 +859,20 @@
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              강력(Strong Force) 매개 환경에서 극한의 온도($T$)와 바리온 밀도($\mu_B$)를 조작하여 쿼크-글루온 플라즈마(QGP) 상전이와 색초전도(CFL) 현상을 탐구합니다.
+              <span class="lang-en">Explore Quark-Gluon Plasma (QGP) phase transitions and Color-Flavor Locked (CFL) color superconductivity by manipulating extreme temperature ($T$) and baryon chemical potential ($\mu_B$) in a strong force environment.</span><span class="lang-ko">강력(Strong Force) 매개 환경에서 극한의 온도($T$)와 바리온 밀도($\mu_B$)를 조작하여 쿼크-글루온 플라즈마(QGP) 상전이와 색초전도(CFL) 현상을 탐구합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               <!-- Parameter Sliders -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
-                  <span>TEMPERATURE ($T$, 온도)</span>
+                  <span>TEMPERATURE <span class="lang-ko">($T$, 온도)</span></span>
                   <span id="label-qcd-temperature" style="color: #ffaa00; font-family: var(--font-mono);">0 MeV</span>
                 </div>
                 <input type="range" id="slider-qcd-temperature" min="0" max="300" step="1" value="0" oninput="updateQCDParameters()" style="width: 100%; accent-color: #ffaa00;">
 
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.2rem;">
-                  <span>BARYON CHEMICAL POTENTIAL ($\mu_B$, 바리온 화학 퍼텐셜)</span>
+                  <span>BARYON CHEMICAL POTENTIAL <span class="lang-ko">($\mu_B$, 바리온 화학 퍼텐셜)</span></span>
                   <span id="label-qcd-mub" style="color: #a5b4fc; font-family: var(--font-mono);">0 MeV</span>
                 </div>
                 <input type="range" id="slider-qcd-mub" min="0" max="1000" step="5" value="0" oninput="updateQCDParameters()" style="width: 100%; accent-color: #a5b4fc;">
@@ -890,7 +890,7 @@
 
               <!-- Phase Diagram Canvas -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">QCD Phase Diagram (상태도 및 임계 경계선)</span>
+                <span class="color-assigner-title">QCD Phase Diagram <span class="lang-ko">(상태도 및 임계 경계선)</span></span>
                 <div class="visualizer-wrapper" style="height: 220px; width: 100%; margin-top: 0.25rem;">
                   <canvas id="canvas-qcd-phase" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
                 </div>
@@ -898,7 +898,7 @@
 
               <!-- Microphysics Chamber Canvas -->
               <div class="color-assigner-panel" style="width: 100%;">
-                <span class="color-assigner-title">Quark-Gluon Microstate Chamber (미시 상태 엔진)</span>
+                <span class="color-assigner-title">Quark-Gluon Microstate Chamber <span class="lang-ko">(미시 상태 엔진)</span></span>
                 <div class="visualizer-wrapper" style="height: 250px; width: 100%; margin-top: 0.25rem; position: relative;">
                   <canvas id="canvas-qcd-micro" style="width: 100%; height: 100%; background: rgba(5, 7, 20, 0.9); border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
                   <div class="canvas-overlay">[ QCD MICRO CHAMBER // ACTIVE ]</div>
@@ -923,14 +923,14 @@
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              양자장론(QFT)의 파인만 규칙(Feynman Rules)을 통해 트리 레벨 산란 진폭($|\mathcal{M}|^2$)과 만델스탐 변수를 도출하고, 미분 단면적(Differential Cross Section)의 극좌표 분포를 산출합니다.
+              <span class="lang-en">Derive tree-level scattering amplitudes ($|\mathcal{M}|^2$) and Mandelstam variables through Feynman Rules of Quantum Field Theory (QFT), and calculate the polar distribution of the differential cross section.</span><span class="lang-ko">양자장론(QFT)의 파인만 규칙(Feynman Rules)을 통해 트리 레벨 산란 진폭($|\mathcal{M}|^2$)과 만델스탐 변수를 도출하고, 미분 단면적(Differential Cross Section)의 극좌표 분포를 산출합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               
               <!-- Process Selector -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
-                <span class="color-assigner-title">SCATTERING PROCESS (산란 반응 선택)</span>
+                <span class="color-assigner-title">SCATTERING PROCESS <span class="lang-ko">(산란 반응 선택)</span></span>
                 <select id="select-feynman-process" onchange="updateFeynmanParameters()" style="width: 100%; padding: 0.5rem; background: rgba(5, 7, 20, 0.8); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-mono); font-size: 0.85rem;">
                   <option value="e- e+ -> mu- mu+">Annihilation: e⁻ e⁺ → μ⁻ μ⁺</option>
                   <option value="e- e+ -> e- e+">Bhabha Scattering: e⁻ e⁺ → e⁻ e⁺</option>
@@ -985,14 +985,14 @@
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              초기 우주의 팽창 과정(빅뱅 이후)에서 암흑물질 입자가 열역학적 평형 상태를 벗어나 동결(Freeze-out)되며 현재 우주의 잔존 밀도(Relic Density)를 형성하는 과정을 추적합니다.
+              <span class="lang-en">Track the freeze-out process where dark matter particles depart from thermodynamic equilibrium during the expansion of the early universe (post-Big Bang), forming the present-day relic density.</span><span class="lang-ko">초기 우주의 팽창 과정(빅뱅 이후)에서 암흑물질 입자가 열역학적 평형 상태를 벗어나 동결(Freeze-out)되며 현재 우주의 잔존 밀도(Relic Density)를 형성하는 과정을 추적합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
               
               <!-- Parameters -->
               <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.50rem;">
-                <span class="color-assigner-title">WIMP PARAMETERS (암흑물질 물리량)</span>
+                <span class="color-assigner-title">WIMP PARAMETERS <span class="lang-ko">(암흑물질 물리량)</span></span>
                 
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; margin-top: 0.5rem;">
                   <span>MASS ($m_\chi$)</span>
@@ -1048,7 +1048,7 @@
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              중성미자의 질량 고유상태와 맛 고유상태의 양자역학적 혼합에 의해 발생하는 진동 현상과, 물질 내부에서의 MSW(Mikheyev-Smirnov-Wolfenstein) 공명 효과를 시뮬레이션합니다.
+              <span class="lang-en">Simulate neutrino oscillation phenomena caused by the quantum mixing of mass and flavor eigenstates, and the MSW (Mikheyev-Smirnov-Wolfenstein) resonance effect inside matter.</span><span class="lang-ko">중성미자의 질량 고유상태와 맛 고유상태의 양자역학적 혼합에 의해 발생하는 진동 현상과, 물질 내부에서의 MSW(Mikheyev-Smirnov-Wolfenstein) 공명 효과를 시뮬레이션합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
@@ -1128,7 +1128,7 @@
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              전자기약 작용의 진공 구조(Chern-Simons Number)와 고온 우주에서의 스팔레론 전이, 그리고 사하로프 3조건을 통한 물질-반물질 비대칭성 생성 과정을 시뮬레이션합니다.
+              <span class="lang-en">Simulate the vacuum structure of electroweak interactions (Chern-Simons Number), sphaleron transitions in the hot early universe, and the generation of matter-antimatter asymmetry through Sakharov's three conditions.</span><span class="lang-ko">전자기약 작용의 진공 구조(Chern-Simons Number)와 고온 우주에서의 스팔레론 전이, 그리고 사하로프 3조건을 통한 물질-반물질 비대칭성 생성 과정을 시뮬레이션합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
@@ -1196,7 +1196,7 @@
           
           <div class="simulator-panel">
             <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: -0.5rem;">
-              강한 상호작용의 CP 문제를 해결하기 위한 Peccei-Quinn 대칭성과 그 결과로 예측되는 <strong>액시온(Axion)</strong>의 특성을 탐구하고, 프리마코프 효과(Primakoff Effect)를 이용한 할로스코프(Haloscope) 검출 실험을 시뮬레이션합니다.
+              <span class="lang-en">Explore Peccei-Quinn symmetry and the resulting predicted <strong>Axion</strong> properties to solve the strong CP problem, and simulate a Haloscope detection experiment using the Primakoff Effect.</span><span class="lang-ko">강한 상호작용의 CP 문제를 해결하기 위한 Peccei-Quinn 대칭성과 그 결과로 예측되는 <strong>액시온(Axion)</strong>의 특성을 탐구하고, 프리마코프 효과(Primakoff Effect)를 이용한 할로스코프(Haloscope) 검출 실험을 시뮬레이션합니다.</span>
             </p>
 
             <div class="builder-workspace" style="gap: 0.75rem;">
@@ -1264,7 +1264,7 @@
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p>소립자 격자판에서 입자를 클릭하면 해당 입자의 양자 전하, 스핀, 바리온수, 붕괴 경로 등 정밀 물리 프로필이 여기에 표시됩니다.</p>
+          <p><span class="lang-en">Click on a particle in the grid to display its precise physical profile here, including quantum charge, spin, baryon number, and decay pathways.</span><span class="lang-ko">소립자 격자판에서 입자를 클릭하면 해당 입자의 양자 전하, 스핀, 바리온수, 붕괴 경로 등 정밀 물리 프로필이 여기에 표시됩니다.</span></p>
         </div>
       </div>
 
