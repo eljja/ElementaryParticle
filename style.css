@@ -1261,3 +1261,21 @@ footer a:hover {
   50% { box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); }
   100% { box-shadow: 0 0 10px rgba(255, 51, 102, 0.2); }
 }
+
+/* Suggestion Chips */
+.suggestion-chip {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00f0ff;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.suggestion-chip:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: #00f0ff;
+  transform: translateY(-1px);
+}
