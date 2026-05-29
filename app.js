@@ -796,7 +796,7 @@ function findValidCombinations(reactList, maxCount = 5) {
     for (let j = i; j < commonProducts.length; j++) {
       let p1 = commonProducts[i].symbol;
       let p2 = commonProducts[j].symbol;
-      if (verifyReactionJS(reactList, [p1, p2]).isValid) {
+      if (verifyReactionJS(reactList, [p1, p2]).is_physically_allowed) {
         results.push([p1, p2]);
         if (results.length >= maxCount) return results;
       }
@@ -812,7 +812,7 @@ function findValidCombinations(reactList, maxCount = 5) {
           let p1 = veryCommon[i].symbol;
           let p2 = veryCommon[j].symbol;
           let p3 = veryCommon[k].symbol;
-          if (verifyReactionJS(reactList, [p1, p2, p3]).isValid) {
+          if (verifyReactionJS(reactList, [p1, p2, p3]).is_physically_allowed) {
             results.push([p1, p2, p3]);
             if (results.length >= maxCount) return results;
           }
