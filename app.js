@@ -311,6 +311,15 @@ function resizeCanvas() {
   }
 }
 
+let bubbleChamberEvents = [];
+window.pushBubbleChamberEvent = function(desc) {
+  const time = (Date.now() % 10000 / 1000).toFixed(2);
+  bubbleChamberEvents.push(`[${time} ns] ${desc.toUpperCase()}`);
+  if (bubbleChamberEvents.length > 5) {
+    bubbleChamberEvents.shift();
+  }
+};
+
 function resolveColor(c) {
   if (c && typeof c === 'string' && c.startsWith('var(')) {
     if (c.includes('--color-quark')) return '#ff3366';
@@ -1105,9 +1114,31 @@ function animateReactionTracks(isAllowed) {
     });
   });
 
+  bubbleChamberEvents = [];
+  window.pushBubbleChamberEvent("Collision event triggered");
+  if (isAllowed) {
+    window.pushBubbleChamberEvent(`${reactants.join(' + ')} collision successful`);
+  } else {
+    window.pushBubbleChamberEvent("Conservation law violation alert");
+  }
+
   products.forEach((sym, idx) => {
     const p = particlesBySymbol[sym];
     const offsetAngle = (idx - (products.length - 1) / 2) * 0.5;
+    
+    let startingMomentum = p.mass_mev === 0 ? 300 : Math.max(80, 800 - p.mass_mev * 0.4); 
+    if (p.symbol === 'W+' || p.symbol === 'W-' || p.symbol === 'Z0' || p.symbol === 'H0') {
+      startingMomentum = 50 + Math.random() * 50; 
+    }
+    
+    let decayFrame = 300; 
+    if (!p.stable) {
+      if (p.type === 'gauge_boson' || p.type === 'scalar_boson') {
+        decayFrame = 25 + Math.random() * 35; 
+      } else {
+        decayFrame = 90 + Math.random() * 100; 
+      }
+    }
     
     tracks.push({
       symbol: sym,
@@ -1117,9 +1148,13 @@ function animateReactionTracks(isAllowed) {
       phase: 'product',
       path: [],
       startX: vertexX, startY: vertexY,
+      currentX: vertexX, currentY: vertexY,
       angle: offsetAngle,
-      progress: 0,
-      speed: 0.012 + Math.random() * 0.006,
+      momentum: startingMomentum,
+      maxMomentum: startingMomentum,
+      decayFrame: decayFrame,
+      decayed: false,
+      speed: 0,
       color: getParticleColors(p.type).color,
       life: 0
     });
@@ -1232,23 +1267,109 @@ function animateReactionTracks(isAllowed) {
     if (reactantsMet && showProducts) {
       tracks.forEach(track => {
         if (track.phase === 'product') {
-          track.progress += track.speed;
+          if (track.decayed) return;
+          
           track.life += 1;
           
-          const r = track.life * 1.5;
-          const theta = track.angle + (track.charge * track.life * 0.035);
+          // 1. Relativistic mechanics (Lorentz + Bethe-Bloch + Synchrotron loss)
+          const q = Math.abs(track.charge);
+          if (q > 0) {
+            const beta = Math.min(0.99, track.momentum / Math.sqrt(track.momentum * track.momentum + track.mass * track.mass + 1e-5));
+            const ionizationLoss = 0.5 * (q * q) / (beta * beta);
+            const massFactor = track.mass === 0 ? 0.5 : Math.max(0.5, track.mass);
+            const synchrotronLoss = 0.00003 * (q * q) * (track.momentum * track.momentum) / (massFactor * massFactor);
+            
+            track.momentum = Math.max(1, track.momentum - (ionizationLoss + synchrotronLoss) * 0.4);
+          }
           
-          let curX = vertexX + Math.cos(theta) * r;
-          let curY = vertexY + Math.sin(theta) * r;
+          const B = 2.8; 
+          const dTheta = (track.charge * B) / Math.max(0.5, track.momentum);
+          track.angle += dTheta;
           
-          if (track.type === 'gauge_boson' && track.charge === 0) {
-            const wiggle = Math.sin(track.life * 0.4) * 3;
+          const beta = track.mass === 0 ? 1.0 : (track.momentum / Math.sqrt(track.momentum * track.momentum + track.mass * track.mass));
+          track.speed = beta * 2.8;
+          
+          let curX = track.currentX + Math.cos(track.angle) * track.speed;
+          let curY = track.currentY + Math.sin(track.angle) * track.speed;
+          
+          if (track.charge === 0 && (track.type === 'gauge_boson' || track.type === 'scalar_boson')) {
+            const wiggle = Math.sin(track.life * 0.5) * 2;
             curX += Math.cos(track.angle + Math.PI/2) * wiggle;
             curY += Math.sin(track.angle + Math.PI/2) * wiggle;
           }
           
+          track.currentX = curX;
+          track.currentY = curY;
           track.path.push({x: curX, y: curY});
           if (track.path.length > 300) track.path.shift();
+          
+          // 2. In-Flight Decay Cascade Trigger
+          if (track.life >= track.decayFrame) {
+            track.decayed = true;
+            const pData = particlesBySymbol[track.symbol];
+            if (pData && pData.decay_modes && pData.decay_modes.length > 0) {
+              const channel = pData.decay_modes[Math.floor(Math.random() * pData.decay_modes.length)].channels;
+              
+              channel.forEach((prodSym, idx) => {
+                const prodPart = particlesBySymbol[prodSym];
+                if (prodPart) {
+                  const outAngle = track.angle + (idx - (channel.length - 1) / 2) * 0.6 + (Math.random() - 0.5) * 0.15;
+                  const prodMomentum = track.momentum / channel.length + (Math.random() - 0.5) * 10;
+                  
+                  tracks.push({
+                    symbol: prodSym,
+                    type: prodPart.type,
+                    charge: prodPart.charge,
+                    mass: prodPart.mass_mev,
+                    phase: 'product',
+                    path: [],
+                    startX: curX, startY: curY,
+                    currentX: curX, currentY: curY,
+                    angle: outAngle,
+                    momentum: Math.max(5, prodMomentum),
+                    maxMomentum: Math.max(5, prodMomentum),
+                    decayFrame: 300, 
+                    decayed: false,
+                    speed: 0,
+                    color: getParticleColors(prodPart.type).color,
+                    life: 0
+                  });
+                }
+              });
+              
+              if (window.pushBubbleChamberEvent) {
+                window.pushBubbleChamberEvent(`${track.symbol} decayed -> [${channel.join(', ')}]`);
+              }
+            }
+          }
+          
+          // 3. Spontaneous Delta Ray Spawning (0.35% chance per frame for fast charged particles)
+          if (Math.abs(track.charge) > 0 && track.momentum > 80 && Math.random() < 0.0035 && !track.isDeltaRay) {
+            const sideAngle = track.angle + (Math.random() > 0.5 ? Math.PI/2 : -Math.PI/2) + (Math.random() - 0.5) * 0.3;
+            tracks.push({
+              symbol: 'e-',
+              type: 'lepton',
+              charge: -1,
+              mass: 0.511,
+              phase: 'product',
+              path: [],
+              startX: curX, startY: curY,
+              currentX: curX, currentY: curY,
+              angle: sideAngle,
+              momentum: 15 + Math.random() * 15, 
+              maxMomentum: 30,
+              decayFrame: 300,
+              decayed: false,
+              isDeltaRay: true,
+              speed: 0,
+              color: '#00f0ff',
+              life: 0
+            });
+            
+            if (window.pushBubbleChamberEvent) {
+              window.pushBubbleChamberEvent("Spontaneous δ-ray emitted");
+            }
+          }
         }
       });
       
@@ -1263,6 +1384,7 @@ function animateReactionTracks(isAllowed) {
           phase: 'jet',
           path: [],
           startX: vertexX, startY: vertexY,
+          currentX: vertexX, currentY: vertexY,
           angle: jetAngle,
           speed: 0.03 + Math.random() * 0.02,
           progress: 0,
@@ -1293,7 +1415,11 @@ function animateReactionTracks(isAllowed) {
           ctx.lineTo(track.path[i].x, track.path[i].y);
           
           const ratio = i / len;
-          ctx.strokeStyle = hexToRgba(track.color, ratio * 0.85 + 0.15);
+          let alpha = ratio * 0.85 + 0.15;
+          if (track.charge === 0 && track.symbol && track.type !== 'gauge_boson') {
+            alpha = ratio * 0.08 + 0.02; 
+          }
+          ctx.strokeStyle = hexToRgba(track.color, alpha);
           
           if (track.type === 'jet_track') {
             ctx.lineWidth = 0.5 * ratio;
@@ -1376,6 +1502,9 @@ function animateReactionTracks(isAllowed) {
         ctx.fillText('💥 HADRONIZATION (강입자화) SNAP!', vertexX - 85, vertexY - 20);
       }
     }
+
+    // Render Futuristic Live HUD
+    renderLiveHUD(w, h, isAllowed);
 
     if (frameCount < maxFrames) {
       animationId = requestAnimationFrame(animate);
@@ -2017,6 +2146,9 @@ function animateHadronBuilderSynthesis(qObjs) {
         ctx.fillText('⚛️ COLOR NEUTRAL STATE ESTABLISHED', vertexX - 100, vertexY - 10);
       }
     }
+
+    // Render Futuristic Live HUD
+    renderLiveHUD(w, h, isAllowed);
 
     if (frameCount < maxFrames) {
       animationId = requestAnimationFrame(animate);
@@ -8052,4 +8184,42 @@ function renderAxionPhysicsMath(ma, gayy) {
     </div>
   `;
   container.innerHTML = html;
+}
+
+function renderLiveHUD(w, h, isAllowed) {
+  // 1. Event Log in the top right
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.85)';
+  ctx.font = 'bold 9px var(--font-mono)';
+  ctx.textAlign = 'right';
+  
+  bubbleChamberEvents.forEach((evt, idx) => {
+    ctx.fillText(evt, w - 12, 22 + idx * 13);
+  });
+  
+  // 2. Physics Equations in the bottom left
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.font = '7.5px var(--font-mono)';
+  ctx.textAlign = 'left';
+  
+  ctx.fillText("LORENTZ FORCE: F = q(E + v × B)", 12, h - 35);
+  ctx.fillText("BETHE-BLOCH IONIZATION: -dE/dx ∝ z²/β²", 12, h - 24);
+  ctx.fillText("RELATIVISTIC CURVATURE: R = p / qB", 12, h - 13);
+  
+  // 3. Telemetry in the bottom right
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.65)';
+  ctx.textAlign = 'right';
+  
+  const activeTrack = tracks.find(t => t.phase === 'product' && !t.decayed && t.charge !== 0 && t.symbol);
+  if (activeTrack) {
+    const pVal = activeTrack.momentum.toFixed(1);
+    const mVal = activeTrack.mass.toFixed(2);
+    const gamma = (Math.sqrt(activeTrack.momentum * activeTrack.momentum + activeTrack.mass * activeTrack.mass) / Math.max(1, activeTrack.mass)).toFixed(2);
+    ctx.fillText(`ACTIVE PARTICLES: ${activeTrack.symbol}`, w - 12, h - 35);
+    ctx.fillText(`MOMENTUM p: ${pVal} MeV/c`, w - 12, h - 24);
+    ctx.fillText(`RELATIVISTIC GAMMA γ: ${activeTrack.mass === 0 ? 'INF' : gamma}`, w - 12, h - 13);
+  } else {
+    ctx.fillText("DETECTOR STATE: SCANNING...", w - 12, h - 13);
+  }
+  
+  ctx.textAlign = 'left';
 }
