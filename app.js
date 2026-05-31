@@ -371,6 +371,7 @@ function resizeCanvas() {
   }
 }
 
+let cherenkovWaves = [];
 let chamberBField = 2.8;
 window.updateChamberBField = function() {
   const slider = document.getElementById('slider-chamber-bfield');
@@ -1189,6 +1190,7 @@ function animateReactionTracks(isAllowed) {
   });
 
   bubbleChamberEvents = [];
+  cherenkovWaves = [];
   window.pushBubbleChamberEvent("Collision event triggered");
   if (isAllowed) {
     window.pushBubbleChamberEvent(`${reactants.join(' + ')} collision successful`);
@@ -1243,6 +1245,31 @@ function animateReactionTracks(isAllowed) {
 
   function animate() {
     frameCount++;
+    
+    // Spontaneous Cosmic Ray Muons (0.7% chance per frame)
+    if (Math.random() < 0.007) {
+      const startX = Math.random() * w;
+      const angle = Math.PI/2 + (Math.random() - 0.5) * 0.35;
+      tracks.push({
+        symbol: 'μ_cosmic',
+        type: 'lepton',
+        charge: Math.random() > 0.5 ? 1 : -1,
+        mass: 105.6,
+        phase: 'product',
+        path: [],
+        startX: startX, startY: 0,
+        currentX: startX, currentY: 0,
+        angle: angle,
+        momentum: 400 + Math.random() * 500, 
+        maxMomentum: 900,
+        decayFrame: 400,
+        decayed: false,
+        isCosmic: true,
+        speed: 0,
+        color: 'rgba(255, 255, 255, 0.22)', 
+        life: 0
+      });
+    }
     
     ctx.fillStyle = 'rgba(0, 0, 0, 0.18)'; 
     ctx.fillRect(0, 0, w, h);
@@ -1377,6 +1404,16 @@ function animateReactionTracks(isAllowed) {
           track.path.push({x: curX, y: curY});
           if (track.path.length > 300) track.path.shift();
           
+          // Relativistic Cherenkov Wavefront emission (for fast charged particles)
+          if (track.speed > 1.8 && Math.abs(track.charge) > 0 && !track.isDeltaRay && frameCount % 6 === 0) {
+            cherenkovWaves.push({
+              x: curX, y: curY,
+              r: 1,
+              maxR: 35,
+              alpha: 0.35
+            });
+          }
+          
           // 2. In-Flight Decay Cascade Trigger
           if (track.life >= track.decayFrame) {
             track.decayed = true;
@@ -1442,6 +1479,9 @@ function animateReactionTracks(isAllowed) {
             
             if (window.pushBubbleChamberEvent) {
               window.pushBubbleChamberEvent("Spontaneous δ-ray emitted");
+              if (Math.random() < 0.1) { 
+                window.pushBubbleChamberEvent("Cosmic ray muon detected"); 
+              }
             }
           }
         }
@@ -1521,6 +1561,20 @@ function animateReactionTracks(isAllowed) {
     });
 
     ctx.setLineDash([]);
+
+    // Render relativistic Cherenkov wavefront rings
+    cherenkovWaves.forEach((wave, idx) => {
+      wave.r += 0.8;
+      wave.alpha -= 0.012;
+      ctx.beginPath();
+      ctx.arc(wave.x, wave.y, wave.r, 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(0, 240, 255, ${wave.alpha})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      if (wave.alpha <= 0 || wave.r >= wave.maxR) {
+        cherenkovWaves.splice(idx, 1);
+      }
+    });
 
     sparkParticles.forEach((spk, idx) => {
       spk.x += spk.vx;
@@ -2140,6 +2194,31 @@ function animateHadronBuilderSynthesis(qObjs) {
 
   function animate() {
     frameCount++;
+    
+    // Spontaneous Cosmic Ray Muons (0.7% chance per frame)
+    if (Math.random() < 0.007) {
+      const startX = Math.random() * w;
+      const angle = Math.PI/2 + (Math.random() - 0.5) * 0.35;
+      tracks.push({
+        symbol: 'μ_cosmic',
+        type: 'lepton',
+        charge: Math.random() > 0.5 ? 1 : -1,
+        mass: 105.6,
+        phase: 'product',
+        path: [],
+        startX: startX, startY: 0,
+        currentX: startX, currentY: 0,
+        angle: angle,
+        momentum: 400 + Math.random() * 500, 
+        maxMomentum: 900,
+        decayFrame: 400,
+        decayed: false,
+        isCosmic: true,
+        speed: 0,
+        color: 'rgba(255, 255, 255, 0.22)', 
+        life: 0
+      });
+    }
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
     ctx.fillRect(0, 0, w, h);
     
