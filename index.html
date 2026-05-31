@@ -27,7 +27,7 @@
       <button id="btn-lang-toggle" onclick="toggleLanguage()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 0.2rem 0.6rem; border-radius: 6px; cursor: pointer; font-family: var(--font-mono); font-weight: bold; transition: all 0.2s;">
         🌐 EN / KO
       </button>
-      <div class="badge">DATABASE V1.0.0 // PHYSICS ENGINE RUNNING <span style="font-size: 0.75rem; color: #00f0ff; margin-left: 6px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 6px;">v1.4.0</span></div>
+      <div class="badge">DATABASE V1.0.0 // PHYSICS ENGINE RUNNING <span style="font-size: 0.75rem; color: #00f0ff; margin-left: 6px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 6px;">v1.5.0</span></div>
     </div>
   </header>
 
@@ -166,6 +166,15 @@
                   <span class="lang-en">Activate Collider</span><span class="lang-ko">충돌기 가동</span>
                 </button>
               </div>
+            </div>
+
+            <!-- Magnetic Field Controller -->
+            <div class="color-assigner-panel" style="width: 100%; align-items: stretch; gap: 0.25rem; margin-top: 0.75rem; margin-bottom: 0.75rem; background: rgba(0, 240, 255, 0.03); border: 1px solid rgba(0, 240, 255, 0.15); border-radius: 8px; padding: 0.5rem 0.75rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600;">
+                <span style="color: #00f0ff; letter-spacing: 0.05em; font-family: var(--font-mono); font-size: 0.7rem;">CHAMBER MAGNETIC FIELD (B-FIELD)</span>
+                <span id="label-chamber-bfield" style="color: #fff; font-family: var(--font-mono);">2.8 Tesla</span>
+              </div>
+              <input type="range" id="slider-chamber-bfield" min="-6.0" max="6.0" step="0.2" value="2.8" style="width: 100%; accent-color: #00f0ff; background: rgba(255,255,255,0.1); border-radius: 4px; height: 4px; outline: none; cursor: pointer; margin-top: 0.35rem;" oninput="updateChamberBField()">
             </div>
 
             <!-- Physics Track Canvas Visualizer -->

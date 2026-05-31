@@ -173,6 +173,66 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clear canvas initially
   drawEmptyCanvas();
 
+  // Sandbox Click to shoot particle beam
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const w = canvas.width / window.devicePixelRatio;
+    const h = canvas.height / window.devicePixelRatio;
+    const clickX = (x / rect.width) * w;
+    const clickY = (y / rect.height) * h;
+    
+    const p = (typeof globalSelectedParticle !== 'undefined' && globalSelectedParticle) ? globalSelectedParticle : particlesBySymbol['e-'];
+    if (!p) return;
+    
+    const startX = 0;
+    const startY = h / 2;
+    const angle = Math.atan2(clickY - startY, clickX - startX);
+    
+    let startingMomentum = p.mass_mev === 0 ? 300 : Math.max(80, 800 - p.mass_mev * 0.4); 
+    let decayFrame = 300; 
+    if (!p.stable) {
+      if (p.type === 'gauge_boson' || p.type === 'scalar_boson') {
+        decayFrame = 25 + Math.random() * 35; 
+      } else {
+        decayFrame = 90 + Math.random() * 100; 
+      }
+    }
+    
+    // Switch simulation HUD log to indicate manual beam
+    if (animationId === null) {
+      // If idle, clear previous tracks and start loop
+      tracks = [];
+      frameCount = 0;
+      animateReactionTracks(true); 
+    }
+    
+    tracks.push({
+      symbol: p.symbol,
+      type: p.type,
+      charge: p.charge,
+      mass: p.mass_mev,
+      phase: 'product',
+      path: [],
+      startX: startX, startY: startY,
+      currentX: startX, currentY: startY,
+      angle: angle,
+      momentum: startingMomentum,
+      maxMomentum: startingMomentum,
+      decayFrame: decayFrame,
+      decayed: false,
+      speed: 0,
+      color: getParticleColors(p.type).color,
+      life: 0
+    });
+    
+    if (window.pushBubbleChamberEvent) {
+      window.pushBubbleChamberEvent(`Fired manual ${p.symbol} beam`);
+    }
+  });
+
   // Load Database
   fetch('./particles.json')
     .then(res => res.json())
@@ -310,6 +370,18 @@ function resizeCanvas() {
     ctxAxionHaloscope.scale(window.devicePixelRatio, window.devicePixelRatio);
   }
 }
+
+let chamberBField = 2.8;
+window.updateChamberBField = function() {
+  const slider = document.getElementById('slider-chamber-bfield');
+  if (!slider) return;
+  const val = parseFloat(slider.value);
+  chamberBField = val;
+  document.getElementById('label-chamber-bfield').innerText = `${val.toFixed(1)} Tesla`;
+  if (window.pushBubbleChamberEvent) {
+    window.pushBubbleChamberEvent(`Magnetic Field set to ${val.toFixed(1)}T`);
+  }
+};
 
 let bubbleChamberEvents = [];
 window.pushBubbleChamberEvent = function(desc) {
@@ -560,7 +632,9 @@ const ckmMatrix = {
   "anti_t": { "anti_d": 0.00008, "anti_s": 0.0016, "anti_b": 0.998 }
 };
 
+let globalSelectedParticle = null;
 function showParticleDetails(p) {
+  globalSelectedParticle = p;
   const details = document.getElementById('particle-details-panel');
   const colors = getParticleColors(p.type);
   
@@ -1282,7 +1356,7 @@ function animateReactionTracks(isAllowed) {
             track.momentum = Math.max(1, track.momentum - (ionizationLoss + synchrotronLoss) * 0.4);
           }
           
-          const B = 2.8; 
+          const B = typeof chamberBField !== 'undefined' ? chamberBField : 2.8; 
           const dTheta = (track.charge * B) / Math.max(0.5, track.momentum);
           track.angle += dTheta;
           
