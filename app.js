@@ -8340,39 +8340,171 @@ function renderAxionPhysicsMath(ma, gayy) {
 }
 
 function renderLiveHUD(w, h, isAllowed) {
-  // 1. Event Log in the top right
-  ctx.fillStyle = 'rgba(0, 240, 255, 0.85)';
-  ctx.font = 'bold 9px var(--font-mono)';
-  ctx.textAlign = 'right';
+  const pad = 35; // Outer boundary padding for tick marks
   
+  // --- 1. SCIENTIFIC AXES & TICKS (Journal Style) ---
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(pad, pad, w - 2*pad, h - 2*pad);
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.font = '8px var(--font-mono)';
+  ctx.textAlign = 'center';
+  
+  // X-Axis Ticks (Bottom and Top)
+  const stepsX = 5;
+  for (let i = 0; i < stepsX; i++) {
+    const frac = i / (stepsX - 1);
+    const x = pad + frac * (w - 2*pad);
+    const cmValue = ((frac - 0.5) * 20).toFixed(1); // -10.0 to 10.0 cm
+    
+    // Bottom Ticks
+    ctx.beginPath();
+    ctx.moveTo(x, h - pad);
+    ctx.lineTo(x, h - pad - 5);
+    ctx.stroke();
+    
+    // Top Ticks
+    ctx.beginPath();
+    ctx.moveTo(x, pad);
+    ctx.lineTo(x, pad + 5);
+    ctx.stroke();
+    
+    // X Label numbers
+    ctx.fillText(`${cmValue}`, x, h - pad + 12);
+  }
+  
+  // Y-Axis Ticks (Left and Right)
+  ctx.textAlign = 'right';
+  for (let i = 0; i < stepsX; i++) {
+    const frac = i / (stepsX - 1);
+    const y = pad + frac * (h - 2*pad);
+    const cmValue = ((0.5 - frac) * 20).toFixed(1); // 10.0 to -10.0 cm
+    
+    // Left Ticks
+    ctx.beginPath();
+    ctx.moveTo(pad, y);
+    ctx.lineTo(pad + 5, y);
+    ctx.stroke();
+    
+    // Right Ticks
+    ctx.beginPath();
+    ctx.moveTo(w - pad, y);
+    ctx.lineTo(w - pad - 5, y);
+    ctx.stroke();
+    
+    // Y Label numbers
+    ctx.fillText(`${cmValue}`, pad - 8, y + 3);
+  }
+  
+  // Axis Titles
+  ctx.fillStyle = '#fff';
+  ctx.font = 'italic 9px var(--font-serif)';
+  ctx.textAlign = 'center';
+  ctx.fillText("Coordinate x [cm]", w / 2, h - 8);
+  
+  ctx.save();
+  ctx.translate(10, h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText("Coordinate y [cm]", 0, 0);
+  ctx.restore();
+  
+  // --- 2. PROFESSIONAL SCROLLING EVENT LOG ---
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.9)';
+  ctx.font = 'bold 8.5px var(--font-mono)';
+  ctx.textAlign = 'right';
   bubbleChamberEvents.forEach((evt, idx) => {
-    ctx.fillText(evt, w - 12, 22 + idx * 13);
+    ctx.fillText(evt, w - pad - 10, pad + 15 + idx * 12);
   });
   
-  // 2. Physics Equations in the bottom left
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  // --- 3. ACADEMIC LEGEND BOX (PRL Standard) ---
+  const legX = pad + 10;
+  const legY = pad + 10;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(legX, legY, 110, 85);
+  ctx.strokeRect(legX, legY, 110, 85);
+  
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 7.5px var(--font-mono)';
+  ctx.fillStyle = '#00f0ff';
+  ctx.fillText("LEGEND (1σ Bound)", legX + 6, legY + 12);
+  
+  const drawLegendRow = (symbol, label, color, dash, yOffset) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(legX + 8, legY + yOffset);
+    ctx.lineTo(legX + 22, legY + yOffset);
+    ctx.setLineDash(dash);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '7.5px var(--font-mono)';
+    ctx.fillText(label, legX + 28, legY + yOffset + 3);
+  };
+  
+  drawLegendRow("━", "Quarks (Spin-1/2)", "#ff3366", [], 26);
+  drawLegendRow("━", "Leptons (Spin-1/2)", "#00f0ff", [], 38);
+  drawLegendRow("〰", "Gauge Bosons (S=1)", "#ffaa00", [], 50);
+  drawLegendRow("╌", "Neutral Path (Inv)", "rgba(255,255,255,0.4)", [2, 2], 62);
+  drawLegendRow("◎", "Cherenkov Fronts", "#00f0ff", [], 74);
+  
+  // Draw Cherenkov legend icon custom
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.arc(legX + 15, legY + 74, 3, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(legX + 15, legY + 74, 5, 0, Math.PI*2); ctx.stroke();
+
+  // --- 4. SCALE BAR (Calibrated) ---
+  const scaleBarW = (5.0 / 20.0) * (w - 2*pad); // 5 cm length in pixels
+  const barX = w - pad - scaleBarW - 10;
+  const barY = h - pad - 12;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(barX, barY - 3); ctx.lineTo(barX, barY + 3); // Left cap
+  ctx.moveTo(barX, barY); ctx.lineTo(barX + scaleBarW, barY); // Bar
+  ctx.moveTo(barX + scaleBarW, barY - 3); ctx.lineTo(barX + scaleBarW, barY + 3); // Right cap
+  ctx.stroke();
+  
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 7.5px var(--font-mono)';
+  ctx.textAlign = 'center';
+  ctx.fillText("5.0 cm Scale", barX + scaleBarW / 2, barY - 5);
+
+  // --- 5. THEORETICAL FORMULAS HUD ---
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '7.5px var(--font-mono)';
   ctx.textAlign = 'left';
+  ctx.fillText("LORENTZ EQUATION: F = q(E + v × B)", pad + 10, h - pad - 35);
+  ctx.fillText("BETHE-BLOCH FORMULA: -dE/dx ∝ z²/β²", pad + 10, h - pad - 24);
+  ctx.fillText("LARMOR CURVATURE: R = p / qB", pad + 10, h - pad - 13);
   
-  ctx.fillText("LORENTZ FORCE: F = q(E + v × B)", 12, h - 35);
-  ctx.fillText("BETHE-BLOCH IONIZATION: -dE/dx ∝ z²/β²", 12, h - 24);
-  ctx.fillText("RELATIVISTIC CURVATURE: R = p / qB", 12, h - 13);
-  
-  // 3. Telemetry in the bottom right
-  ctx.fillStyle = 'rgba(0, 240, 255, 0.65)';
+  // --- 6. REAL-TIME PHYSICAL TELEMETRY ---
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.7)';
   ctx.textAlign = 'right';
-  
   const activeTrack = tracks.find(t => t.phase === 'product' && !t.decayed && t.charge !== 0 && t.symbol);
   if (activeTrack) {
     const pVal = activeTrack.momentum.toFixed(1);
     const mVal = activeTrack.mass.toFixed(2);
     const gamma = (Math.sqrt(activeTrack.momentum * activeTrack.momentum + activeTrack.mass * activeTrack.mass) / Math.max(1, activeTrack.mass)).toFixed(2);
-    ctx.fillText(`ACTIVE PARTICLES: ${activeTrack.symbol}`, w - 12, h - 35);
-    ctx.fillText(`MOMENTUM p: ${pVal} MeV/c`, w - 12, h - 24);
-    ctx.fillText(`RELATIVISTIC GAMMA γ: ${activeTrack.mass === 0 ? 'INF' : gamma}`, w - 12, h - 13);
+    const dEdx = (0.35 * (activeTrack.charge * activeTrack.charge) / Math.max(0.01, Math.pow(activeTrack.speed/2.8, 2))).toFixed(2);
+    
+    ctx.fillText(`TRACK TELEMETRY: ${activeTrack.symbol}`, w - pad - 10, h - pad - 35);
+    ctx.fillText(`MOMENTUM p: ${pVal} MeV/c`, w - pad - 10, h - pad - 24);
+    ctx.fillText(`ENERGY LOSS -dE/dx: ${dEdx} MeV/cm`, w - pad - 10, h - pad - 13);
   } else {
-    ctx.fillText("DETECTOR STATE: SCANNING...", w - 12, h - 13);
+    ctx.fillText("DETECTOR TELEMETRY: SCANNING...", w - pad - 10, h - pad - 13);
   }
+  
+  // --- 7. FIGURE CAPTION (Journal Standard) ---
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = 'italic 7px var(--font-serif)';
+  ctx.textAlign = 'center';
+  ctx.fillText("Figure 1. Real-time relativistic trajectory of collision products in a B-field. Tapering comets represent Bethe-Bloch energy loss.", w / 2, pad - 12);
   
   ctx.textAlign = 'left';
 }
